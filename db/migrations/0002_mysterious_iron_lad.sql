@@ -1,0 +1,2 @@
+ALTER TABLE "acteurs" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('french', coalesce(prenom, '') || ' ' || coalesce(nom, ''))) STORED;--> statement-breakpoint
+CREATE INDEX "acteurs_search_idx" ON "acteurs" USING gin ("search_vector");

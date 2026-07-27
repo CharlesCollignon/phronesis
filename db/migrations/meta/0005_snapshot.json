@@ -1,0 +1,1687 @@
+{
+  "id": "2e76b5b4-9a54-4cf7-8aa5-d60a3796cf80",
+  "prevId": "074bc9b7-c71a-49a9-8e48-c2bb4c8caa6a",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.actes": {
+      "name": "actes",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dossier_uid": {
+          "name": "dossier_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordre": {
+          "name": "ordre",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profondeur": {
+          "name": "profondeur",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "parent_uid": {
+          "name": "parent_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "organe_ref": {
+          "name": "organe_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "texte_associe_ref": {
+          "name": "texte_associe_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "statut": {
+          "name": "statut",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vote_refs": {
+          "name": "vote_refs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "actes_dossier_idx": {
+          "name": "actes_dossier_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "actes_dossier_uid_dossiers_uid_fk": {
+          "name": "actes_dossier_uid_dossiers_uid_fk",
+          "tableFrom": "actes",
+          "tableTo": "dossiers",
+          "columnsFrom": [
+            "dossier_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acteur_hatvp": {
+      "name": "acteur_hatvp",
+      "schema": "",
+      "columns": {
+        "acteur_uid": {
+          "name": "acteur_uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "hatvp_url": {
+          "name": "hatvp_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qualite": {
+          "name": "qualite",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matched_on": {
+          "name": "matched_on",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "acteur_hatvp_acteur_uid_acteurs_uid_fk": {
+          "name": "acteur_hatvp_acteur_uid_acteurs_uid_fk",
+          "tableFrom": "acteur_hatvp",
+          "tableTo": "acteurs",
+          "columnsFrom": [
+            "acteur_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acteurs": {
+      "name": "acteurs",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "civilite": {
+          "name": "civilite",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prenom": {
+          "name": "prenom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nom": {
+          "name": "nom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_naissance": {
+          "name": "date_naissance",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ville_naissance": {
+          "name": "ville_naissance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profession": {
+          "name": "profession",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "senat_matricule": {
+          "name": "senat_matricule",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "to_tsvector('french', coalesce(prenom, '') || ' ' || coalesce(nom, ''))",
+            "type": "stored"
+          }
+        }
+      },
+      "indexes": {
+        "acteurs_search_idx": {
+          "name": "acteurs_search_idx",
+          "columns": [
+            {
+              "expression": "search_vector",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "acteurs_senat_matricule_idx": {
+          "name": "acteurs_senat_matricule_idx",
+          "columns": [
+            {
+              "expression": "senat_matricule",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.amendements": {
+      "name": "amendements",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "numero_long": {
+          "name": "numero_long",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "texte_ref": {
+          "name": "texte_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dossier_uid": {
+          "name": "dossier_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auteur_type": {
+          "name": "auteur_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auteur_acteur_uid": {
+          "name": "auteur_acteur_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auteur_groupe_uid": {
+          "name": "auteur_groupe_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "article_designation": {
+          "name": "article_designation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dispositif": {
+          "name": "dispositif",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expose_sommaire": {
+          "name": "expose_sommaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort": {
+          "name": "sort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "etat": {
+          "name": "etat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_depot": {
+          "name": "date_depot",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "amendements_dossier_idx": {
+          "name": "amendements_dossier_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "amendements_texte_idx": {
+          "name": "amendements_texte_idx",
+          "columns": [
+            {
+              "expression": "texte_ref",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "amendements_auteur_idx": {
+          "name": "amendements_auteur_idx",
+          "columns": [
+            {
+              "expression": "auteur_acteur_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "amendements_dossier_uid_dossiers_uid_fk": {
+          "name": "amendements_dossier_uid_dossiers_uid_fk",
+          "tableFrom": "amendements",
+          "tableTo": "dossiers",
+          "columnsFrom": [
+            "dossier_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.documents": {
+      "name": "documents",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dossier_uid": {
+          "name": "dossier_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "classe_code": {
+          "name": "classe_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_code": {
+          "name": "type_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sous_type_code": {
+          "name": "sous_type_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "titre": {
+          "name": "titre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_depot": {
+          "name": "date_depot",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "documents_dossier_idx": {
+          "name": "documents_dossier_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "documents_dossier_uid_dossiers_uid_fk": {
+          "name": "documents_dossier_uid_dossiers_uid_fk",
+          "tableFrom": "documents",
+          "tableTo": "dossiers",
+          "columnsFrom": [
+            "dossier_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dossiers": {
+      "name": "dossiers",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titre": {
+          "name": "titre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titre_chemin": {
+          "name": "titre_chemin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "procedure_code": {
+          "name": "procedure_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "procedure_libelle": {
+          "name": "procedure_libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "senat_chemin": {
+          "name": "senat_chemin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_dossier": {
+          "name": "type_dossier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "initiateur_acteur_uid": {
+          "name": "initiateur_acteur_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "to_tsvector('french', coalesce(titre, ''))",
+            "type": "stored"
+          }
+        }
+      },
+      "indexes": {
+        "dossiers_search_idx": {
+          "name": "dossiers_search_idx",
+          "columns": [
+            {
+              "expression": "search_vector",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.empreintes": {
+      "name": "empreintes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "empreintes_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "dossier_uid": {
+          "name": "dossier_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "axe": {
+          "name": "axe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "impact": {
+          "name": "impact",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "justification": {
+          "name": "justification",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sources": {
+          "name": "sources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "modele": {
+          "name": "modele",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "genere_le": {
+          "name": "genere_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "empreintes_dossier_axe_idx": {
+          "name": "empreintes_dossier_axe_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "axe",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "empreintes_dossier_idx": {
+          "name": "empreintes_dossier_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "empreintes_dossier_uid_dossiers_uid_fk": {
+          "name": "empreintes_dossier_uid_dossiers_uid_fk",
+          "tableFrom": "empreintes",
+          "tableTo": "dossiers",
+          "columnsFrom": [
+            "dossier_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.faits_judiciaires_publics": {
+      "name": "faits_judiciaires_publics",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "faits_judiciaires_publics_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "acteur_uid": {
+          "name": "acteur_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_decision": {
+          "name": "date_decision",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "juridiction": {
+          "name": "juridiction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resume": {
+          "name": "resume",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_label": {
+          "name": "source_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "definitive": {
+          "name": "definitive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "faits_judiciaires_acteur_idx": {
+          "name": "faits_judiciaires_acteur_idx",
+          "columns": [
+            {
+              "expression": "acteur_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "faits_judiciaires_publics_acteur_uid_acteurs_uid_fk": {
+          "name": "faits_judiciaires_publics_acteur_uid_acteurs_uid_fk",
+          "tableFrom": "faits_judiciaires_publics",
+          "tableTo": "acteurs",
+          "columnsFrom": [
+            "acteur_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.imports": {
+      "name": "imports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "imports_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "dataset": {
+          "name": "dataset",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "row_count": {
+          "name": "row_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mandats": {
+      "name": "mandats",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "acteur_uid": {
+          "name": "acteur_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organe_uid": {
+          "name": "organe_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "code_type_organe": {
+          "name": "code_type_organe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_qualite": {
+          "name": "libelle_qualite",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_debut": {
+          "name": "date_debut",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_fin": {
+          "name": "date_fin",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "circo_departement": {
+          "name": "circo_departement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "circo_num_departement": {
+          "name": "circo_num_departement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "circo_num": {
+          "name": "circo_num",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "mandats_acteur_idx": {
+          "name": "mandats_acteur_idx",
+          "columns": [
+            {
+              "expression": "acteur_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mandats_organe_idx": {
+          "name": "mandats_organe_idx",
+          "columns": [
+            {
+              "expression": "organe_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mandats_type_idx": {
+          "name": "mandats_type_idx",
+          "columns": [
+            {
+              "expression": "code_type_organe",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mandats_acteur_uid_acteurs_uid_fk": {
+          "name": "mandats_acteur_uid_acteurs_uid_fk",
+          "tableFrom": "mandats",
+          "tableTo": "acteurs",
+          "columnsFrom": [
+            "acteur_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mandats_organe_uid_organes_uid_fk": {
+          "name": "mandats_organe_uid_organes_uid_fk",
+          "tableFrom": "mandats",
+          "tableTo": "organes",
+          "columnsFrom": [
+            "organe_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.organes": {
+      "name": "organes",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code_type": {
+          "name": "code_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_abrege": {
+          "name": "libelle_abrege",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "couleur": {
+          "name": "couleur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position_politique": {
+          "name": "position_politique",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_debut": {
+          "name": "date_debut",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_fin": {
+          "name": "date_fin",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "organes_code_type_idx": {
+          "name": "organes_code_type_idx",
+          "columns": [
+            {
+              "expression": "code_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.resumes_ia": {
+      "name": "resumes_ia",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "resumes_ia_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "sujet_type": {
+          "name": "sujet_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sujet_uid": {
+          "name": "sujet_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contenu": {
+          "name": "contenu",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modele": {
+          "name": "modele",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sources": {
+          "name": "sources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "genere_le": {
+          "name": "genere_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "resumes_sujet_idx": {
+          "name": "resumes_sujet_idx",
+          "columns": [
+            {
+              "expression": "sujet_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sujet_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.scrutins": {
+      "name": "scrutins",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "chambre": {
+          "name": "chambre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'AN'"
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legislature": {
+          "name": "legislature",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_scrutin": {
+          "name": "date_scrutin",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titre": {
+          "name": "titre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type_vote_code": {
+          "name": "type_vote_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_vote_libelle": {
+          "name": "type_vote_libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort_code": {
+          "name": "sort_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "demandeur": {
+          "name": "demandeur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seance_ref": {
+          "name": "seance_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dossier_uid": {
+          "name": "dossier_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_votants": {
+          "name": "nombre_votants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suffrages_exprimes": {
+          "name": "suffrages_exprimes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suffrages_requis": {
+          "name": "suffrages_requis",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pour": {
+          "name": "pour",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contre": {
+          "name": "contre",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abstentions": {
+          "name": "abstentions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "non_votants": {
+          "name": "non_votants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "to_tsvector('french', coalesce(titre, ''))",
+            "type": "stored"
+          }
+        }
+      },
+      "indexes": {
+        "scrutins_date_idx": {
+          "name": "scrutins_date_idx",
+          "columns": [
+            {
+              "expression": "date_scrutin",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "scrutins_dossier_idx": {
+          "name": "scrutins_dossier_idx",
+          "columns": [
+            {
+              "expression": "dossier_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "scrutins_chambre_idx": {
+          "name": "scrutins_chambre_idx",
+          "columns": [
+            {
+              "expression": "chambre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "scrutins_search_idx": {
+          "name": "scrutins_search_idx",
+          "columns": [
+            {
+              "expression": "search_vector",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "scrutins_chambre_leg_num_idx": {
+          "name": "scrutins_chambre_leg_num_idx",
+          "columns": [
+            {
+              "expression": "chambre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "legislature",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "scrutins_dossier_uid_dossiers_uid_fk": {
+          "name": "scrutins_dossier_uid_dossiers_uid_fk",
+          "tableFrom": "scrutins",
+          "tableTo": "dossiers",
+          "columnsFrom": [
+            "dossier_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.votes": {
+      "name": "votes",
+      "schema": "",
+      "columns": {
+        "scrutin_uid": {
+          "name": "scrutin_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acteur_uid": {
+          "name": "acteur_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "groupe_uid": {
+          "name": "groupe_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "par_delegation": {
+          "name": "par_delegation",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "cause_position": {
+          "name": "cause_position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "votes_acteur_idx": {
+          "name": "votes_acteur_idx",
+          "columns": [
+            {
+              "expression": "acteur_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "votes_groupe_idx": {
+          "name": "votes_groupe_idx",
+          "columns": [
+            {
+              "expression": "groupe_uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "votes_scrutin_uid_scrutins_uid_fk": {
+          "name": "votes_scrutin_uid_scrutins_uid_fk",
+          "tableFrom": "votes",
+          "tableTo": "scrutins",
+          "columnsFrom": [
+            "scrutin_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "votes_acteur_uid_acteurs_uid_fk": {
+          "name": "votes_acteur_uid_acteurs_uid_fk",
+          "tableFrom": "votes",
+          "tableTo": "acteurs",
+          "columnsFrom": [
+            "acteur_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "votes_groupe_uid_organes_uid_fk": {
+          "name": "votes_groupe_uid_organes_uid_fk",
+          "tableFrom": "votes",
+          "tableTo": "organes",
+          "columnsFrom": [
+            "groupe_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "votes_scrutin_uid_acteur_uid_pk": {
+          "name": "votes_scrutin_uid_acteur_uid_pk",
+          "columns": [
+            "scrutin_uid",
+            "acteur_uid"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

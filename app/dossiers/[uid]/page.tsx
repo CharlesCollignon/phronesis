@@ -1,0 +1,278 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { Badge } from "@/components/badge";
+import { PageShell } from "@/components/breadcrumbs";
+import { EmpreintePanel } from "@/components/empreinte-panel";
+import { ExternalLink } from "@/components/external-link";
+import { ResonancePanel } from "@/components/resonance-panel";
+import { ResumeIa } from "@/components/resume-ia";
+import { ScorePhronesisPanel } from "@/components/score-phronesis";
+import { SondageDossier } from "@/components/sondage-dossier";
+import { VoteBar } from "@/components/vote-bar";
+import { formatDate, formatDateShort, formatSort } from "@/lib/format";
+import { getDossier } from "@/lib/queries";
+import { computeScorePhronesis } from "@/lib/score-phronesis";
+import { urlDocumentAn, urlDossierAn } from "@/lib/urls";
+
+export const dynamic = "force-dynamic";
+
+type PageProps = {
+  params: Promise<{ uid: string }>;
+};
+
+export default async function DossierPage({
+  params,
+}: PageProps): Promise<React.ReactElement> {
+  const { uid } = await params;
+  const data = await getDossier(uid);
+  if (!data) notFound();
+
+  const {
+    dossier,
+    actes,
+    documents,
+    scrutins,
+    amendements,
+    amendementsCount,
+    resume,
+    empreintes,
+  } = data;
+
+  const officialHref = urlDossierAn(
+    dossier.legislature,
+    dossier.titreChemin,
+  );
+
+  const score = computeScorePhronesis({
+    documentsCount: documents.length,
+    documentTypeCodes: documents
+      .map((d) => d.typeCode)
+      .filter((t): t is string => t != null),
+    actesCount: actes.length,
+    scrutinsCount: scrutins.length,
+    amendementsCount,
+    hasResumeIa: resume != null,
+    hasEmpreinte: empreintes.length > 0,
+  });
+
+  const dossierLabel = dossier.titre
+    ? dossier.titre.length > 60
+      ? `${dossier.titre.slice(0, 60)}…`
+      : dossier.titre
+    : "Dossier";
+
+  return (
+    <PageShell
+      breadcrumbs={[
+        { label: "Accueil", href: "/" },
+        { label: "Lois", href: "/dossiers" },
+        { label: dossierLabel },
+      ]}
+    >
+      {dossier.procedureLibelle ? (
+        <p className="text-sm text-[var(--muted)]">
+          {dossier.procedureLibelle}
+        </p>
+      ) : null}
+      <h1 className="mt-2 max-w-4xl font-[family-name:var(--font-display)] text-3xl leading-tight tracking-tight sm:text-4xl">
+        {dossier.titre}
+      </h1>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {officialHref ? (
+          <ExternalLink href={officialHref}>
+            Dossier officiel Assemblée nationale
+          </ExternalLink>
+        ) : null}
+      </div>
+
+      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ScorePhronesisPanel score={score} />
+        <EmpreintePanel rows={empreintes} />
+        <div className="md:col-span-2 lg:col-span-1">
+          <ResonancePanel
+            rows={empreintes.map((e) => ({
+              axe: e.axe,
+              impact: e.impact,
+            }))}
+            compareLabel="Projection loi"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <SondageDossier dossierUid={dossier.uid} />
+      </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <ResumeIa
+          resume={resume}
+          officialHref={officialHref}
+          officialLabel="Lire le dossier officiel"
+        />
+        <aside className=" border border-[var(--border)] bg-[var(--surface)] p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+            Version officielle
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+            La vulgarisation n&apos;est jamais un substitut au texte.
+            Consultez les documents déposés et le dossier sur le site
+            de l&apos;Assemblée nationale.
+          </p>
+          {documents.length > 0 ? (
+            <ul className="mt-4 space-y-2 text-sm">
+              {documents.slice(0, 8).map((doc) => (
+                <li key={doc.uid}>
+                  <ExternalLink href={urlDocumentAn(doc.uid)}>
+                    {doc.titre}
+                  </ExternalLink>
+                  {doc.dateDepot ? (
+                    <span className="ml-2 text-xs text-[var(--muted)]">
+                      {formatDateShort(doc.dateDepot)}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-[var(--muted)]">
+              Aucun document lié dans le dump open data.
+            </p>
+          )}
+        </aside>
+      </div>
+
+      <section className="mt-12">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          Chronologie
+        </h2>
+        {actes.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            Aucune étape procédurale enregistrée.
+          </p>
+        ) : (
+          <ol className="mt-4 space-y-2 border-l border-[var(--border)] pl-4">
+            {actes.map((a) => (
+              <li
+                key={a.uid}
+                style={{ marginLeft: a.profondeur * 12 }}
+                className="text-sm"
+              >
+                <span className="text-xs text-[var(--muted)]">
+                  {formatDate(a.date)}
+                </span>
+                <p className="leading-snug">
+                  {a.libelle ?? a.code}
+                  {a.statut ? (
+                    <span className="text-[var(--muted)]">
+                      {" "}
+                      — {a.statut}
+                    </span>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          Scrutins liés
+        </h2>
+        {scrutins.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            Aucun scrutin public lié à ce dossier. L&apos;adoption
+            d&apos;un texte peut se faire à main levée, sans trace
+            nominative.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {scrutins.map((s) => (
+              <li key={s.uid}>
+                <Link
+                  href={`/scrutins/${s.uid}`}
+                  className="block border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                    <span>n° {s.numero}</span>
+                    <span>·</span>
+                    <span>{formatDateShort(s.dateScrutin)}</span>
+                    <Badge
+                      tone={
+                        s.sortCode.toLowerCase().includes("adopt")
+                          ? "adopte"
+                          : "rejete"
+                      }
+                    >
+                      {formatSort(s.sortCode)}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm">{s.titre}</p>
+                  <div className="mt-3 max-w-md">
+                    <VoteBar
+                      pour={s.pour ?? 0}
+                      contre={s.contre ?? 0}
+                      abstentions={0}
+                    />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          Amendements
+        </h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          {amendements.length >= 100
+            ? "100 premiers amendements (par date de dépôt)."
+            : `${amendements.length} amendement(s).`}
+        </p>
+        <ul className="mt-4 space-y-3">
+          {amendements.map((a) => (
+            <li
+              key={a.uid}
+              className=" border border-[var(--border)] bg-[var(--surface)] p-4"
+            >
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                <span>{a.numeroLong ?? a.uid}</span>
+                {a.articleDesignation ? (
+                  <>
+                    <span>·</span>
+                    <span>{a.articleDesignation}</span>
+                  </>
+                ) : null}
+                {a.sort ? (
+                  <Badge
+                    tone={
+                      a.sort.toLowerCase().includes("adopt")
+                        ? "adopte"
+                        : a.sort.toLowerCase().includes("rejet")
+                          ? "rejete"
+                          : "neutral"
+                    }
+                  >
+                    {a.sort}
+                  </Badge>
+                ) : null}
+              </div>
+              {a.exposeSommaire ? (
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed">
+                  {a.exposeSommaire}
+                </p>
+              ) : a.dispositif ? (
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--muted)]">
+                  {a.dispositif}
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </PageShell>
+  );
+}

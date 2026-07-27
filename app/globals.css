@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0a0e14;
+  --paper: #f4f5f7;
+  --surface: #ffffff;
+  --surface-muted: #eef0f4;
+  --wash: #e8eaef;
+  --muted: #5c6570;
+  --accent: #c9a227;
+  --accent-ink: #8a7018;
+  --accent-soft: #f5efd6;
+  --marine: #002654;
+  --border: #d4d8df;
+  --sidebar: #ffffff;
+  --sidebar-fg: #0a0e14;
+  --sidebar-muted: #5c6570;
+  --sidebar-border: #d4d8df;
+  --sidebar-hover: #eef0f4;
+  --sidebar-active: #f5efd6;
+  --sidebar-width: 14rem;
+  --topbar: #ffffff;
+  --topbar-border: #d4d8df;
+  --input-bg: #ffffff;
+  --input-border: #c8cdd6;
+  --table-head: #eef0f4;
+  --table-sticky: #ffffff;
+  --success-bg: #dcfce7;
+  --success-fg: #14532d;
+  --danger-bg: #ffe4e6;
+  --danger-fg: #881337;
+  --warn-bg: #fef3c7;
+  --warn-fg: #78350f;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --radius: 0;
+  --vote-pour: #059669;
+  --vote-contre: #e11d48;
+  --vote-abstention: #d97706;
+  --vote-neutre: #6b7280;
+}
+
+.dark {
+  --ink: #e8eaef;
+  --paper: #0b0f14;
+  --surface: #141a22;
+  --surface-muted: #1a222d;
+  --wash: #1a222d;
+  --muted: #9aa3ad;
+  --accent: #d4b03a;
+  --accent-ink: #e0c45a;
+  --accent-soft: #2a2410;
+  --marine: #6b8cce;
+  --border: #2a3441;
+  --sidebar: #0f141b;
+  --sidebar-fg: #e8eaef;
+  --sidebar-muted: #8b949e;
+  --sidebar-border: #2a3441;
+  --sidebar-hover: #1a222d;
+  --sidebar-active: #2a2410;
+  --topbar: #0f141b;
+  --topbar-border: #2a3441;
+  --input-bg: #141a22;
+  --input-border: #2a3441;
+  --table-head: #1a222d;
+  --table-sticky: #141a22;
+  --success-bg: #052e16;
+  --success-fg: #86efac;
+  --danger-bg: #4c0519;
+  --danger-fg: #fda4af;
+  --warn-bg: #451a03;
+  --warn-fg: #fcd34d;
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-logo: var(--font-logo);
+  --font-num: var(--font-num);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.num {
+  font-family: var(--font-num), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.card-sharp,
+.panel {
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* Pas de coins arrondis sur l'UI (hors SVG / charts) */
+:where(
+  button,
+  input,
+  select,
+  textarea,
+  aside,
+  nav,
+  header,
+  footer,
+  table,
+  th,
+  td,
+  .card-sharp,
+  .panel
+) {
+  border-radius: 0 !important;
+}

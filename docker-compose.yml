@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: phronesis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: phronesis
+      POSTGRES_PASSWORD: phronesis
+      POSTGRES_DB: phronesis
+    ports:
+      - "5433:5432"
+    volumes:
+      - phronesis_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phronesis -d phronesis"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  phronesis_pgdata:
