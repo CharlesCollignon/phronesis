@@ -1,0 +1,10 @@
+node_modules
+.next
+data
+*.dump
+phronesis.dump
+.git
+.env
+.env.local
+.env.*
+!.env.example
