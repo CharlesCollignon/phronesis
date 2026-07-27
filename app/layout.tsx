@@ -10,6 +10,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { Providers } from "@/components/providers";
 
+import { Analytics } from "@vercel/analytics/next";
+
 import "./globals.css";
 
 const display = Fraunces({
@@ -69,6 +71,7 @@ export default function RootLayout({
           </div>
         </Providers>
       </body>
+      <Analytics />
     </html>
   );
 }
