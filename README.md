@@ -90,13 +90,16 @@ pg_restore --dbname="$NEON_DIRECT_URL" \
 ### Mises à jour de données (hors Vercel)
 
 Les scripts `pnpm ingest`, `pnpm empreintes:generate` et
-`pnpm resumes:generate` s'exécutent depuis une machine locale en
-pointant `DATABASE_URL` vers Neon :
+`pnpm resumes:generate` s'exécutent depuis votre machine.
+Dans `.env`, mettre `DATABASE_URL` sur l'URL Neon **directe**
+(entre guillemets). Avant de lancer un batch :
 
 ```bash
-export DATABASE_URL="<NEON_DIRECT_URL>"
-pnpm ingest
+unset DATABASE_URL   # si un export Docker traîne dans le shell
 pnpm empreintes:generate -- --limit=50
+
+# boucle jusqu'à épuisement :
+LOOP=1 LIMIT=50 ./scripts/deploy/setup-production.sh empreintes
 ```
 
 L'application Vercel lit la base à la volée — pas de redéploiement

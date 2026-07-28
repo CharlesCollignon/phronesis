@@ -78,6 +78,34 @@ sync_vercel_env() {
   done
 }
 
+# --- Empreintes batch (Neon prod) ---
+run_empreintes() {
+  info "Empreintes — batch vers Neon (limit=${LIMIT:-50})"
+  require_cmd pnpm
+  [[ -f .env ]] || die ".env introuvable"
+  # Évite qu'un DATABASE_URL exporté (ex. Docker) écrase .env
+  unset DATABASE_URL
+  local limit="${LIMIT:-50}"
+  if [[ "${LOOP:-0}" == "1" ]]; then
+    batch=0
+    while true; do
+      batch=$((batch + 1))
+      info "Batch $batch"
+      out=$(pnpm empreintes:generate -- --limit="$limit" 2>&1) || {
+        echo "$out"
+        exit 1
+      }
+      echo "$out" | tail -3
+      if echo "$out" | grep -q "0 dossier(s) sans empreinte"; then
+        break
+      fi
+      sleep 2
+    done
+  else
+    pnpm empreintes:generate -- --limit="$limit"
+  fi
+}
+
 # --- Phase Vercel deploy ---
 deploy_vercel() {
   info "Vercel — déploiement production"
@@ -96,6 +124,7 @@ Commandes:
   neon-restore  pg_restore vers Neon (NEON_DIRECT_URL requis)
   vercel-env    Synchroniser les variables Vercel depuis .env
   vercel-deploy Déployer en production
+  empreintes      Batch empreintes (LOOP=1 LIMIT=50 ./script empreintes)
   all           github + neon-restore + vercel-env + vercel-deploy
 
 Prérequis Neon (une fois):
@@ -112,6 +141,7 @@ case "$cmd" in
   neon-restore) restore_neon ;;
   vercel-env) sync_vercel_env ;;
   vercel-deploy) deploy_vercel ;;
+  empreintes) run_empreintes ;;
   all)
     push_github
     restore_neon
