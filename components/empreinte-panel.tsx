@@ -55,7 +55,7 @@ export function EmpreintePanel({
 }: EmpreintePanelProps): React.ReactElement {
   if (rows.length === 0) {
     return (
-      <Card className="rounded-none border-dashed shadow-none">
+      <Card className="h-full rounded-none border-dashed shadow-none">
         <CardHeader>
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Empreinte civique
@@ -75,7 +75,7 @@ export function EmpreintePanel({
   const meta = rows[0]!;
 
   return (
-    <Card className="rounded-none shadow-sm">
+    <Card className="h-full rounded-none shadow-sm">
       <CardHeader className="gap-1">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -90,8 +90,8 @@ export function EmpreintePanel({
           jugement moral.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ul className="space-y-3">
+      <CardContent className="flex flex-1 flex-col">
+        <ul className="flex-1 space-y-3">
           {AXES_EMPREINTE.map((axe) => {
             const row = byAxe.get(axe);
             if (!row) return null;
@@ -137,7 +137,9 @@ export function EmpreintePanel({
             );
           })}
         </ul>
-        <RepereCiviqueNote />
+        <div className="mt-auto">
+          <RepereCiviqueNote />
+        </div>
       </CardContent>
     </Card>
   );

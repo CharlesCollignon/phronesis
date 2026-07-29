@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import type { EChartsCoreOption } from "echarts/core";
 
 import { EChart } from "@/components/charts/echart";
-import { couleurGroupe } from "@/lib/spectre-groupes";
 
 type GroupeVote = {
   groupeUid: string | null;
@@ -17,42 +16,12 @@ type GroupeVote = {
 };
 
 type ScrutinChartsProps = {
-  pour: number;
-  contre: number;
-  abstentions: number;
   parGroupe: GroupeVote[];
 };
 
 export function ScrutinCharts({
-  pour,
-  contre,
-  abstentions,
   parGroupe,
 }: ScrutinChartsProps): React.ReactElement {
-  const donut = useMemo((): EChartsCoreOption => {
-    return {
-      color: ["#059669", "#e11d48", "#d97706"],
-      tooltip: { trigger: "item" },
-      legend: {
-        bottom: 0,
-        textStyle: { color: "#5a6675", fontSize: 11 },
-      },
-      series: [
-        {
-          type: "pie",
-          radius: ["48%", "72%"],
-          center: ["50%", "46%"],
-          label: { show: false },
-          data: [
-            { name: "Pour", value: pour },
-            { name: "Contre", value: contre },
-            { name: "Abst.", value: abstentions },
-          ],
-        },
-      ],
-    };
-  }, [pour, contre, abstentions]);
-
   const bars = useMemo((): EChartsCoreOption => {
     const rows = [...parGroupe]
       .filter((g) => g.groupeUid)
@@ -83,9 +52,16 @@ export function ScrutinCharts({
       xAxis: {
         type: "category",
         data: labels,
-        axisLabel: { rotate: 35, fontSize: 10, color: "#5a6675" },
+        axisLabel: {
+          rotate: 35,
+          fontSize: 10,
+          color: "#5a6675",
+        },
       },
-      yAxis: { type: "value", splitLine: { lineStyle: { opacity: 0.2 } } },
+      yAxis: {
+        type: "value",
+        splitLine: { lineStyle: { opacity: 0.2 } },
+      },
       series: [
         {
           name: "Pour",
@@ -113,38 +89,11 @@ export function ScrutinCharts({
   }, [parGroupe]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className=" border border-border bg-card p-3 sm:p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Répartition des votes
-        </p>
-        <EChart option={donut} height={260} />
-      </div>
-      <div className=" border border-border bg-card p-3 sm:p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Par groupe (top 12)
-        </p>
-        <EChart option={bars} height={280} />
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {parGroupe.slice(0, 8).map((g) => (
-            <li
-              key={g.groupeUid ?? g.libelle}
-              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"
-            >
-              <span
-                className="h-2 w-2"
-                style={{
-                  background: couleurGroupe(
-                    g.libelleAbrege,
-                    g.couleur,
-                  ),
-                }}
-              />
-              {g.libelleAbrege ?? "?"}
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="border border-border bg-card p-3 sm:p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Par groupe (top 12)
+      </p>
+      <EChart option={bars} height={320} />
     </div>
   );
 }

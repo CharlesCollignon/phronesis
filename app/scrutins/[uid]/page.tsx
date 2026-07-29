@@ -7,7 +7,14 @@ import { PageShell } from "@/components/breadcrumbs";
 import { ScrutinCharts } from "@/components/charts/scrutin-charts";
 import { ExternalLink } from "@/components/external-link";
 import { SondageScrutin } from "@/components/sondage-scrutin";
-import { Stat } from "@/components/stat";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { VoteBar } from "@/components/vote-bar";
 import { VoteFilters } from "@/components/vote-filters";
 import {
@@ -127,20 +134,30 @@ export default async function ScrutinPage({
         </p>
       ) : null}
 
-      <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Pour" value={formatNumber(scrutin.pour)} />
-        <Stat label="Contre" value={formatNumber(scrutin.contre)} />
-        <Stat
-          label="Abstentions"
-          value={formatNumber(scrutin.abstentions)}
-        />
-        <Stat
-          label="Non-votants"
-          value={formatNumber(scrutin.nonVotants)}
-        />
+      <div className="mt-6 grid grid-cols-2 divide-x divide-y divide-border border border-border bg-card sm:grid-cols-4 sm:divide-y-0">
+        {(
+          [
+            ["Pour", scrutin.pour],
+            ["Contre", scrutin.contre],
+            ["Abstentions", scrutin.abstentions],
+            ["Non-votants", scrutin.nonVotants],
+          ] as const
+        ).map(([label, value]) => (
+          <div
+            key={label}
+            className="flex items-baseline justify-between gap-2 px-3 py-2 sm:justify-start sm:gap-3"
+          >
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              {label}
+            </span>
+            <span className="num text-lg font-medium tabular-nums">
+              {formatNumber(value)}
+            </span>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-4 max-w-xl">
+      <div className="mt-3">
         <VoteBar
           pour={scrutin.pour ?? 0}
           contre={scrutin.contre ?? 0}
@@ -158,19 +175,14 @@ export default async function ScrutinPage({
       </div>
 
       <section className="mt-10">
-        <ScrutinCharts
-          pour={scrutin.pour ?? 0}
-          contre={scrutin.contre ?? 0}
-          abstentions={scrutin.abstentions ?? 0}
-          parGroupe={groupesOrdonnes}
-        />
+        <ScrutinCharts parGroupe={groupesOrdonnes} />
       </section>
 
       <section className="mt-10">
         <h2 className="font-serif text-xl">
           Répartition par groupe
         </h2>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {groupesOrdonnes.map((g) => (
             <li
               key={g.groupeUid ?? "sans-groupe"}
@@ -192,11 +204,11 @@ export default async function ScrutinPage({
                   {g.libelle ?? "Groupe inconnu"}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {g.pour} pour · {g.contre} contre · {g.abstention}{" "}
-                  abs.
+                  {g.pour} pour · {g.contre} contre ·{" "}
+                  {g.abstention} abs.
                 </span>
               </div>
-              <div className="mt-2 max-w-md">
+              <div className="mt-2">
                 <VoteBar
                   pour={g.pour}
                   contre={g.contre}
@@ -244,24 +256,19 @@ export default async function ScrutinPage({
             />
           </Suspense>
         </div>
-        <div className="mt-3 overflow-x-auto border border-border bg-card">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="sticky left-0 bg-card px-4 py-2 font-medium">
-                  Député
-                </th>
-                <th className="px-4 py-2 font-medium">Groupe</th>
-                <th className="px-4 py-2 font-medium">Position</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="mt-3 border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="px-4">Député</TableHead>
+                <TableHead className="px-4">Groupe</TableHead>
+                <TableHead className="px-4">Position</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {voteRows.map((v) => (
-                <tr
-                  key={v.acteurUid}
-                  className="border-b border-border last:border-0"
-                >
-                  <td className="sticky left-0 bg-card px-4 py-2">
+                <TableRow key={v.acteurUid}>
+                  <TableCell className="px-4">
                     <Link
                       href={
                         scrutin.chambre === "SENAT"
@@ -272,11 +279,11 @@ export default async function ScrutinPage({
                     >
                       {nomComplet(v.prenom, v.nom)}
                     </Link>
-                  </td>
-                  <td className="px-4 py-2 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
                     {v.groupeLibelle ?? "—"}
-                  </td>
-                  <td className="px-4 py-2">
+                  </TableCell>
+                  <TableCell className="px-4">
                     <Badge
                       tone={
                         v.position === "pour"
@@ -290,11 +297,11 @@ export default async function ScrutinPage({
                     >
                       {formatPosition(v.position)}
                     </Badge>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </section>
     </PageShell>

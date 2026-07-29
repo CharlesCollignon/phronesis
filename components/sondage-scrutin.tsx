@@ -16,11 +16,54 @@ type Counts = {
 
 type Position = "pour" | "contre" | "abstention" | "pas_avis";
 
-const LABELS: { id: Position; label: string }[] = [
-  { id: "pour", label: "Pour" },
-  { id: "contre", label: "Contre" },
-  { id: "abstention", label: "Abstention" },
-  { id: "pas_avis", label: "Pas d'avis" },
+const LABELS: {
+  id: Position;
+  label: string;
+  selectedClass: string;
+  idleClass: string;
+}[] = [
+  {
+    id: "pour",
+    label: "Pour",
+    selectedClass:
+      "border-[var(--vote-pour)] bg-[var(--vote-pour)] " +
+      "text-white",
+    idleClass:
+      "border-[var(--vote-pour)]/50 bg-[var(--vote-pour)]/10 " +
+      "text-[var(--vote-pour)] hover:bg-[var(--vote-pour)]/20",
+  },
+  {
+    id: "contre",
+    label: "Contre",
+    selectedClass:
+      "border-[var(--vote-contre)] bg-[var(--vote-contre)] " +
+      "text-white",
+    idleClass:
+      "border-[var(--vote-contre)]/50 bg-[var(--vote-contre)]/10 " +
+      "text-[var(--vote-contre)] hover:bg-[var(--vote-contre)]/20",
+  },
+  {
+    id: "abstention",
+    label: "Abstention",
+    selectedClass:
+      "border-[var(--vote-abstention)] " +
+      "bg-[var(--vote-abstention)] text-white",
+    idleClass:
+      "border-[var(--vote-abstention)]/50 " +
+      "bg-[var(--vote-abstention)]/10 " +
+      "text-[var(--vote-abstention)] " +
+      "hover:bg-[var(--vote-abstention)]/20",
+  },
+  {
+    id: "pas_avis",
+    label: "Pas d'avis",
+    selectedClass:
+      "border-[var(--vote-neutre)] bg-[var(--vote-neutre)] " +
+      "text-white",
+    idleClass:
+      "border-[var(--vote-neutre)]/50 bg-[var(--vote-neutre)]/10 " +
+      "text-[var(--vote-neutre)] hover:bg-[var(--vote-neutre)]/20",
+  },
 ];
 
 type SondageScrutinProps = {
@@ -76,14 +119,17 @@ function SondageInner({
       }
       setSaving(true);
       setError(null);
+      const deselect = mine === position;
       try {
         const res = await fetch(
           `/api/scrutins/${encodeURIComponent(scrutinUid)}/sondage`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ position }),
-          },
+          deselect
+            ? { method: "DELETE" }
+            : {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ position }),
+              },
         );
         if (res.status === 401) {
           setError("Connectez-vous pour donner votre avis.");
@@ -92,17 +138,21 @@ function SondageInner({
         if (!res.ok) throw new Error("vote failed");
         const data = (await res.json()) as {
           counts: Counts;
-          mine: Position;
+          mine: Position | null;
         };
         setCounts(data.counts);
         setMine(data.mine);
       } catch {
-        setError("Enregistrement impossible.");
+        setError(
+          deselect
+            ? "Suppression impossible."
+            : "Enregistrement impossible.",
+        );
       } finally {
         setSaving(false);
       }
     },
-    [scrutinUid, isSignedIn],
+    [scrutinUid, isSignedIn, mine],
   );
 
   const display = counts ?? {
@@ -149,24 +199,27 @@ function SondageInner({
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {LABELS.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              disabled={saving || loading}
-              onClick={() => void vote(opt.id)}
-              className={
-                `min-h-10 flex-1 border px-2 text-xs sm:text-sm ` +
-                (mine === opt.id
-                  ? "border-[var(--accent)] bg-accent " +
-                    "font-medium text-foreground"
-                  : "border-border bg-muted " +
-                    "text-foreground hover:border-[var(--accent)]/50")
-              }
-            >
-              {opt.label}
-            </button>
-          ))}
+          {LABELS.map((opt) => {
+            const selected = mine === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                disabled={saving || loading}
+                aria-pressed={selected}
+                title={selected ? "Retirer mon avis" : undefined}
+                onClick={() => void vote(opt.id)}
+                className={
+                  `min-h-10 flex-1 border px-2 text-xs font-medium ` +
+                  `transition sm:text-sm ${
+                    selected ? opt.selectedClass : opt.idleClass
+                  }`
+                }
+              >
+                {opt.label}
+              </button>
+            );
+          })}
         </div>
 
         {!isSignedIn ? (
@@ -177,7 +230,7 @@ function SondageInner({
             >
               Se connecter
             </Link>{" "}
-            pour voter (un avis par scrutin, modifiable).
+            pour voter (re-clic pour retirer).
           </p>
         ) : null}
 

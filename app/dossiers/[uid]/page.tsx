@@ -13,7 +13,7 @@ import { VoteBar } from "@/components/vote-bar";
 import { formatDate, formatDateShort, formatSort } from "@/lib/format";
 import { getDossier } from "@/lib/queries";
 import { computeScorePhronesis } from "@/lib/score-phronesis";
-import { urlDocumentAn, urlDossierAn } from "@/lib/urls";
+import { urlDossierAn } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 
@@ -86,60 +86,30 @@ export default async function DossierPage({
         ) : null}
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ScorePhronesisPanel score={score} />
-        <EmpreintePanel rows={empreintes} />
-        <div className="md:col-span-2 lg:col-span-1">
-          <ResonancePanel
-            rows={empreintes.map((e) => ({
-              axe: e.axe,
-              impact: e.impact,
-            }))}
-            compareLabel="Projection loi"
-          />
-        </div>
+      <div className="mt-6">
+        <ResumeIa resume={resume} documents={documents} />
       </div>
 
       <div className="mt-6">
         <SondageDossier dossierUid={dossier.uid} />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <ResumeIa
-          resume={resume}
-          officialHref={officialHref}
-          officialLabel="Lire le dossier officiel"
-        />
-        <aside className=" border border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Version officielle
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            La vulgarisation n&apos;est jamais un substitut au texte.
-            Consultez les documents déposés et le dossier sur le site
-            de l&apos;Assemblée nationale.
-          </p>
-          {documents.length > 0 ? (
-            <ul className="mt-4 space-y-2 text-sm">
-              {documents.slice(0, 8).map((doc) => (
-                <li key={doc.uid}>
-                  <ExternalLink href={urlDocumentAn(doc.uid)}>
-                    {doc.titre}
-                  </ExternalLink>
-                  {doc.dateDepot ? (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {formatDateShort(doc.dateDepot)}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Aucun document lié dans le dump open data.
-            </p>
-          )}
-        </aside>
+      <div className="mt-8 grid items-stretch gap-6 lg:grid-cols-2">
+        <div className="flex h-full min-h-0 flex-col gap-6">
+          <ScorePhronesisPanel score={score} />
+          <div className="flex min-h-0 flex-1 flex-col [&>*]:min-h-0 [&>*]:flex-1">
+            <ResonancePanel
+              rows={empreintes.map((e) => ({
+                axe: e.axe,
+                impact: e.impact,
+              }))}
+              compareLabel="Projection loi"
+            />
+          </div>
+        </div>
+        <div className="flex h-full min-h-0 flex-col [&>*]:min-h-0 [&>*]:flex-1">
+          <EmpreintePanel rows={empreintes} />
+        </div>
       </div>
 
       <section className="mt-12">

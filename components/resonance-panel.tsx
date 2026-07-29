@@ -5,6 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { AxesBars } from "@/components/profil-axes";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { loadBoussoleProfil } from "@/lib/boussole-storage";
 import { DILEMMES, type ProfilBoussole } from "@/lib/dilemmes";
 import {
@@ -21,6 +28,42 @@ type ResonancePanelProps = {
   compareLabel?: string;
   title?: string;
 };
+
+function ResonanceShell({
+  title,
+  description,
+  children,
+  dashed = false,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  dashed?: boolean;
+}): React.ReactElement {
+  return (
+    <Card
+      className={
+        dashed
+          ? "h-full rounded-none border-dashed shadow-none"
+          : "h-full rounded-none shadow-sm"
+      }
+    >
+      <CardHeader className="gap-1">
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </CardTitle>
+        {description ? (
+          <CardDescription>{description}</CardDescription>
+        ) : null}
+      </CardHeader>
+      {children ? (
+        <CardContent className="flex flex-1 flex-col">
+          {children}
+        </CardContent>
+      ) : null}
+    </Card>
+  );
+}
 
 function ResonanceInner({
   rows,
@@ -67,83 +110,77 @@ function ResonanceInner({
 
   if (!ready) {
     return (
-      <aside className="border border-border bg-card p-5">
+      <ResonanceShell title={title}>
         <p className="text-sm text-muted-foreground">Chargement…</p>
-      </aside>
+      </ResonanceShell>
     );
   }
 
   if (!canUseProfil) {
     return (
-      <aside className="border border-dashed border-border bg-muted p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <ResonanceShell title={title} dashed>
+        <p className="text-sm text-muted-foreground">
           <Link
             href="/sign-in"
-            className="text-primary hover:underline"
+            className="font-medium text-primary underline-offset-2 hover:underline"
           >
             Connectez-vous
           </Link>{" "}
           et complétez la{" "}
-          <Link href="/boussole" className="hover:underline">
+          <Link
+            href="/boussole"
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
             boussole
           </Link>{" "}
           pour comparer avec cette empreinte.
         </p>
-      </aside>
+      </ResonanceShell>
     );
   }
 
   if (!profil) {
     return (
-      <aside className="border border-dashed border-border bg-muted p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <ResonanceShell title={title} dashed>
+        <p className="text-sm text-muted-foreground">
           Complétez la{" "}
           <Link
             href="/boussole"
-            className="text-primary hover:underline"
+            className="font-medium text-primary underline-offset-2 hover:underline"
           >
             boussole
           </Link>{" "}
-          ({DILEMMES.length} dilemmes) pour activer la résonance avec{" "}
-          {compareLabel.toLowerCase()}.
+          ({DILEMMES.length} dilemmes) pour activer la résonance
+          avec {compareLabel.toLowerCase()}.
         </p>
-      </aside>
+      </ResonanceShell>
     );
   }
 
   if (!resonance) {
     return (
-      <aside className="border border-border bg-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <ResonanceShell title={title}>
+        <p className="text-sm text-muted-foreground">
           Empreinte insuffisante pour une résonance sur les axes
           mappés.
         </p>
-      </aside>
+      </ResonanceShell>
     );
   }
 
   const pct = Math.round(resonance.score * 100);
+  const nAxes = resonance.axesCompares.length;
+  const axeWord = nAxes > 1 ? "s" : "";
 
   return (
-    <aside className="border border-border bg-card p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {title}
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {compareLabel} · {resonance.axesCompares.length} axe
-        {resonance.axesCompares.length > 1 ? "s" : ""} comparé
-        {resonance.axesCompares.length > 1 ? "s" : ""}
-      </p>
-      <p className="num mt-4 text-3xl text-foreground">
+    <ResonanceShell
+      title={title}
+      description={
+        `${compareLabel} · ${nAxes} axe${axeWord} ` +
+        `comparé${axeWord}`
+      }
+    >
+      <p className="num text-3xl text-foreground">
         {pct}
         <span className="text-lg text-muted-foreground"> %</span>
       </p>
@@ -160,7 +197,7 @@ function ResonanceInner({
           showHints={false}
         />
       </div>
-    </aside>
+    </ResonanceShell>
   );
 }
 
@@ -170,9 +207,11 @@ function ResonanceWithAuth(
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <aside className="border border-border p-5 text-sm text-muted-foreground">
-        Chargement…
-      </aside>
+      <ResonanceShell
+        title={props.title ?? "Résonance avec votre boussole"}
+      >
+        <p className="text-sm text-muted-foreground">Chargement…</p>
+      </ResonanceShell>
     );
   }
   return (

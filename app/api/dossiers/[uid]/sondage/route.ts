@@ -158,3 +158,45 @@ export async function POST(
   const counts = await countsForDossier(uid);
   return NextResponse.json({ counts, mine: body.position });
 }
+
+export async function DELETE(
+  _req: Request,
+  ctx: RouteContext,
+): Promise<NextResponse> {
+  if (
+    !process.env.CLERK_SECRET_KEY ||
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  ) {
+    return NextResponse.json(
+      { error: "Clerk non configuré" },
+      { status: 503 },
+    );
+  }
+
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  const { uid } = await ctx.params;
+  const [dossier] = await db
+    .select({ uid: dossiers.uid })
+    .from(dossiers)
+    .where(eq(dossiers.uid, uid))
+    .limit(1);
+  if (!dossier) {
+    return NextResponse.json({ error: "Dossier inconnu" }, { status: 404 });
+  }
+
+  await db
+    .delete(sondagesDossiers)
+    .where(
+      and(
+        eq(sondagesDossiers.dossierUid, uid),
+        eq(sondagesDossiers.clerkUserId, userId),
+      ),
+    );
+
+  const counts = await countsForDossier(uid);
+  return NextResponse.json({ counts, mine: null });
+}

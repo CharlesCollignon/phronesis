@@ -171,3 +171,45 @@ export async function POST(
   const counts = await countsForScrutin(uid);
   return NextResponse.json({ counts, mine: body.position });
 }
+
+export async function DELETE(
+  _req: Request,
+  ctx: RouteContext,
+): Promise<NextResponse> {
+  if (
+    !process.env.CLERK_SECRET_KEY ||
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  ) {
+    return NextResponse.json(
+      { error: "Clerk non configuré" },
+      { status: 503 },
+    );
+  }
+
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  const { uid } = await ctx.params;
+  const [scrutin] = await db
+    .select({ uid: scrutins.uid })
+    .from(scrutins)
+    .where(eq(scrutins.uid, uid))
+    .limit(1);
+  if (!scrutin) {
+    return NextResponse.json({ error: "Scrutin inconnu" }, { status: 404 });
+  }
+
+  await db
+    .delete(sondagesScrutins)
+    .where(
+      and(
+        eq(sondagesScrutins.scrutinUid, uid),
+        eq(sondagesScrutins.clerkUserId, userId),
+      ),
+    );
+
+  const counts = await countsForScrutin(uid);
+  return NextResponse.json({ counts, mine: null });
+}
