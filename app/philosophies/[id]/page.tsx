@@ -50,10 +50,10 @@ export default async function PhilosophiePage({
         { label: philo.label },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         {philo.label}
       </h1>
-      <p className="mt-3 max-w-2xl text-lg text-[var(--muted)]">
+      <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
         {philo.description}
       </p>
 
@@ -61,7 +61,7 @@ export default async function PhilosophiePage({
         {philo.presentation}
       </p>
 
-      <ul className="mt-6 max-w-xl list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
+      <ul className="mt-6 max-w-xl list-disc space-y-1 pl-5 text-sm text-muted-foreground">
         {philo.pointsCles.map((p) => (
           <li key={p}>{p}</li>
         ))}
@@ -69,10 +69,10 @@ export default async function PhilosophiePage({
 
       <section className="mt-12 grid gap-8 lg:grid-cols-2">
         <div>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          <h2 className="font-serif text-2xl">
             Profil de référence
           </h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">
+          <p className="mt-2 text-sm text-muted-foreground">
             Profil type normalisé (−1 … +1) sur les axes de la
             Boussole. Idéal-type simplifié, pas un programme
             électoral.
@@ -85,7 +85,7 @@ export default async function PhilosophiePage({
           </div>
         </div>
         <div>
-          <h3 className="font-[family-name:var(--font-display)] text-xl">
+          <h3 className="font-serif text-xl">
             Lecture des axes
           </h3>
           <div className="mt-3">
@@ -95,8 +95,8 @@ export default async function PhilosophiePage({
       </section>
 
       <section className="mt-10 grid gap-6 sm:grid-cols-2">
-        <div className=" border border-[var(--border)] bg-[var(--surface)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+        <div className=" border border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Axes les plus marqués
           </p>
           <ul className="mt-3 space-y-1 text-sm">
@@ -105,8 +105,8 @@ export default async function PhilosophiePage({
             ))}
           </ul>
         </div>
-        <div className=" border border-[var(--border)] bg-[var(--surface)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+        <div className=" border border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Axes les moins marqués
           </p>
           <ul className="mt-3 space-y-1 text-sm">
@@ -118,7 +118,7 @@ export default async function PhilosophiePage({
       </section>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Autres conceptions
         </h2>
         <ul className="mt-4 flex flex-wrap gap-2">
@@ -126,14 +126,14 @@ export default async function PhilosophiePage({
             <li key={p.id}>
               <Link
                 href={`/philosophies/${p.id}`}
-                className="inline-block border border-[var(--border)] px-3 py-1.5 text-sm hover:border-[var(--accent)]/40"
+                className="inline-block border border-border px-3 py-1.5 text-sm hover:border-[var(--accent)]/40"
               >
                 {p.label}
               </Link>
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-sm text-[var(--muted)]">
+        <p className="mt-6 text-sm text-muted-foreground">
           Comparer à votre profil :{" "}
           <Link
             href="/boussole"

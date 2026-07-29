@@ -27,10 +27,10 @@ export default async function DeputesPage({
         { label: "Députés" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Députés
       </h1>
-      <p className="mt-2 text-[var(--muted)]">
+      <p className="mt-2 text-muted-foreground">
         {rows.length} députés de la 17<sup>e</sup> législature.
       </p>
       <div className="mt-6 max-w-xl">
@@ -47,7 +47,7 @@ export default async function DeputesPage({
           <li key={d.uid}>
             <Link
               href={`/deputes/${d.uid}`}
-              className="flex h-full min-h-11 gap-3 border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+              className="flex h-full min-h-11 gap-3 border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
             >
               <AvatarParlementaire
                 src={urlPhotoDepute(d.uid)}
@@ -70,7 +70,7 @@ export default async function DeputesPage({
                     {nomComplet(d.prenom, d.nom)}
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-[var(--muted)]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {d.groupeAbrege ?? d.groupeLibelle ?? "Sans groupe"}
                   {d.circoDepartement
                     ? ` · ${d.circoDepartement}${d.circoNum ? ` (${d.circoNum})` : ""}`

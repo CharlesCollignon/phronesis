@@ -1,19 +1,37 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 type StatProps = {
   label: string;
   value: string;
   hint?: string;
 };
 
-export function Stat({ label, value, hint }: StatProps): React.ReactElement {
+export function Stat({
+  label,
+  value,
+  hint,
+}: StatProps): React.ReactElement {
   return (
-    <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-[var(--muted)]">
-        {label}
-      </p>
-      <p className="num mt-1 text-2xl text-[var(--ink)]">{value}</p>
+    <Card className="rounded-none shadow-sm">
+      <CardHeader className="gap-0 p-4 pb-0">
+        <CardDescription className="text-xs uppercase tracking-wide">
+          {label}
+        </CardDescription>
+        <CardTitle className="num mt-1 text-2xl font-normal">
+          {value}
+        </CardTitle>
+      </CardHeader>
       {hint ? (
-        <p className="mt-1 text-xs text-[var(--muted)]">{hint}</p>
+        <CardContent className="p-4 pt-1">
+          <p className="text-xs text-muted-foreground">{hint}</p>
+        </CardContent>
       ) : null}
-    </div>
+    </Card>
   );
 }

@@ -14,26 +14,26 @@ export function Breadcrumbs({
 }: BreadcrumbsProps): React.ReactElement {
   return (
     <nav aria-label="Fil d'Ariane" className="text-sm">
-      <ol className="flex flex-wrap items-center gap-1 text-[var(--muted)]">
+      <ol className="flex flex-wrap items-center gap-1 text-muted-foreground">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           return (
             <li key={`${item.label}-${i}`} className="flex items-center gap-1">
               {i > 0 ? (
-                <span aria-hidden className="text-[var(--border)]">
+                <span aria-hidden className="text-border">
                   /
                 </span>
               ) : null}
               {item.href && !last ? (
                 <Link
                   href={item.href}
-                  className="hover:text-[var(--accent-ink)] hover:underline"
+                  className="hover:text-primary hover:underline"
                 >
                   {item.label}
                 </Link>
               ) : (
                 <span
-                  className={last ? "text-[var(--ink)]" : undefined}
+                  className={last ? "text-foreground" : undefined}
                   aria-current={last ? "page" : undefined}
                 >
                   {item.label}

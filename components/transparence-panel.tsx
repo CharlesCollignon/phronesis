@@ -27,8 +27,8 @@ export function TransparencePanel({
   faits,
 }: TransparencePanelProps): React.ReactElement {
   return (
-    <aside className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+    <aside className="mt-6 border border-border bg-card p-4 text-sm">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Transparence
       </p>
 
@@ -37,7 +37,7 @@ export function TransparencePanel({
           <ExternalLink href={hatvp.hatvpUrl}>
             Déclaration HATVP
           </ExternalLink>
-          <span className="text-[var(--muted)]">
+          <span className="text-muted-foreground">
             {" "}
             · {hatvp.qualite}
           </span>
@@ -45,11 +45,11 @@ export function TransparencePanel({
       ) : null}
 
       <div className="mt-3">
-        <p className="text-xs font-medium text-[var(--ink)]/80">
+        <p className="text-xs font-medium text-foreground/80">
           Décisions judiciaires publiques (définitives)
         </p>
         {faits.length === 0 ? (
-          <p className="mt-1 text-[var(--muted)]">
+          <p className="mt-1 text-muted-foreground">
             Aucune décision définitive référencée ici
           </p>
         ) : (
@@ -72,7 +72,7 @@ export function TransparencePanel({
         )}
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         Sources officielles uniquement · pas un casier ·
         présomption d&apos;innocence pour tout le reste.{" "}
         <Link

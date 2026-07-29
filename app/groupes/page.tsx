@@ -42,10 +42,10 @@ export default async function GroupesPage({
         { label: "Groupes" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Groupes parlementaires
       </h1>
-      <p className="mt-2 max-w-2xl text-[var(--muted)]">
+      <p className="mt-2 max-w-2xl text-muted-foreground">
         Hémicycle schématique (gauche → droite) et fiches de
         groupe. Couleurs officielles AMO + initiales — pas de logos
         de partis.
@@ -65,11 +65,11 @@ export default async function GroupesPage({
         />
       </div>
 
-      <section className="mt-8 border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-8">
+      <section className="mt-8 border border-border bg-card p-4 sm:p-8">
         <Hemicycle groups={effectifs} chambre={chambre} />
       </section>
 
-      <p className="mt-8 text-sm text-[var(--muted)]">
+      <p className="mt-8 text-sm text-muted-foreground">
         {sorted.length} groupe{sorted.length > 1 ? "s" : ""} ·
         ordre de lecture gauche → droite
       </p>
@@ -79,7 +79,7 @@ export default async function GroupesPage({
           <li key={g.uid}>
             <Link
               href={`/groupes/${g.uid}`}
-              className="flex h-full min-h-11 items-start gap-3 border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+              className="flex h-full min-h-11 items-start gap-3 border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
             >
               <span
                 className="mt-1 inline-flex h-9 min-w-9 items-center justify-center text-xs font-semibold text-white"
@@ -94,7 +94,7 @@ export default async function GroupesPage({
               </span>
               <div>
                 <p className="font-medium">{g.libelle}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {effectifByUid.get(g.uid) ?? "—"} membres
                 </p>
               </div>

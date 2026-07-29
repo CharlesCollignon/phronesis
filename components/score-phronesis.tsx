@@ -16,26 +16,26 @@ export function ScorePhronesisPanel({
       : 0;
 
   return (
-    <aside className=" border border-[var(--border)] bg-[var(--surface)] p-5">
+    <aside className=" border border-border bg-card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Score Phronesis
         </p>
-        <p className="text-xs text-[var(--muted)]">{score.version}</p>
+        <p className="text-xs text-muted-foreground">{score.version}</p>
       </div>
-      <p className="mt-1 text-sm text-[var(--muted)]">
+      <p className="mt-1 text-sm text-muted-foreground">
         Robustesse du socle documentaire — pas une note sur la loi.
       </p>
-      <p className="num mt-3 text-3xl text-[var(--ink)]">
+      <p className="num mt-3 text-3xl text-foreground">
         {score.total}
-        <span className="text-lg text-[var(--muted)]">
+        <span className="text-lg text-muted-foreground">
           {" "}
           / {score.maxTotal}
         </span>
       </p>
-      <div className="mt-2 h-2 w-full overflow-hidden bg-[var(--ink)]/10">
+      <div className="mt-2 h-2 w-full overflow-hidden bg-foreground/10">
         <div
-          className="h-full bg-[var(--ink)]"
+          className="h-full bg-foreground"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -50,17 +50,17 @@ export function ScorePhronesisPanel({
                 {c.rempli ? "✓" : "○"}
               </span>
               {c.label}
-              <span className="ml-1 text-xs text-[var(--muted)]">
+              <span className="ml-1 text-xs text-muted-foreground">
                 ({c.detail})
               </span>
             </span>
-            <span className="shrink-0 text-xs text-[var(--muted)]">
+            <span className="shrink-0 text-xs text-muted-foreground">
               {c.points}/{c.maxPoints}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-[var(--muted)]">
+      <p className="mt-4 text-xs text-muted-foreground">
         Formule détaillée dans la{" "}
         <Link href="/methodologie" className="underline">
           méthodologie

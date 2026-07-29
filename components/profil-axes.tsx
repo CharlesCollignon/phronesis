@@ -1,5 +1,5 @@
+import { AXE_BOUSSOLE_HINTS } from "@/lib/axes-boussole-fondements";
 import {
-  AXE_BOUSSOLE_HINTS,
   AXE_BOUSSOLE_LABELS,
   AXES_BOUSSOLE,
   type ProfilBoussole,
@@ -54,7 +54,7 @@ export function RadarProfil({
           points={ring}
           fill="none"
           stroke="currentColor"
-          className="text-[var(--ink)]/15"
+          className="text-foreground/15"
         />
       ))}
       {AXES_BOUSSOLE.map((axe, i) => {
@@ -68,7 +68,7 @@ export function RadarProfil({
               y1={cy}
               x2={cx + r * Math.cos(angle)}
               y2={cy + r * Math.sin(angle)}
-              className="stroke-[var(--ink)]/20"
+              className="stroke-[var(--foreground)]/20"
             />
             <text
               x={lx}
@@ -114,13 +114,13 @@ export function AxesBars({
   return (
     <ul className="space-y-3">
       {compare ? (
-        <li className="flex flex-wrap gap-4 text-xs text-[var(--muted)]">
+        <li className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-4 bg-[var(--accent)]" />
             {profilLabel}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-2 w-4 bg-[var(--ink)]/35" />
+            <span className="inline-block h-2 w-4 bg-foreground/35" />
             {compareLabel}
           </span>
         </li>
@@ -131,7 +131,7 @@ export function AxesBars({
             <span className="font-medium">
               {AXE_BOUSSOLE_LABELS[axe]}
             </span>
-            <span className="text-[var(--muted)]">
+            <span className="text-muted-foreground">
               {(profil[axe] * 100).toFixed(0)}
               {compare != null
                 ? ` / ${(compare[axe] * 100).toFixed(0)}`
@@ -139,11 +139,11 @@ export function AxesBars({
             </span>
           </div>
           {showHints ? (
-            <p className="mt-0.5 text-xs text-[var(--muted)]">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {AXE_BOUSSOLE_HINTS[axe]}
             </p>
           ) : null}
-          <div className="relative mt-1.5 h-1.5 overflow-hidden bg-[var(--ink)]/10">
+          <div className="relative mt-1.5 h-1.5 overflow-hidden bg-foreground/10">
             <div
               className="absolute inset-y-0 left-0 bg-[var(--accent)]"
               style={{
@@ -152,9 +152,9 @@ export function AxesBars({
             />
           </div>
           {compare != null ? (
-            <div className="relative mt-1 h-1 overflow-hidden bg-[var(--ink)]/10">
+            <div className="relative mt-1 h-1 overflow-hidden bg-foreground/10">
               <div
-                className="absolute inset-y-0 left-0 bg-[var(--ink)]/40"
+                className="absolute inset-y-0 left-0 bg-foreground/40"
                 style={{
                   width: `${((compare[axe] + 1) / 2) * 100}%`,
                 }}

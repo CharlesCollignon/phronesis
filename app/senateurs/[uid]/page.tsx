@@ -75,13 +75,13 @@ export default async function SenateurPage({
             size={88}
           />
           <div>
-            <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
               Sénat
             </p>
-            <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+            <h1 className="font-serif text-4xl tracking-tight">
               {nomComplet(acteur.prenom, acteur.nom, acteur.civilite)}
             </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               {groupe ? (
                 <span className="inline-flex items-center gap-2">
                   <span
@@ -115,7 +115,7 @@ export default async function SenateurPage({
           ) : null}
           <Link
             href={`/comparateur?type=senateurs&a=${uid}`}
-            className="text-sm font-medium text-[var(--accent-ink)] hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
           >
             Comparer avec…
           </Link>
@@ -128,8 +128,8 @@ export default async function SenateurPage({
       />
 
       {groupe ? (
-        <section className="mt-8 border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
-          <h2 className="font-[family-name:var(--font-display)] text-xl">
+        <section className="mt-8 border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-serif text-xl">
             Place dans l&apos;hémicycle
           </h2>
           <div className="mt-4">
@@ -163,14 +163,14 @@ export default async function SenateurPage({
       </div>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Derniers votes
         </h2>
-        <div className="mt-4 overflow-x-auto border border-[var(--border)] bg-[var(--surface)]">
+        <div className="mt-4 overflow-x-auto border border-border bg-card">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-[var(--border)] text-xs uppercase tracking-wide text-[var(--muted)]">
+            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="sticky left-0 bg-[var(--table-sticky)] px-4 py-3 font-medium">
+                <th className="sticky left-0 bg-card px-4 py-3 font-medium">
                   Scrutin
                 </th>
                 <th className="px-4 py-3 font-medium">Date</th>
@@ -182,17 +182,17 @@ export default async function SenateurPage({
               {historique.map((v) => (
                 <tr
                   key={v.scrutinUid}
-                  className="border-b border-[var(--border)] last:border-0"
+                  className="border-b border-border last:border-0"
                 >
-                  <td className="sticky left-0 bg-[var(--table-sticky)] px-4 py-2.5">
+                  <td className="sticky left-0 bg-card px-4 py-2.5">
                     <Link
                       href={`/scrutins/${v.scrutinUid}`}
-                      className="hover:text-[var(--accent-ink)] hover:underline"
+                      className="hover:text-primary hover:underline"
                     >
                       n° {v.numero} — {v.titre}
                     </Link>
                   </td>
-                  <td className="px-4 py-2.5 text-[var(--muted)]">
+                  <td className="px-4 py-2.5 text-muted-foreground">
                     {formatDateShort(v.dateScrutin)}
                   </td>
                   <td className="px-4 py-2.5">
@@ -210,7 +210,7 @@ export default async function SenateurPage({
                       {formatPosition(v.position)}
                     </Badge>
                   </td>
-                  <td className="px-4 py-2.5 text-[var(--muted)]">
+                  <td className="px-4 py-2.5 text-muted-foreground">
                     {formatSort(v.sortCode)}
                   </td>
                 </tr>

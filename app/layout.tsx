@@ -1,38 +1,30 @@
 import type { Metadata } from "next";
-import {
-  Fraunces,
-  Fugaz_One,
-  JetBrains_Mono,
-  Source_Sans_3,
-} from "next/font/google";
+import { Fugaz_One, Inter, JetBrains_Mono } from "next/font/google";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { Providers } from "@/components/providers";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
 
-const display = Fraunces({
-  variable: "--font-display",
+const fontSans = Inter({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
-const body = Source_Sans_3({
-  variable: "--font-body",
+const fontMono = JetBrains_Mono({
   subsets: ["latin"],
+  variable: "--font-mono",
 });
 
-const logo = Fugaz_One({
-  variable: "--font-logo",
+const fontLogo = Fugaz_One({
   weight: "400",
   subsets: ["latin"],
-});
-
-const num = JetBrains_Mono({
-  variable: "--font-num",
-  subsets: ["latin"],
+  variable: "--font-logo",
 });
 
 export const metadata: Metadata = {
@@ -55,20 +47,30 @@ export default function RootLayout({
     <html
       lang="fr"
       suppressHydrationWarning
-      className={
-        `${display.variable} ${body.variable} ${logo.variable} ` +
-        `${num.variable} h-full antialiased`
-      }
+      className={cn(
+        fontSans.variable,
+        fontMono.variable,
+        fontLogo.variable,
+        "h-full antialiased",
+      )}
     >
-      <body className="min-h-full bg-[var(--paper)] text-[var(--ink)]">
+      <body className="min-h-full bg-background font-sans text-foreground">
         <Providers>
-          <div className="flex min-h-screen">
-            <AppSidebar />
-            <div className="flex min-w-0 flex-1 flex-col pt-11 md:ml-[var(--sidebar-width)] md:pt-0 md:transition-[margin] md:duration-300">
-              <AppTopbar />
-              <main className="flex-1">{children}</main>
+          <TooltipProvider>
+            <div className="flex min-h-screen">
+              <AppSidebar />
+              <div
+                className={
+                  "flex min-w-0 flex-1 flex-col pt-11 " +
+                  "md:ml-[var(--sidebar-width)] md:pt-0 " +
+                  "md:transition-[margin] md:duration-300"
+                }
+              >
+                <AppTopbar />
+                <main className="flex-1">{children}</main>
+              </div>
             </div>
-          </div>
+          </TooltipProvider>
         </Providers>
       </body>
       <Analytics />

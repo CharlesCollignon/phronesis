@@ -30,12 +30,12 @@ export function VoteFilters({
 
   return (
     <div className="flex flex-wrap gap-3">
-      <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Position
         <select
           value={position}
           onChange={(e) => update("position", e.target.value)}
-          className=" border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--ink)]"
+          className=" border border-border bg-white px-3 py-2 text-sm text-foreground"
         >
           <option value="">Toutes</option>
           {positions.map((p) => (
@@ -45,12 +45,12 @@ export function VoteFilters({
           ))}
         </select>
       </label>
-      <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Groupe
         <select
           value={groupe}
           onChange={(e) => update("groupe", e.target.value)}
-          className=" border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--ink)]"
+          className=" border border-border bg-white px-3 py-2 text-sm text-foreground"
         >
           <option value="">Tous</option>
           {groupes

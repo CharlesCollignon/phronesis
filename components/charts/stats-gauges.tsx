@@ -70,10 +70,10 @@ export function StatsGauges({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className=" border border-[var(--border)] bg-[var(--surface)] p-2">
+      <div className=" border border-border bg-card p-2">
         <EChart option={optP} height={180} />
       </div>
-      <div className=" border border-[var(--border)] bg-[var(--surface)] p-2">
+      <div className=" border border-border bg-card p-2">
         <EChart option={optF} height={180} />
       </div>
     </div>

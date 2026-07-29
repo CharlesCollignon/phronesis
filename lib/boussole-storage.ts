@@ -1,5 +1,11 @@
 /** Persistance locale du questionnaire Boussole (v2). */
 
+import {
+  DILEMMES,
+  computeProfil,
+  type ProfilBoussole,
+} from "@/lib/dilemmes";
+
 export const BOUSSOLE_STORAGE_KEY = "phronesis.boussole.v2";
 export const ENGAGEMENT_STORAGE_KEY = "phronesis.engagement.v1";
 
@@ -70,6 +76,40 @@ export function loadBoussoleStored(): BoussoleStored {
 
 export function saveBoussoleStored(data: BoussoleStored): void {
   localStorage.setItem(BOUSSOLE_STORAGE_KEY, JSON.stringify(data));
+}
+
+/** Profil Boussole si tous les dilemmes sont répondus. */
+export function profilFromReponses(
+  reponses: Record<string, string>,
+): ProfilBoussole | null {
+  const valid: Record<string, string> = {};
+  for (const d of DILEMMES) {
+    const choixId = reponses[d.id];
+    if (choixId && d.choix.some((c) => c.id === choixId)) {
+      valid[d.id] = choixId;
+    }
+  }
+  if (!DILEMMES.every((d) => valid[d.id])) {
+    return null;
+  }
+  return computeProfil(valid);
+}
+
+/**
+ * Charge le profil : localStorage d'abord, puis sync cloud si besoin.
+ */
+export async function loadBoussoleProfil(opts?: {
+  syncCloud?: boolean;
+}): Promise<ProfilBoussole | null> {
+  const local = profilFromReponses(loadBoussoleStored().reponses);
+  if (local) return local;
+  if (!opts?.syncCloud) return null;
+  try {
+    const synced = await syncBoussoleAfterAuth();
+    return profilFromReponses(synced);
+  } catch {
+    return null;
+  }
 }
 
 function isNonEmpty(

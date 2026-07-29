@@ -114,14 +114,14 @@ export function ScrutinCharts({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className=" border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <div className=" border border-border bg-card p-3 sm:p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Répartition des votes
         </p>
         <EChart option={donut} height={260} />
       </div>
-      <div className=" border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <div className=" border border-border bg-card p-3 sm:p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Par groupe (top 12)
         </p>
         <EChart option={bars} height={280} />
@@ -129,7 +129,7 @@ export function ScrutinCharts({
           {parGroupe.slice(0, 8).map((g) => (
             <li
               key={g.groupeUid ?? g.libelle}
-              className="inline-flex items-center gap-1 text-[10px] text-[var(--muted)]"
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"
             >
               <span
                 className="h-2 w-2"

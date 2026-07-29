@@ -6,6 +6,8 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
+import { Button } from "@/components/ui/button";
+
 export function ClerkAuthControls({
   collapsed,
   mobileOpen,
@@ -22,25 +24,21 @@ export function ClerkAuthControls({
             elements: { avatarBox: "h-8 w-8" },
           }}
         />
-        {showLabels && (
-          <span className="truncate text-xs text-[var(--sidebar-muted)]">
+        {showLabels ? (
+          <span className="truncate text-xs text-muted-foreground">
             Compte
           </span>
-        )}
+        ) : null}
       </Show>
       <Show when="signed-out">
         <SignInButton mode="modal">
-          <button
+          <Button
             type="button"
-            className={
-              "flex min-h-10 w-full items-center justify-center " +
-              "border border-[var(--accent)]/40 px-2 " +
-              "text-xs font-medium text-[var(--accent)] " +
-              "hover:bg-white/5"
-            }
+            variant="outline"
+            className="h-10 w-full rounded-none text-xs"
           >
             {showLabels ? "Se connecter" : "→"}
-          </button>
+          </Button>
         </SignInButton>
       </Show>
     </div>

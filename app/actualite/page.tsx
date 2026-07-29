@@ -22,13 +22,13 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
         { label: "À l'Assemblée" },
       ]}
     >
-      <p className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--accent-ink)]">
+      <p className="text-sm font-medium uppercase tracking-[0.15em] text-primary">
         Actualité parlementaire
       </p>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="mt-2 font-serif text-4xl tracking-tight">
         À l&apos;Assemblée
       </h1>
-      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
         Fil dérivé des données open data déjà ingérées (scrutins
         publics et dossiers récents) — pas un fil presse ni un
         agrégateur Twitter.
@@ -36,11 +36,11 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
 
       <div className="mt-12 grid gap-12 lg:grid-cols-2">
         <section>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          <h2 className="font-serif text-2xl">
             Derniers scrutins publics
           </h2>
           {scrutins.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--muted)]">
+            <p className="mt-4 text-sm text-muted-foreground">
               Aucun scrutin en base — lancez l&apos;ingest ou
               vérifiez Postgres.
             </p>
@@ -52,7 +52,7 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
                     href={`/scrutins/${s.uid}`}
                     className="card-sharp block p-4 transition hover:border-[var(--accent)]/40"
                   >
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <span className="num">n° {s.numero}</span>
                       <span>·</span>
                       <span>{formatDateShort(s.dateScrutin)}</span>
@@ -84,11 +84,11 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
         </section>
 
         <section>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          <h2 className="font-serif text-2xl">
             Dossiers récemment actifs
           </h2>
           {dossiers.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--muted)]">
+            <p className="mt-4 text-sm text-muted-foreground">
               Aucun dossier en base.
             </p>
           ) : (
@@ -100,7 +100,7 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
                     className="card-sharp block p-4 transition hover:border-[var(--accent)]/40"
                   >
                     {d.procedureLibelle ? (
-                      <p className="text-xs text-[var(--muted)]">
+                      <p className="text-xs text-muted-foreground">
                         {d.procedureLibelle}
                       </p>
                     ) : null}
@@ -108,7 +108,7 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
                       {d.titre}
                     </p>
                     {d.sondageTotal > 0 ? (
-                      <p className="mt-2 text-xs text-[var(--muted)]">
+                      <p className="mt-2 text-xs text-muted-foreground">
                         Avis citoyens :{" "}
                         <span className="num">
                           {d.sondagePour}
@@ -126,7 +126,7 @@ export default async function ActualitePage(): Promise<React.ReactElement> {
                         )
                       </p>
                     ) : (
-                      <p className="mt-2 text-xs text-[var(--muted)]">
+                      <p className="mt-2 text-xs text-muted-foreground">
                         Pas encore d&apos;avis citoyens
                       </p>
                     )}

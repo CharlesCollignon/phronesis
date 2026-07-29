@@ -43,7 +43,7 @@ export function Hemicycle({
 
   if (arcs.length === 0) {
     return (
-      <p className="text-sm text-[var(--muted)]">
+      <p className="text-sm text-muted-foreground">
         Aucun groupe à représenter.
       </p>
     );
@@ -75,7 +75,7 @@ export function Hemicycle({
               )}
               fill={arc.couleur}
               opacity={dimmed ? 0.35 : isActive ? 1 : 0.92}
-              stroke={isActive ? "var(--ink)" : "white"}
+              stroke={isActive ? "var(--foreground)" : "white"}
               strokeWidth={isActive ? 2 : 1}
               className="cursor-pointer transition-opacity"
               tabIndex={0}
@@ -105,19 +105,19 @@ export function Hemicycle({
               style={{ background: activeArc.couleur }}
             />
             <span className="font-medium">{activeArc.abrege}</span>
-            <span className="text-[var(--muted)]">
+            <span className="text-muted-foreground">
               {" "}
               · {activeArc.libelle} · {activeArc.effectif}
             </span>
           </p>
         ) : (
-          <p className="text-[var(--muted)]">
+          <p className="text-muted-foreground">
             Survolez ou sélectionnez un groupe
           </p>
         )}
       </div>
 
-      <p className="mt-1 text-center text-xs text-[var(--muted)]">
+      <p className="mt-1 text-center text-xs text-muted-foreground">
         ← gauche · centre · droite → · représentation schématique
         (pas le plan de salle)
       </p>
@@ -133,8 +133,8 @@ export function Hemicycle({
                 onMouseLeave={() => setHover(null)}
                 className={
                   `inline-flex min-h-11 items-center gap-1.5 ` +
-                  ` border border-[var(--border)] ` +
-                  `bg-[var(--surface)] px-2.5 text-xs ` +
+                  ` border border-border ` +
+                  `bg-card px-2.5 text-xs ` +
                   (selectedUid === arc.uid
                     ? "ring-2 ring-[var(--accent)]"
                     : "")
@@ -145,7 +145,7 @@ export function Hemicycle({
                   style={{ background: arc.couleur }}
                 />
                 {arc.abrege}
-                <span className="text-[var(--muted)]">
+                <span className="text-muted-foreground">
                   {arc.effectif}
                 </span>
               </button>

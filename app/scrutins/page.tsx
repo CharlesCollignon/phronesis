@@ -52,10 +52,10 @@ export default async function ScrutinsPage({
         { label: "Votes" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Scrutins publics
       </h1>
-      <p className="mt-2 max-w-2xl text-[var(--muted)]">
+      <p className="mt-2 max-w-2xl text-muted-foreground">
         Positions nominatives — Assemblée nationale et Sénat. Les
         votes à main levée ne figurent pas dans ces données.
       </p>
@@ -89,11 +89,11 @@ export default async function ScrutinsPage({
             type="search"
             defaultValue={q}
             placeholder="Filtrer les scrutins…"
-            className="w-full flex-1 border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+            className="w-full flex-1 border border-input bg-input px-4 py-3 text-sm text-foreground outline-none focus:border-[var(--accent)]"
           />
           <button
             type="submit"
-            className=" bg-[var(--ink)] px-5 py-3 text-sm font-medium text-[var(--paper)]"
+            className=" bg-foreground px-5 py-3 text-sm font-medium text-[var(--background)]"
           >
             Filtrer
           </button>
@@ -105,9 +105,9 @@ export default async function ScrutinsPage({
           <li key={s.uid}>
             <Link
               href={`/scrutins/${s.uid}`}
-              className="block border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+              className="block border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <Badge tone="neutral">
                   {s.chambre === "SENAT" ? "Sénat" : "AN"}
                 </Badge>

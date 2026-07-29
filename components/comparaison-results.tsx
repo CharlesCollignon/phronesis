@@ -41,7 +41,7 @@ function ScrutinList({
   empty: string;
 }): React.ReactElement {
   if (items.length === 0) {
-    return <p className="text-sm text-[var(--muted)]">{empty}</p>;
+    return <p className="text-sm text-muted-foreground">{empty}</p>;
   }
   return (
     <ul className="space-y-2">
@@ -49,9 +49,9 @@ function ScrutinList({
         <li key={s.scrutinUid}>
           <Link
             href={`/scrutins/${s.scrutinUid}`}
-            className="block border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/40"
+            className="block border border-border bg-card px-4 py-3 transition hover:border-[var(--accent)]/40"
           >
-            <p className="text-xs text-[var(--muted)]">
+            <p className="text-xs text-muted-foreground">
               {formatDateShort(s.dateScrutin)} · n° {s.numero}
             </p>
             <p className="mt-1 line-clamp-2 text-sm">{s.titre}</p>
@@ -94,7 +94,7 @@ export function ComparaisonResults({
   return (
     <div className="mt-10 space-y-10">
       <div>
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           {hrefA ? (
             <Link href={hrefA} className="hover:text-[var(--accent)]">
               {labelA}
@@ -102,7 +102,7 @@ export function ComparaisonResults({
           ) : (
             labelA
           )}
-          <span className="mx-2 text-[var(--muted)]">×</span>
+          <span className="mx-2 text-muted-foreground">×</span>
           {hrefB ? (
             <Link href={hrefB} className="hover:text-[var(--accent)]">
               {labelB}
@@ -111,7 +111,7 @@ export function ComparaisonResults({
             labelB
           )}
         </h2>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm text-muted-foreground">
           Accord mesuré sur les scrutins publics où les deux ont une
           position pour, contre ou abstention. Les non-votants sont
           exclus du taux d&apos;accord.
@@ -158,7 +158,7 @@ export function ComparaisonResults({
 
       <div className="grid gap-10 lg:grid-cols-2">
         <section>
-          <h3 className="font-[family-name:var(--font-display)] text-xl">
+          <h3 className="font-serif text-xl">
             Divergences
           </h3>
           <div className="mt-3">
@@ -171,7 +171,7 @@ export function ComparaisonResults({
           </div>
         </section>
         <section>
-          <h3 className="font-[family-name:var(--font-display)] text-xl">
+          <h3 className="font-serif text-xl">
             Convergences
           </h3>
           <div className="mt-3">

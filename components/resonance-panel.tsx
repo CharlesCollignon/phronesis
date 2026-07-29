@@ -5,12 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { AxesBars } from "@/components/profil-axes";
-import { loadBoussoleStored } from "@/lib/boussole-storage";
-import {
-  DILEMMES,
-  computeProfil,
-  type ProfilBoussole,
-} from "@/lib/dilemmes";
+import { loadBoussoleProfil } from "@/lib/boussole-storage";
+import { DILEMMES, type ProfilBoussole } from "@/lib/dilemmes";
 import {
   computeResonance,
   type EmpreinteImpactRow,
@@ -26,21 +22,6 @@ type ResonancePanelProps = {
   title?: string;
 };
 
-function loadProfilComplet(): ProfilBoussole | null {
-  const stored = loadBoussoleStored();
-  const valid: Record<string, string> = {};
-  for (const d of DILEMMES) {
-    const choixId = stored.reponses[d.id];
-    if (choixId && d.choix.some((c) => c.id === choixId)) {
-      valid[d.id] = choixId;
-    }
-  }
-  if (DILEMMES.every((d) => valid[d.id])) {
-    return computeProfil(valid);
-  }
-  return null;
-}
-
 function ResonanceInner({
   rows,
   compareLabel = "Projection (empreinte)",
@@ -53,12 +34,30 @@ function ResonanceInner({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (canUseProfil) {
-      setProfil(loadProfilComplet());
-    } else {
-      setProfil(null);
+    let cancelled = false;
+
+    async function boot(): Promise<void> {
+      if (!canUseProfil) {
+        if (!cancelled) {
+          setProfil(null);
+          setReady(true);
+        }
+        return;
+      }
+      const p = await loadBoussoleProfil({
+        syncCloud: HAS_CLERK,
+      });
+      if (!cancelled) {
+        setProfil(p);
+        setReady(true);
+      }
     }
-    setReady(true);
+
+    setReady(false);
+    void boot();
+    return () => {
+      cancelled = true;
+    };
   }, [canUseProfil]);
 
   const resonance = useMemo(
@@ -68,22 +67,22 @@ function ResonanceInner({
 
   if (!ready) {
     return (
-      <aside className="border border-[var(--border)] bg-[var(--surface)] p-5">
-        <p className="text-sm text-[var(--muted)]">Chargement…</p>
+      <aside className="border border-border bg-card p-5">
+        <p className="text-sm text-muted-foreground">Chargement…</p>
       </aside>
     );
   }
 
   if (!canUseProfil) {
     return (
-      <aside className="border border-dashed border-[var(--border)] bg-[var(--wash)] p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <aside className="border border-dashed border-border bg-muted p-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm text-muted-foreground">
           <Link
             href="/sign-in"
-            className="text-[var(--accent-ink)] hover:underline"
+            className="text-primary hover:underline"
           >
             Connectez-vous
           </Link>{" "}
@@ -99,15 +98,15 @@ function ResonanceInner({
 
   if (!profil) {
     return (
-      <aside className="border border-dashed border-[var(--border)] bg-[var(--wash)] p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <aside className="border border-dashed border-border bg-muted p-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm text-muted-foreground">
           Complétez la{" "}
           <Link
             href="/boussole"
-            className="text-[var(--accent-ink)] hover:underline"
+            className="text-primary hover:underline"
           >
             boussole
           </Link>{" "}
@@ -120,11 +119,11 @@ function ResonanceInner({
 
   if (!resonance) {
     return (
-      <aside className="border border-[var(--border)] bg-[var(--surface)] p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <aside className="border border-border bg-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm text-muted-foreground">
           Empreinte insuffisante pour une résonance sur les axes
           mappés.
         </p>
@@ -135,20 +134,20 @@ function ResonanceInner({
   const pct = Math.round(resonance.score * 100);
 
   return (
-    <aside className="border border-[var(--border)] bg-[var(--surface)] p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+    <aside className="border border-border bg-card p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </p>
-      <p className="mt-1 text-sm text-[var(--muted)]">
+      <p className="mt-1 text-sm text-muted-foreground">
         {compareLabel} · {resonance.axesCompares.length} axe
         {resonance.axesCompares.length > 1 ? "s" : ""} comparé
         {resonance.axesCompares.length > 1 ? "s" : ""}
       </p>
-      <p className="num mt-4 text-3xl text-[var(--ink)]">
+      <p className="num mt-4 text-3xl text-foreground">
         {pct}
-        <span className="text-lg text-[var(--muted)]"> %</span>
+        <span className="text-lg text-muted-foreground"> %</span>
       </p>
-      <p className="mt-1 text-xs text-[var(--muted)]">
+      <p className="mt-1 text-xs text-muted-foreground">
         Similarité de profil (cosinus) — pas un jugement moral
       </p>
       <div className="mt-4">
@@ -171,7 +170,7 @@ function ResonanceWithAuth(
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <aside className="border border-[var(--border)] p-5 text-sm text-[var(--muted)]">
+      <aside className="border border-border p-5 text-sm text-muted-foreground">
         Chargement…
       </aside>
     );

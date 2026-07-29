@@ -29,13 +29,13 @@ export function SiteHeader(): React.ReactElement {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--paper)]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
         <Link href="/" className="group flex items-baseline gap-2">
-          <span className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[var(--ink)]">
+          <span className="font-serif text-2xl tracking-tight text-foreground">
             Phronesis
           </span>
-          <span className="hidden text-xs text-[var(--muted)] lg:inline">
+          <span className="hidden text-xs text-muted-foreground lg:inline">
             Comprendre avant de juger
           </span>
         </Link>
@@ -45,7 +45,7 @@ export function SiteHeader(): React.ReactElement {
             <Link
               key={item.href}
               href={item.href}
-              className="min-h-11 px-2.5 py-2 text-sm text-[var(--ink)]/80 transition hover:bg-[var(--marine)]/8 hover:text-[var(--marine)]"
+              className="min-h-11 px-2.5 py-2 text-sm text-foreground/80 transition hover:bg-[var(--primary)]/8 hover:text-primary"
             >
               {item.label}
             </Link>
@@ -54,7 +54,7 @@ export function SiteHeader(): React.ReactElement {
 
         <button
           type="button"
-          className="inline-flex min-h-11 min-w-11 items-center justify-center border border-[var(--border)] text-sm md:hidden"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center border border-border text-sm md:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen((v) => !v)}
@@ -66,7 +66,7 @@ export function SiteHeader(): React.ReactElement {
       {open ? (
         <nav
           id="mobile-nav"
-          className="border-t border-[var(--border)] bg-[var(--paper)] px-4 py-3 md:hidden"
+          className="border-t border-border bg-background px-4 py-3 md:hidden"
         >
           <ul className="grid gap-1">
             {NAV.map((item) => (
@@ -74,7 +74,7 @@ export function SiteHeader(): React.ReactElement {
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center px-3 text-sm font-medium hover:bg-[var(--wash)]"
+                  className="flex min-h-11 items-center px-3 text-sm font-medium hover:bg-muted"
                 >
                   {item.label}
                 </Link>

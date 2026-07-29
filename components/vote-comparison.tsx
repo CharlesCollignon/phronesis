@@ -29,7 +29,7 @@ function stackedBar(
   const pAvis = (100 * (counts.pasAvis ?? 0)) / safe;
 
   return (
-    <div className="flex h-4 w-full overflow-hidden bg-[var(--wash)]">
+    <div className="flex h-4 w-full overflow-hidden bg-muted">
       <div
         className="bg-[var(--vote-pour)]"
         style={{ width: `${pPour}%` }}
@@ -60,19 +60,19 @@ function legend(counts: VoteCounts): React.ReactElement {
   return (
     <dl className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
       <div>
-        <dt className="text-[var(--muted)]">Pour</dt>
+        <dt className="text-muted-foreground">Pour</dt>
         <dd className="num text-sm">{counts.pour}</dd>
       </div>
       <div>
-        <dt className="text-[var(--muted)]">Contre</dt>
+        <dt className="text-muted-foreground">Contre</dt>
         <dd className="num text-sm">{counts.contre}</dd>
       </div>
       <div>
-        <dt className="text-[var(--muted)]">Abst.</dt>
+        <dt className="text-muted-foreground">Abst.</dt>
         <dd className="num text-sm">{counts.abstention}</dd>
       </div>
       <div>
-        <dt className="text-[var(--muted)]">
+        <dt className="text-muted-foreground">
           {(counts.pasAvis ?? 0) > 0 ? "N/A" : "Total"}
         </dt>
         <dd className="num text-sm">
@@ -94,15 +94,15 @@ export function VoteComparison({
 }: VoteComparisonProps): React.ReactElement {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div className="border border-border bg-card p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {deputesLabel}
         </p>
         {stackedBar(deputes)}
         {legend(deputes)}
       </div>
-      <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div className="border border-border bg-card p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {citoyensLabel}
         </p>
         {stackedBar(citoyens)}

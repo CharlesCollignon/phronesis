@@ -30,10 +30,10 @@ export default async function DossiersPage({
         { label: "Lois" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Dossiers législatifs
       </h1>
-      <p className="mt-2 max-w-2xl text-[var(--muted)]">
+      <p className="mt-2 max-w-2xl text-muted-foreground">
         Projets et propositions de loi de la 17<sup>e</sup> législature,
         avec accès permanent au texte officiel.
       </p>
@@ -51,10 +51,10 @@ export default async function DossiersPage({
           <li key={d.uid}>
             <Link
               href={`/dossiers/${d.uid}`}
-              className="block border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+              className="block border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
             >
               {d.procedureLibelle ? (
-                <p className="text-xs text-[var(--muted)]">
+                <p className="text-xs text-muted-foreground">
                   {d.procedureLibelle}
                 </p>
               ) : null}

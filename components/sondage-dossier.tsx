@@ -111,22 +111,22 @@ function SondageInner({
 
   return (
     <aside className="card-sharp p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Avis des citoyens Phronesis
       </p>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         Sondage d&apos;opinion sur cette plateforme —{" "}
-        <strong className="font-medium text-[var(--ink)]">
+        <strong className="font-medium text-foreground">
           pas un vote parlementaire
         </strong>
         .
       </p>
 
       {loading ? (
-        <p className="mt-4 text-sm text-[var(--muted)]">Chargement…</p>
+        <p className="mt-4 text-sm text-muted-foreground">Chargement…</p>
       ) : (
         <>
-          <div className="mt-4 flex h-3 w-full overflow-hidden bg-[var(--wash)]">
+          <div className="mt-4 flex h-3 w-full overflow-hidden bg-muted">
             <div
               className="bg-[var(--vote-pour)]"
               style={{ width: `${pPour}%` }}
@@ -145,25 +145,25 @@ function SondageInner({
           </div>
           <dl className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
             <div>
-              <dt className="text-[var(--muted)]">Pour</dt>
-              <dd className="num text-lg text-[var(--ink)]">
+              <dt className="text-muted-foreground">Pour</dt>
+              <dd className="num text-lg text-foreground">
                 {display.pour}
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Contre</dt>
-              <dd className="num text-lg text-[var(--ink)]">
+              <dt className="text-muted-foreground">Contre</dt>
+              <dd className="num text-lg text-foreground">
                 {display.contre}
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Pas d&apos;avis</dt>
-              <dd className="num text-lg text-[var(--ink)]">
+              <dt className="text-muted-foreground">Pas d&apos;avis</dt>
+              <dd className="num text-lg text-foreground">
                 {display.pasAvis}
               </dd>
             </div>
           </dl>
-          <p className="mt-1 text-center text-xs text-[var(--muted)]">
+          <p className="mt-1 text-center text-xs text-muted-foreground">
             <span className="num">{display.total}</span> avis
           </p>
         </>
@@ -179,10 +179,10 @@ function SondageInner({
             className={
               `min-h-11 flex-1 border px-3 text-sm ` +
               (mine === opt.id
-                ? "border-[var(--accent)] bg-[var(--accent-soft)] " +
-                  "font-medium text-[var(--ink)]"
-                : "border-[var(--border)] bg-[var(--surface-muted)] " +
-                  "text-[var(--ink)] hover:border-[var(--accent)]/50")
+                ? "border-[var(--accent)] bg-accent " +
+                  "font-medium text-foreground"
+                : "border-border bg-muted " +
+                  "text-foreground hover:border-[var(--accent)]/50")
             }
           >
             {opt.label}
@@ -191,10 +191,10 @@ function SondageInner({
       </div>
 
       {!isSignedIn ? (
-        <p className="mt-3 text-xs text-[var(--muted)]">
+        <p className="mt-3 text-xs text-muted-foreground">
           <Link
             href="/sign-in"
-            className="text-[var(--accent-ink)] underline-offset-2 hover:underline"
+            className="text-primary underline-offset-2 hover:underline"
           >
             Se connecter
           </Link>{" "}
@@ -203,7 +203,7 @@ function SondageInner({
       ) : null}
 
       {error ? (
-        <p className="mt-2 text-xs text-[var(--danger-fg)]">{error}</p>
+        <p className="mt-2 text-xs text-rose-900">{error}</p>
       ) : null}
     </aside>
   );
@@ -215,7 +215,7 @@ function SondageWithClerk({
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <aside className="card-sharp p-5 text-sm text-[var(--muted)]">
+      <aside className="card-sharp p-5 text-sm text-muted-foreground">
         Chargement…
       </aside>
     );

@@ -60,7 +60,7 @@ export function AccordGauge({
   }, [taux]);
 
   return (
-    <div className=" border border-[var(--border)] bg-[var(--surface)] p-2">
+    <div className=" border border-border bg-card p-2">
       <EChart option={option} height={220} />
     </div>
   );

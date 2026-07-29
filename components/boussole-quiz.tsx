@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { AxesBars, RadarProfil } from "@/components/profil-axes";
+import { Button } from "@/components/ui/button";
 import {
   loadBoussoleStored,
   pushBoussoleToCloud,
@@ -13,8 +14,15 @@ import {
   touchBoussoleStreak,
   type EngagementStored,
 } from "@/lib/boussole-storage";
-import { DILEMMES, computeProfil } from "@/lib/dilemmes";
+import { AXE_FONDEMENTS } from "@/lib/axes-boussole-fondements";
+import {
+  AXE_BOUSSOLE_LABELS,
+  DILEMMES,
+  axesPrincipauxDuDilemme,
+  computeProfil,
+} from "@/lib/dilemmes";
 import { rankPhilosophies } from "@/lib/philosophies";
+import { cn } from "@/lib/utils";
 
 const HAS_CLERK = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
@@ -44,7 +52,7 @@ function BoussoleQuizWithAuth(): React.ReactElement {
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <p className="text-sm text-[var(--muted)]">Chargement…</p>
+      <p className="text-sm text-muted-foreground">Chargement…</p>
     );
   }
   return (
@@ -165,7 +173,7 @@ function BoussoleQuizInner({
 
   if (!ready) {
     return (
-      <p className="text-sm text-[var(--muted)]">Chargement…</p>
+      <p className="text-sm text-muted-foreground">Chargement…</p>
     );
   }
 
@@ -173,9 +181,9 @@ function BoussoleQuizInner({
     return (
       <div className="space-y-10">
         {syncNote ? (
-          <p className="text-xs text-[var(--accent-ink)]">{syncNote}</p>
+          <p className="text-xs text-primary">{syncNote}</p>
         ) : null}
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-muted-foreground">
           Boussole complète ({DILEMMES.length}/{DILEMMES.length}).
           {engagement.streakDays > 0 ? (
             <>
@@ -187,7 +195,7 @@ function BoussoleQuizInner({
           Explorez un{" "}
           <Link
             href="/dossiers"
-            className="text-[var(--accent-ink)] hover:underline"
+            className="text-primary hover:underline"
           >
             dossier
           </Link>{" "}
@@ -195,10 +203,10 @@ function BoussoleQuizInner({
         </p>
         <section className="grid gap-8 lg:grid-cols-2">
           <div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl">
+            <h2 className="font-serif text-2xl">
               Votre boussole
             </h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <p className="mt-2 text-sm text-muted-foreground">
               Carte de valeurs construite à partir de vos{" "}
               {DILEMMES.length} réponses — pas une étiquette
               partisane. Les barres vont de « peu marqué » (gauche)
@@ -212,7 +220,7 @@ function BoussoleQuizInner({
             </div>
           </div>
           <div>
-            <h3 className="font-[family-name:var(--font-display)] text-xl">
+            <h3 className="font-serif text-xl">
               Lecture des axes
             </h3>
             <div className="mt-3">
@@ -222,10 +230,10 @@ function BoussoleQuizInner({
         </section>
 
         <section>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">
+          <h2 className="font-serif text-2xl">
             Proximité avec des conceptions philosophiques
           </h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">
+          <p className="mt-2 text-sm text-muted-foreground">
             Similarité de profil (cosinus). Ce n&apos;est pas « vous
             êtes de tel parti », mais une proximité avec une façon
             de concevoir la justice, la liberté ou l&apos;État.{" "}
@@ -241,7 +249,7 @@ function BoussoleQuizInner({
             {ranking.map(({ philo, score }) => (
               <li
                 key={philo.id}
-                className=" border border-[var(--border)] bg-[var(--surface)] p-4"
+                className=" border border-border bg-card p-4"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="font-medium">
@@ -252,11 +260,11 @@ function BoussoleQuizInner({
                       {philo.label}
                     </Link>
                   </p>
-                  <p className="text-sm text-[var(--muted)]">
+                  <p className="text-sm text-muted-foreground">
                     {(score * 100).toFixed(0)} % de similarité
                   </p>
                 </div>
-                <p className="mt-1 text-sm text-[var(--muted)]">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {philo.description}
                 </p>
               </li>
@@ -265,35 +273,35 @@ function BoussoleQuizInner({
         </section>
 
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="rounded-none"
             onClick={reset}
-            className=" border border-[var(--ink)]/20 px-4 py-2 text-sm hover:bg-[var(--ink)]/5"
           >
             Recommencer
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            className="rounded-none"
             onClick={() => {
               setShowResults(false);
               setStep(0);
             }}
-            className=" border border-[var(--ink)]/20 px-4 py-2 text-sm hover:bg-[var(--ink)]/5"
           >
             Revoir les questions
-          </button>
-          <Link
-            href="/methodologie"
-            className=" px-4 py-2 text-sm text-[var(--accent)] hover:underline"
-          >
-            Voir la méthode
-          </Link>
+          </Button>
+          <Button asChild variant="link" className="rounded-none">
+            <Link href="/methodologie">Voir la méthode</Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   const dilemme = DILEMMES[step]!;
+  const axesPrincipaux = axesPrincipauxDuDilemme(dilemme);
   const progress = Math.round(
     (100 * answeredCount) / DILEMMES.length,
   );
@@ -301,17 +309,17 @@ function BoussoleQuizInner({
   return (
     <div className="mx-auto max-w-2xl">
       {HAS_CLERK && !isSignedIn ? (
-        <p className="mb-4 border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--muted)]">
+        <p className="mb-4 border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
           <Link
             href="/sign-in"
-            className="text-[var(--accent-ink)] hover:underline"
+            className="text-primary hover:underline"
           >
             Connectez-vous
           </Link>{" "}
           pour sauvegarder et retrouver votre boussole.
         </p>
       ) : null}
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-xs text-[var(--muted)]">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-xs text-muted-foreground">
         <span>
           Progression : {answeredCount}/{DILEMMES.length} dilemmes
         </span>
@@ -319,91 +327,132 @@ function BoussoleQuizInner({
           <span>Série {engagement.streakDays} j.</span>
         ) : null}
       </div>
-      <div className="mb-4 h-1.5 overflow-hidden bg-[var(--wash)]">
+      <div className="mb-4 h-1.5 overflow-hidden bg-muted">
         <div
-          className="h-full bg-[var(--accent)] transition-all"
+          className="h-full bg-accent transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">
         Question {step + 1} / {DILEMMES.length}
         {reponses[dilemme.id] ? " · répondue" : ""}
       </p>
-      <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl leading-snug">
+      <h2 className="mt-2 font-serif text-2xl leading-snug">
         {dilemme.question}
       </h2>
 
-      <aside className="mt-4 space-y-3 border border-[var(--border)] bg-[var(--wash)] p-4 text-sm leading-relaxed">
+      <aside className="mt-4 space-y-3 border border-border bg-muted p-4 text-sm leading-relaxed">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Contexte
           </p>
-          <p className="mt-1 text-[var(--ink)]/90">{dilemme.contexte}</p>
+          <p className="mt-1 text-foreground/90">{dilemme.contexte}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Ce que l&apos;on cherche à éclairer
           </p>
-          <p className="mt-1 text-[var(--ink)]/90">{dilemme.enjeu}</p>
+          <p className="mt-1 text-foreground/90">{dilemme.enjeu}</p>
         </div>
+        {axesPrincipaux.length > 0 ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Axes en jeu
+            </p>
+            <ul className="mt-2 space-y-2">
+              {axesPrincipaux.map((axe) => {
+                const f = AXE_FONDEMENTS[axe];
+                return (
+                  <li key={axe}>
+                    <p className="text-sm font-medium text-foreground">
+                      {AXE_BOUSSOLE_LABELS[axe]}
+                    </p>
+                    <p className="text-sm text-foreground/90">
+                      {f.contexteCourt}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {f.distinction}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Fondements détaillés :{" "}
+              <Link
+                href={`/philosophies#axe-${axesPrincipaux[0]}`}
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                glossaire des axes
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
       </aside>
 
-      <p className="mt-5 text-xs text-[var(--muted)]">
-        Quatre réponses graduées — du plus marqué d&apos;un côté au
-        plus marqué de l&apos;autre. Il n&apos;y a pas de bonne
-        réponse.
+      <p className="mt-5 text-xs text-muted-foreground">
+        Quatre réponses — des logiques distinctes, pas un
+        simple curseur. Il n&apos;y a pas de bonne réponse.
       </p>
 
       <div className="mt-3 grid gap-3">
         {dilemme.choix.map((c, index) => (
-          <button
+          <Button
             key={c.id}
             type="button"
+            variant="outline"
             onClick={() => choose(dilemme.id, c.id)}
-            className={
-              reponses[dilemme.id] === c.id
-                ? " border-2 border-[var(--accent)] bg-[var(--accent-soft)] px-5 py-4 text-left"
-                : " border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-left transition hover:border-[var(--accent)]/40"
-            }
+            className={cn(
+              "h-auto flex-col items-start gap-1 rounded-none px-5 py-4",
+              "whitespace-normal shadow-none",
+              reponses[dilemme.id] === c.id &&
+                "border-2 border-accent bg-accent",
+            )}
           >
-            <p className="text-xs text-[var(--muted)]">
+            <span className="text-xs text-muted-foreground">
               Option {index + 1} / 4
-            </p>
-            <p className="mt-0.5 text-sm font-medium">{c.label}</p>
-            <p className="mt-1 text-sm leading-snug text-[var(--muted)]">
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {c.label}
+            </span>
+            <span className="text-sm leading-snug font-normal text-muted-foreground">
               {c.nuance}
-            </p>
-          </button>
+            </span>
+          </Button>
         ))}
       </div>
 
       <div className="mt-6 flex justify-between text-sm">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           disabled={step === 0}
           onClick={() => setStep(Math.max(0, step - 1))}
-          className="text-[var(--muted)] disabled:opacity-40"
+          className="rounded-none"
         >
           ← Précédent
-        </button>
+        </Button>
         {step < DILEMMES.length - 1 ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             disabled={!reponses[dilemme.id]}
             onClick={() => setStep(step + 1)}
-            className="text-[var(--accent)] disabled:opacity-40"
+            className="rounded-none text-primary"
           >
             Suivant →
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             disabled={!complete}
             onClick={() => setShowResults(true)}
-            className="font-medium text-[var(--accent)] disabled:opacity-40"
+            className="rounded-none font-medium text-primary"
           >
             Voir mon résultat →
-          </button>
+          </Button>
         )}
       </div>
     </div>

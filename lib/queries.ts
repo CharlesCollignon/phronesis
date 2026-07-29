@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { computeScorePhronesis } from "@/lib/score-phronesis";
 
 const {
   acteurs,
@@ -617,13 +618,104 @@ export async function getHomeStats() {
     dossierUids.length === 0
       ? []
       : await db
-          .selectDistinct({ dossierUid: empreintes.dossierUid })
+          .select({
+            dossierUid: empreintes.dossierUid,
+            axe: empreintes.axe,
+            impact: empreintes.impact,
+          })
           .from(empreintes)
           .where(inArray(empreintes.dossierUid, dossierUids));
 
   const withEmpreinte = new Set(
     empreinteRows.map((r) => r.dossierUid),
   );
+
+  const empreintesByDossier = new Map<
+    string,
+    { axe: string; impact: string }[]
+  >();
+  for (const row of empreinteRows) {
+    const list = empreintesByDossier.get(row.dossierUid) ?? [];
+    list.push({ axe: row.axe, impact: row.impact });
+    empreintesByDossier.set(row.dossierUid, list);
+  }
+
+  const scoreInputs =
+    dossierUids.length === 0
+      ? []
+      : await db.execute<{
+          uid: string;
+          documents_count: number;
+          actes_count: number;
+          scrutins_count: number;
+          amendements_count: number;
+          has_resume: number;
+          type_codes: string | null;
+        }>(sql`
+          SELECT
+            d.uid,
+            (
+              SELECT count(*)::int FROM documents doc
+              WHERE doc.dossier_uid = d.uid
+            ) AS documents_count,
+            (
+              SELECT count(*)::int FROM actes a
+              WHERE a.dossier_uid = d.uid
+            ) AS actes_count,
+            (
+              SELECT count(*)::int FROM scrutins s
+              WHERE s.dossier_uid = d.uid
+            ) AS scrutins_count,
+            (
+              SELECT count(*)::int FROM amendements am
+              WHERE am.dossier_uid = d.uid
+            ) AS amendements_count,
+            (
+              SELECT count(*)::int FROM resumes_ia r
+              WHERE r.sujet_type = 'dossier' AND r.sujet_uid = d.uid
+            ) AS has_resume,
+            (
+              SELECT string_agg(DISTINCT doc.type_code, ',')
+              FROM documents doc
+              WHERE doc.dossier_uid = d.uid
+                AND doc.type_code IS NOT NULL
+            ) AS type_codes
+          FROM dossiers d
+          WHERE d.uid IN (${sql.join(
+            dossierUids.map((u) => sql`${u}`),
+            sql`, `,
+          )})
+        `);
+
+  const scoreByUid = new Map<
+    string,
+    { total: number; maxTotal: number }
+  >();
+  for (const row of scoreInputs as {
+    uid: string;
+    documents_count: number;
+    actes_count: number;
+    scrutins_count: number;
+    amendements_count: number;
+    has_resume: number;
+    type_codes: string | null;
+  }[]) {
+    const score = computeScorePhronesis({
+      documentsCount: Number(row.documents_count),
+      documentTypeCodes: row.type_codes
+        ? row.type_codes.split(",")
+        : [],
+      actesCount: Number(row.actes_count),
+      scrutinsCount: Number(row.scrutins_count),
+      amendementsCount: Number(row.amendements_count),
+      hasResumeIa: Number(row.has_resume) > 0,
+      hasEmpreinte: withEmpreinte.has(row.uid),
+    });
+    scoreByUid.set(row.uid, {
+      total: score.total,
+      maxTotal: score.maxTotal,
+    });
+  }
 
   const [lastScrutinDate] = await db.execute<{ d: string | null }>(sql`
     SELECT max(date_scrutin)::text AS d FROM scrutins
@@ -640,6 +732,9 @@ export async function getHomeStats() {
     derniersDossiers: derniersDossiers.map((d) => ({
       ...d,
       hasEmpreinte: withEmpreinte.has(d.uid),
+      scoreTotal: scoreByUid.get(d.uid)?.total ?? 0,
+      scoreMax: scoreByUid.get(d.uid)?.maxTotal ?? 100,
+      empreinteImpacts: empreintesByDossier.get(d.uid) ?? [],
     })),
     derniersImports,
     derniereDateScrutin: lastScrutinDate?.d ?? null,

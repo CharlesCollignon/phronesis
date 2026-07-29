@@ -116,20 +116,20 @@ function SondageInner({
 
   return (
     <section className="space-y-4">
-      <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div className="border border-border bg-card p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Comparer députés et citoyens
         </p>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <p className="mt-1 text-sm text-muted-foreground">
           Sondage d&apos;opinion —{" "}
-          <strong className="text-[var(--ink)]">
+          <strong className="text-foreground">
             pas un vote parlementaire
           </strong>
           .
         </p>
 
         {loading ? (
-          <p className="mt-4 text-sm text-[var(--muted)]">Chargement…</p>
+          <p className="mt-4 text-sm text-muted-foreground">Chargement…</p>
         ) : (
           <div className="mt-4">
             <VoteComparison
@@ -158,10 +158,10 @@ function SondageInner({
               className={
                 `min-h-10 flex-1 border px-2 text-xs sm:text-sm ` +
                 (mine === opt.id
-                  ? "border-[var(--accent)] bg-[var(--accent-soft)] " +
-                    "font-medium text-[var(--ink)]"
-                  : "border-[var(--border)] bg-[var(--surface-muted)] " +
-                    "text-[var(--ink)] hover:border-[var(--accent)]/50")
+                  ? "border-[var(--accent)] bg-accent " +
+                    "font-medium text-foreground"
+                  : "border-border bg-muted " +
+                    "text-foreground hover:border-[var(--accent)]/50")
               }
             >
               {opt.label}
@@ -170,10 +170,10 @@ function SondageInner({
         </div>
 
         {!isSignedIn ? (
-          <p className="mt-3 text-xs text-[var(--muted)]">
+          <p className="mt-3 text-xs text-muted-foreground">
             <Link
               href="/sign-in"
-              className="text-[var(--accent-ink)] hover:underline"
+              className="text-primary hover:underline"
             >
               Se connecter
             </Link>{" "}
@@ -182,7 +182,7 @@ function SondageInner({
         ) : null}
 
         {error ? (
-          <p className="mt-2 text-xs text-[var(--danger-fg)]">{error}</p>
+          <p className="mt-2 text-xs text-rose-900">{error}</p>
         ) : null}
       </div>
     </section>
@@ -195,7 +195,7 @@ function SondageWithClerk(
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <div className="border border-[var(--border)] p-4 text-sm text-[var(--muted)]">
+      <div className="border border-border p-4 text-sm text-muted-foreground">
         Chargement…
       </div>
     );

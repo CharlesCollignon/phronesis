@@ -75,10 +75,10 @@ export default async function ScrutinPage({
         { label: `Scrutin n° ${scrutin.numero}` },
       ]}
     >
-      <p className="text-sm text-[var(--muted)]">
+      <p className="text-sm text-muted-foreground">
         {chambreLabel} · {formatDate(scrutin.dateScrutin)}
       </p>
-      <h1 className="mt-1 max-w-4xl font-[family-name:var(--font-display)] text-2xl leading-tight tracking-tight sm:text-3xl">
+      <h1 className="mt-1 max-w-4xl font-serif text-2xl leading-tight tracking-tight sm:text-3xl">
         {capitalizeTitre(scrutin.titre)}
       </h1>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -93,7 +93,7 @@ export default async function ScrutinPage({
           {formatSort(scrutin.sortCode)}
         </Badge>
         {scrutin.typeVoteLibelle ? (
-          <span className="text-sm text-[var(--muted)]">
+          <span className="text-sm text-muted-foreground">
             {scrutin.typeVoteLibelle}
           </span>
         ) : null}
@@ -120,7 +120,7 @@ export default async function ScrutinPage({
           Dossier :{" "}
           <Link
             href={`/dossiers/${dossier.uid}`}
-            className="text-[var(--accent-ink)] hover:underline"
+            className="text-primary hover:underline"
           >
             {dossier.titre}
           </Link>
@@ -167,14 +167,14 @@ export default async function ScrutinPage({
       </section>
 
       <section className="mt-10">
-        <h2 className="font-[family-name:var(--font-display)] text-xl">
+        <h2 className="font-serif text-xl">
           Répartition par groupe
         </h2>
         <ul className="mt-3 space-y-2">
           {groupesOrdonnes.map((g) => (
             <li
               key={g.groupeUid ?? "sans-groupe"}
-              className="border border-[var(--border)] bg-[var(--surface)] p-3"
+              className="border border-border bg-card p-3"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span
@@ -191,7 +191,7 @@ export default async function ScrutinPage({
                 <span className="text-sm font-medium">
                   {g.libelle ?? "Groupe inconnu"}
                 </span>
-                <span className="text-xs text-[var(--muted)]">
+                <span className="text-xs text-muted-foreground">
                   {g.pour} pour · {g.contre} contre · {g.abstention}{" "}
                   abs.
                 </span>
@@ -209,7 +209,7 @@ export default async function ScrutinPage({
       </section>
 
       <section className="mt-10">
-        <h2 className="font-[family-name:var(--font-display)] text-xl">
+        <h2 className="font-serif text-xl">
           Positions nominatives
         </h2>
         <div className="mt-3">
@@ -244,11 +244,11 @@ export default async function ScrutinPage({
             />
           </Suspense>
         </div>
-        <div className="mt-3 overflow-x-auto border border-[var(--border)] bg-[var(--surface)]">
+        <div className="mt-3 overflow-x-auto border border-border bg-card">
           <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="border-b border-[var(--border)] bg-[var(--table-head)] text-xs uppercase tracking-wide text-[var(--muted)]">
+            <thead className="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="sticky left-0 bg-[var(--table-sticky)] px-4 py-2 font-medium">
+                <th className="sticky left-0 bg-card px-4 py-2 font-medium">
                   Député
                 </th>
                 <th className="px-4 py-2 font-medium">Groupe</th>
@@ -259,21 +259,21 @@ export default async function ScrutinPage({
               {voteRows.map((v) => (
                 <tr
                   key={v.acteurUid}
-                  className="border-b border-[var(--border)] last:border-0"
+                  className="border-b border-border last:border-0"
                 >
-                  <td className="sticky left-0 bg-[var(--table-sticky)] px-4 py-2">
+                  <td className="sticky left-0 bg-card px-4 py-2">
                     <Link
                       href={
                         scrutin.chambre === "SENAT"
                           ? `/senateurs/${v.acteurUid}`
                           : `/deputes/${v.acteurUid}`
                       }
-                      className="hover:text-[var(--accent-ink)]"
+                      className="hover:text-primary"
                     >
                       {nomComplet(v.prenom, v.nom)}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-[var(--muted)]">
+                  <td className="px-4 py-2 text-muted-foreground">
                     {v.groupeLibelle ?? "—"}
                   </td>
                   <td className="px-4 py-2">

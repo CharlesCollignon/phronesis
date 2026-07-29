@@ -71,11 +71,11 @@ export default async function DossierPage({
       ]}
     >
       {dossier.procedureLibelle ? (
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-muted-foreground">
           {dossier.procedureLibelle}
         </p>
       ) : null}
-      <h1 className="mt-2 max-w-4xl font-[family-name:var(--font-display)] text-3xl leading-tight tracking-tight sm:text-4xl">
+      <h1 className="mt-2 max-w-4xl font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
         {dossier.titre}
       </h1>
       <div className="mt-4 flex flex-wrap gap-3">
@@ -110,11 +110,11 @@ export default async function DossierPage({
           officialHref={officialHref}
           officialLabel="Lire le dossier officiel"
         />
-        <aside className=" border border-[var(--border)] bg-[var(--surface)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+        <aside className=" border border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Version officielle
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             La vulgarisation n&apos;est jamais un substitut au texte.
             Consultez les documents déposés et le dossier sur le site
             de l&apos;Assemblée nationale.
@@ -127,7 +127,7 @@ export default async function DossierPage({
                     {doc.titre}
                   </ExternalLink>
                   {doc.dateDepot ? (
-                    <span className="ml-2 text-xs text-[var(--muted)]">
+                    <span className="ml-2 text-xs text-muted-foreground">
                       {formatDateShort(doc.dateDepot)}
                     </span>
                   ) : null}
@@ -135,7 +135,7 @@ export default async function DossierPage({
               ))}
             </ul>
           ) : (
-            <p className="mt-4 text-sm text-[var(--muted)]">
+            <p className="mt-4 text-sm text-muted-foreground">
               Aucun document lié dans le dump open data.
             </p>
           )}
@@ -143,28 +143,28 @@ export default async function DossierPage({
       </div>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Chronologie
         </h2>
         {actes.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--muted)]">
+          <p className="mt-3 text-sm text-muted-foreground">
             Aucune étape procédurale enregistrée.
           </p>
         ) : (
-          <ol className="mt-4 space-y-2 border-l border-[var(--border)] pl-4">
+          <ol className="mt-4 space-y-2 border-l border-border pl-4">
             {actes.map((a) => (
               <li
                 key={a.uid}
                 style={{ marginLeft: a.profondeur * 12 }}
                 className="text-sm"
               >
-                <span className="text-xs text-[var(--muted)]">
+                <span className="text-xs text-muted-foreground">
                   {formatDate(a.date)}
                 </span>
                 <p className="leading-snug">
                   {a.libelle ?? a.code}
                   {a.statut ? (
-                    <span className="text-[var(--muted)]">
+                    <span className="text-muted-foreground">
                       {" "}
                       — {a.statut}
                     </span>
@@ -177,11 +177,11 @@ export default async function DossierPage({
       </section>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Scrutins liés
         </h2>
         {scrutins.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--muted)]">
+          <p className="mt-3 text-sm text-muted-foreground">
             Aucun scrutin public lié à ce dossier. L&apos;adoption
             d&apos;un texte peut se faire à main levée, sans trace
             nominative.
@@ -192,9 +192,9 @@ export default async function DossierPage({
               <li key={s.uid}>
                 <Link
                   href={`/scrutins/${s.uid}`}
-                  className="block border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+                  className="block border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
                 >
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>n° {s.numero}</span>
                     <span>·</span>
                     <span>{formatDateShort(s.dateScrutin)}</span>
@@ -224,10 +224,10 @@ export default async function DossierPage({
       </section>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Amendements
         </h2>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <p className="mt-1 text-sm text-muted-foreground">
           {amendements.length >= 100
             ? "100 premiers amendements (par date de dépôt)."
             : `${amendements.length} amendement(s).`}
@@ -236,9 +236,9 @@ export default async function DossierPage({
           {amendements.map((a) => (
             <li
               key={a.uid}
-              className=" border border-[var(--border)] bg-[var(--surface)] p-4"
+              className=" border border-border bg-card p-4"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{a.numeroLong ?? a.uid}</span>
                 {a.articleDesignation ? (
                   <>
@@ -265,7 +265,7 @@ export default async function DossierPage({
                   {a.exposeSommaire}
                 </p>
               ) : a.dispositif ? (
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--muted)]">
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                   {a.dispositif}
                 </p>
               ) : null}

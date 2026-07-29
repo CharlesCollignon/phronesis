@@ -61,7 +61,7 @@ export default async function GroupePage({
         >
           {(groupe.libelleAbrege ?? "?").slice(0, 4)}
         </span>
-        <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+        <h1 className="font-serif text-4xl tracking-tight">
           {groupe.libelle}
         </h1>
       </div>
@@ -69,19 +69,19 @@ export default async function GroupePage({
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
         <Link
           href={`/comparateur?type=${compareType}&a=${groupe.uid}`}
-          className="text-[var(--accent-ink)] hover:underline"
+          className="text-primary hover:underline"
         >
           Comparer ce groupe →
         </Link>
         <Link
           href="/methodologie"
-          className="text-[var(--muted)] hover:underline"
+          className="text-muted-foreground hover:underline"
         >
           Méthode d&apos;agrégation
         </Link>
       </div>
 
-      <section className="mt-8 border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
+      <section className="mt-8 border border-border bg-card p-4 sm:p-6">
         <Hemicycle
           groups={effectifs}
           chambre={chambre}
@@ -90,7 +90,7 @@ export default async function GroupePage({
         />
       </section>
 
-      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
+      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
         Vecteur construit à partir des majorités pour/contre du
         groupe sur des scrutins publics liés à des dossiers avec
         empreinte. Ce n&apos;est pas un score moral, ni le Score
@@ -99,34 +99,34 @@ export default async function GroupePage({
       </p>
 
       <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-        <div className=" border border-[var(--border)] bg-[var(--surface)] p-4">
-          <dt className="text-xs uppercase tracking-wider text-[var(--muted)]">
+        <div className=" border border-border bg-card p-4">
+          <dt className="text-xs uppercase tracking-wider text-muted-foreground">
             Scrutins mobilisés
           </dt>
-          <dd className="mt-1 font-[family-name:var(--font-display)] text-2xl">
+          <dd className="mt-1 font-serif text-2xl">
             {data.scrutinsMobilises}
           </dd>
         </div>
-        <div className=" border border-[var(--border)] bg-[var(--surface)] p-4">
-          <dt className="text-xs uppercase tracking-wider text-[var(--muted)]">
+        <div className=" border border-border bg-card p-4">
+          <dt className="text-xs uppercase tracking-wider text-muted-foreground">
             Dossiers mobilisés
           </dt>
-          <dd className="mt-1 font-[family-name:var(--font-display)] text-2xl">
+          <dd className="mt-1 font-serif text-2xl">
             {data.dossiersMobilises}
           </dd>
         </div>
-        <div className=" border border-[var(--border)] bg-[var(--surface)] p-4">
-          <dt className="text-xs uppercase tracking-wider text-[var(--muted)]">
+        <div className=" border border-border bg-card p-4">
+          <dt className="text-xs uppercase tracking-wider text-muted-foreground">
             Axes renseignés
           </dt>
-          <dd className="mt-1 font-[family-name:var(--font-display)] text-2xl">
+          <dd className="mt-1 font-serif text-2xl">
             {axesUtilises.length}
           </dd>
         </div>
       </dl>
 
       {data.scrutinsMobilises === 0 ? (
-        <p className="mt-8 text-sm text-[var(--muted)]">
+        <p className="mt-8 text-sm text-muted-foreground">
           Pas assez de scrutins publics liés à des dossiers avec
           empreinte pour construire un vecteur.
         </p>
@@ -134,7 +134,7 @@ export default async function GroupePage({
         <>
           <section className="mt-12 grid gap-8 lg:grid-cols-2">
             <div>
-              <h2 className="font-[family-name:var(--font-display)] text-2xl">
+              <h2 className="font-serif text-2xl">
                 Empreinte agrégée
               </h2>
               <div className="mt-6">
@@ -145,7 +145,7 @@ export default async function GroupePage({
               </div>
             </div>
             <div>
-              <h3 className="font-[family-name:var(--font-display)] text-xl">
+              <h3 className="font-serif text-xl">
                 Axes
               </h3>
               <div className="mt-3">
@@ -163,14 +163,14 @@ export default async function GroupePage({
 
           <section className="mt-12 grid gap-6 lg:grid-cols-2">
             <div>
-              <h2 className="font-[family-name:var(--font-display)] text-2xl">
+              <h2 className="font-serif text-2xl">
                 Proximité philosophique
               </h2>
-              <p className="mt-2 text-sm text-[var(--muted)]">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Similarité cosinus avec les six conceptions de
                 référence — pas une affiliation partisane.
               </p>
-              <div className="mt-4 border border-[var(--border)] bg-[var(--surface)] p-3">
+              <div className="mt-4 border border-border bg-card p-3">
                 <PhiloRadar
                   items={data.rankingPhilosophies.map(
                     ({ philo, score }) => ({
@@ -184,16 +184,16 @@ export default async function GroupePage({
                 {data.rankingPhilosophies.map(({ philo, score }) => (
                   <li
                     key={philo.id}
-                    className=" border border-[var(--border)] bg-[var(--surface)] p-4"
+                    className=" border border-border bg-card p-4"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <Link
                         href={`/philosophies/${philo.id}`}
-                        className="font-medium hover:text-[var(--accent-ink)] hover:underline"
+                        className="font-medium hover:text-primary hover:underline"
                       >
                         {philo.label}
                       </Link>
-                      <span className="text-sm text-[var(--muted)]">
+                      <span className="text-sm text-muted-foreground">
                         {(score * 100).toFixed(0)} %
                       </span>
                     </div>

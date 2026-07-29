@@ -121,10 +121,10 @@ export default async function ComparateurPage({
         { label: "Comparateur" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Comparateur
       </h1>
-      <p className="mt-2 max-w-2xl text-[var(--muted)]">
+      <p className="mt-2 max-w-2xl text-muted-foreground">
         Comparez les positions de vote sur les scrutins publics —
         Assemblée nationale ou Sénat.
       </p>
@@ -142,16 +142,16 @@ export default async function ComparateurPage({
 
       <form
         method="get"
-        className="mt-6 grid gap-4 border border-[var(--border)] bg-[var(--surface)] p-5 sm:grid-cols-[1fr_1fr_auto]"
+        className="mt-6 grid gap-4 border border-border bg-card p-5 sm:grid-cols-[1fr_1fr_auto]"
       >
         <input type="hidden" name="type" value={type} />
-        <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
           A
           <select
             name="a"
             defaultValue={uidA}
             required
-            className="border border-[var(--input-border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+            className="border border-input bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--accent)]"
           >
             <option value="">Choisir…</option>
             {options.map((o) => (
@@ -161,13 +161,13 @@ export default async function ComparateurPage({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
           B
           <select
             name="b"
             defaultValue={uidB}
             required
-            className="border border-[var(--input-border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+            className="border border-input bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--accent)]"
           >
             <option value="">Choisir…</option>
             {options.map((o) => (
@@ -180,7 +180,7 @@ export default async function ComparateurPage({
         <div className="flex items-end">
           <button
             type="submit"
-            className="w-full bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-[var(--paper)] transition hover:bg-[var(--accent)] sm:w-auto"
+            className="w-full bg-foreground px-5 py-2.5 text-sm font-medium text-[var(--background)] transition hover:bg-[var(--accent)] sm:w-auto"
           >
             Comparer
           </button>

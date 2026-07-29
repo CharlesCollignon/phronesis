@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 type SearchFormProps = {
   action?: string;
   placeholder?: string;
@@ -16,30 +19,24 @@ export function SearchForm({
       <label className="sr-only" htmlFor="q">
         Recherche
       </label>
-      <div className={compact ? "flex gap-0" : "flex flex-col gap-2 sm:flex-row"}>
-        <input
+      <div
+        className={
+          compact
+            ? "flex gap-2"
+            : "flex flex-col gap-2 sm:flex-row"
+        }
+      >
+        <Input
           id="q"
           name="q"
           type="search"
           defaultValue={defaultValue}
           placeholder={placeholder}
-          className={
-            "w-full flex-1 border border-[var(--input-border)] " +
-            "bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--ink)] " +
-            "outline-none placeholder:text-[var(--muted)] " +
-            "focus:border-[var(--accent)]"
-          }
+          className="min-w-0 flex-1 rounded-none shadow-none"
         />
-        <button
-          type="submit"
-          className={
-            "border border-[var(--input-border)] bg-[var(--surface-muted)] " +
-            "px-4 py-2 text-sm font-medium text-[var(--ink)] " +
-            "transition hover:border-[var(--accent)] hover:text-[var(--accent-ink)]"
-          }
-        >
+        <Button type="submit" className="rounded-none shadow-sm">
           Rechercher
-        </button>
+        </Button>
       </div>
     </form>
   );

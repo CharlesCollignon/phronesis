@@ -9,10 +9,10 @@ export default function SignInPage(): React.ReactElement {
   if (!hasClerk) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl">
+        <h1 className="font-serif text-2xl">
           Connexion
         </h1>
-        <p className="mt-3 text-sm text-[var(--muted)]">
+        <p className="mt-3 text-sm text-muted-foreground">
           Clerk n&apos;est pas configuré. Ajoutez{" "}
           <code className="text-xs">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code>{" "}
           et <code className="text-xs">CLERK_SECRET_KEY</code> dans{" "}
@@ -20,7 +20,7 @@ export default function SignInPage(): React.ReactElement {
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex text-sm text-[var(--accent-ink)] hover:underline"
+          className="mt-6 inline-flex text-sm text-primary hover:underline"
         >
           Retour à l&apos;accueil
         </Link>

@@ -33,7 +33,7 @@ export function AvatarParlementaire({
       <span
         className={
           `inline-flex shrink-0 items-center justify-center ` +
-          `bg-[var(--marine)] text-[var(--paper)] ` +
+          `bg-[var(--primary)] text-[var(--background)] ` +
           `font-medium ${className}`
         }
         style={{ width: size, height: size, fontSize: size * 0.32 }}
@@ -51,7 +51,7 @@ export function AvatarParlementaire({
       width={size}
       height={size}
       className={
-        `shrink-0 object-cover bg-[var(--wash)] ` +
+        `shrink-0 object-cover bg-muted ` +
         className
       }
       onError={() => setFailed(true)}

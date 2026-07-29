@@ -70,10 +70,10 @@ export default async function DeputePage({
             size={88}
           />
           <div>
-          <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+          <h1 className="font-serif text-4xl tracking-tight">
             {nomComplet(acteur.prenom, acteur.nom, acteur.civilite)}
           </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {groupe ? (
               <span className="inline-flex items-center gap-2">
                 <span
@@ -108,7 +108,7 @@ export default async function DeputePage({
           </ExternalLink>
           <Link
             href={`/comparateur?type=deputes&a=${uid}`}
-            className="text-sm font-medium text-[var(--accent-ink)] hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
           >
             Comparer avec…
           </Link>
@@ -116,7 +116,7 @@ export default async function DeputePage({
       </div>
 
       {acteur.profession ? (
-        <p className="mt-4 text-sm text-[var(--muted)]">
+        <p className="mt-4 text-sm text-muted-foreground">
           Profession : {acteur.profession}
         </p>
       ) : null}
@@ -127,8 +127,8 @@ export default async function DeputePage({
       />
 
       {groupe ? (
-        <section className="mt-8 border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
-          <h2 className="font-[family-name:var(--font-display)] text-xl">
+        <section className="mt-8 border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-serif text-xl">
             Place dans l&apos;hémicycle
           </h2>
           <div className="mt-4">
@@ -167,7 +167,7 @@ export default async function DeputePage({
         <Stat label="Non-votants" value={String(stats.nonVotant)} />
       </div>
 
-      <p className="mt-4 text-xs text-[var(--muted)]">
+      <p className="mt-4 text-xs text-muted-foreground">
         Méthode : participation = votes hors non-votants / scrutins
         publics où le député apparaît. Fidélité = accord avec la
         position majoritaire de son groupe (pour/contre/abstention).
@@ -179,7 +179,7 @@ export default async function DeputePage({
       </p>
 
       <section className="mt-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Historique des votes
         </h2>
         <ul className="mt-4 space-y-2">
@@ -187,10 +187,10 @@ export default async function DeputePage({
             <li key={v.scrutinUid}>
               <Link
                 href={`/scrutins/${v.scrutinUid}`}
-                className="flex flex-wrap items-start justify-between gap-3 border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/40"
+                className="flex flex-wrap items-start justify-between gap-3 border border-border bg-card px-4 py-3 transition hover:border-[var(--accent)]/40"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-[var(--muted)]">
+                  <p className="text-xs text-muted-foreground">
                     {formatDateShort(v.dateScrutin)} · n° {v.numero} ·{" "}
                     {formatSort(v.sortCode)}
                   </p>

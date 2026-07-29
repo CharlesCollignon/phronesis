@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { PageShell } from "@/components/breadcrumbs";
+import { AXE_FONDEMENTS } from "@/lib/axes-boussole-fondements";
 import {
-  AXE_BOUSSOLE_HINTS,
   AXE_BOUSSOLE_LABELS,
   AXES_BOUSSOLE,
 } from "@/lib/dilemmes";
@@ -20,10 +20,10 @@ export default function PhilosophiesPage(): React.ReactElement {
         { label: "Philosophies" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Conceptions philosophiques
       </h1>
-      <p className="mt-3 max-w-2xl text-[var(--muted)]">
+      <p className="mt-3 max-w-2xl text-muted-foreground">
         Six façons de concevoir la justice, la liberté ou le rôle de
         l&apos;État — des profils de référence pour situer des
         valeurs, pas des étiquettes partisanes. Elles servent à la{" "}
@@ -38,7 +38,7 @@ export default function PhilosophiesPage(): React.ReactElement {
       </p>
 
       <section className="mt-10">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Les six conceptions
         </h2>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -46,10 +46,10 @@ export default function PhilosophiesPage(): React.ReactElement {
             <li key={philo.id}>
               <Link
                 href={`/philosophies/${philo.id}`}
-                className="block h-full border border-[var(--border)] bg-[var(--surface)] p-5 transition hover:border-[var(--accent)]/40"
+                className="block h-full border border-border bg-card p-5 transition hover:border-[var(--accent)]/40"
               >
                 <p className="font-medium">{philo.label}</p>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {philo.description}
                 </p>
                 <p className="mt-3 text-xs text-[var(--accent)]">
@@ -62,30 +62,48 @@ export default function PhilosophiesPage(): React.ReactElement {
       </section>
 
       <section className="mt-14">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">
+        <h2 className="font-serif text-2xl">
           Glossaire des axes
         </h2>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Les mêmes dix axes structurent la Boussole et ces fiches.
           Ce ne sont pas des notes morales : ce sont des dimensions
-          d&apos;arbitrage.
+          d&apos;arbitrage, avec un fondement conceptuel explicite.
         </p>
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-          {AXES_BOUSSOLE.map((axe) => (
-            <li
-              key={axe}
-              className=" border border-[var(--border)] bg-[var(--surface)] p-4"
-            >
-              <p className="font-medium">{AXE_BOUSSOLE_LABELS[axe]}</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {AXE_BOUSSOLE_HINTS[axe]}
-              </p>
-            </li>
-          ))}
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+          {AXES_BOUSSOLE.map((axe) => {
+            const f = AXE_FONDEMENTS[axe];
+            return (
+              <li
+                key={axe}
+                id={`axe-${axe}`}
+                className="scroll-mt-24 border border-border bg-card p-4"
+              >
+                <p className="font-medium">
+                  {AXE_BOUSSOLE_LABELS[axe]}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+                  {f.sens}
+                </p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Distinction
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {f.distinction}
+                </p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ce que ce n&apos;est pas
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {f.ceQueCeNestPas}
+                </p>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
-      <p className="mt-10 text-sm text-[var(--muted)]">
+      <p className="mt-10 text-sm text-muted-foreground">
         Méthode détaillée :{" "}
         <Link
           href="/methodologie"

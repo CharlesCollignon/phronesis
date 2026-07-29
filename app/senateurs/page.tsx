@@ -31,10 +31,10 @@ export default async function SenateursPage({
         { label: "Sénateurs" },
       ]}
     >
-      <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
+      <h1 className="font-serif text-4xl tracking-tight">
         Sénateurs
       </h1>
-      <p className="mt-2 text-[var(--muted)]">
+      <p className="mt-2 text-muted-foreground">
         {rows.length} sénateurs en mandat (données AMO Assemblée /
         open data Sénat).
       </p>
@@ -52,7 +52,7 @@ export default async function SenateursPage({
           <li key={d.uid}>
             <Link
               href={`/senateurs/${d.uid}`}
-              className="flex h-full min-h-11 gap-3 border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/40"
+              className="flex h-full min-h-11 gap-3 border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
             >
               <AvatarParlementaire
                 src={urlPhotoSenateur(
@@ -79,7 +79,7 @@ export default async function SenateursPage({
                     {nomComplet(d.prenom, d.nom)}
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-[var(--muted)]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {d.groupeAbrege ?? d.groupeLibelle ?? "Sans groupe"}
                   {d.circoDepartement
                     ? ` · ${d.circoDepartement}`
