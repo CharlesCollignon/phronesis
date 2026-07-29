@@ -170,7 +170,7 @@ export function AppSidebar(): React.ReactElement {
       <p
         className={
           `font-[family-name:var(--font-logo)] tracking-wide ` +
-          `text-[var(--accent-ink)] ` +
+          `text-[var(--logo)] ` +
           (showLabels ? "text-lg" : "text-[10px] leading-tight")
         }
       >
@@ -239,7 +239,7 @@ export function AppSidebar(): React.ReactElement {
         </button>
         <Link
           href="/"
-          className="font-[family-name:var(--font-logo)] text-base text-[var(--accent-ink)]"
+          className="font-[family-name:var(--font-logo)] text-base text-[var(--logo)]"
         >
           PHRONESIS
         </Link>

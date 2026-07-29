@@ -10,6 +10,8 @@ import {
   pushBoussoleToCloud,
   saveBoussoleStored,
   syncBoussoleAfterAuth,
+  touchBoussoleStreak,
+  type EngagementStored,
 } from "@/lib/boussole-storage";
 import { DILEMMES, computeProfil } from "@/lib/dilemmes";
 import { rankPhilosophies } from "@/lib/philosophies";
@@ -67,6 +69,10 @@ function BoussoleQuizInner({
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [syncNote, setSyncNote] = useState<string | null>(null);
+  const [engagement, setEngagement] = useState<EngagementStored>({
+    lastVisit: "",
+    streakDays: 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +83,7 @@ function BoussoleQuizInner({
         setShowResults(false);
         setStep(0);
         setSyncNote(null);
+        setEngagement(touchBoussoleStreak());
         setReady(true);
         return;
       }
@@ -104,6 +111,11 @@ function BoussoleQuizInner({
           ? DILEMMES.length - 1
           : Math.min(answered, DILEMMES.length - 1),
       );
+      const streak = touchBoussoleStreak();
+      setEngagement(streak);
+      if (HAS_CLERK && isSignedIn) {
+        void pushBoussoleToCloud(valid);
+      }
       setReady(true);
     }
 
@@ -128,6 +140,7 @@ function BoussoleQuizInner({
   function choose(dilemmeId: string, choixId: string): void {
     const next = { ...reponses, [dilemmeId]: choixId };
     setReponses(next);
+    setEngagement(touchBoussoleStreak());
     if (persistLocal) {
       saveBoussoleStored({ reponses: next });
       if (HAS_CLERK && isSignedIn) void pushBoussoleToCloud(next);
@@ -162,6 +175,24 @@ function BoussoleQuizInner({
         {syncNote ? (
           <p className="text-xs text-[var(--accent-ink)]">{syncNote}</p>
         ) : null}
+        <p className="text-sm text-[var(--muted)]">
+          Boussole complète ({DILEMMES.length}/{DILEMMES.length}).
+          {engagement.streakDays > 0 ? (
+            <>
+              {" "}
+              Série : {engagement.streakDays} jour
+              {engagement.streakDays > 1 ? "s" : ""} d&apos;affilée.
+            </>
+          ) : null}{" "}
+          Explorez un{" "}
+          <Link
+            href="/dossiers"
+            className="text-[var(--accent-ink)] hover:underline"
+          >
+            dossier
+          </Link>{" "}
+          pour voir la résonance avec votre profil.
+        </p>
         <section className="grid gap-8 lg:grid-cols-2">
           <div>
             <h2 className="font-[family-name:var(--font-display)] text-2xl">
@@ -280,6 +311,14 @@ function BoussoleQuizInner({
           pour sauvegarder et retrouver votre boussole.
         </p>
       ) : null}
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-xs text-[var(--muted)]">
+        <span>
+          Progression : {answeredCount}/{DILEMMES.length} dilemmes
+        </span>
+        {engagement.streakDays > 0 ? (
+          <span>Série {engagement.streakDays} j.</span>
+        ) : null}
+      </div>
       <div className="mb-4 h-1.5 overflow-hidden bg-[var(--wash)]">
         <div
           className="h-full bg-[var(--accent)] transition-all"

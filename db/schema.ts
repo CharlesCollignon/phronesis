@@ -285,7 +285,6 @@ export const empreintes = pgTable(
   },
   (t) => [
     uniqueIndex("empreintes_dossier_axe_idx").on(t.dossierUid, t.axe),
-    index("empreintes_dossier_idx").on(t.dossierUid),
   ],
 );
 
@@ -368,6 +367,11 @@ export const faitsJudiciairesPublics = pgTable(
   (t) => [index("faits_judiciaires_acteur_idx").on(t.acteurUid)],
 );
 
+export type UserEngagement = {
+  lastVisit?: string;
+  streakDays?: number;
+};
+
 /**
  * Profil utilisateur Clerk : boussole cloud + préférence thème.
  */
@@ -378,10 +382,54 @@ export const userProfiles = pgTable("user_profiles", {
     .notNull()
     .default({}),
   theme: text("theme"),
+  engagement: jsonb("engagement")
+    .$type<UserEngagement>()
+    .notNull()
+    .default({}),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
+
+export type NotificationType =
+  | "nouveau_scrutin"
+  | "nouveau_dossier"
+  | "resonance_haute";
+
+/**
+ * Notifications in-app (Clerk) — pas de push / email.
+ */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    clerkUserId: text("clerk_user_id").notNull(),
+    type: text("type").$type<NotificationType>().notNull(),
+    titre: text("titre").notNull(),
+    body: text("body").notNull(),
+    href: text("href").notNull(),
+    targetUid: text("target_uid").notNull(),
+    payload: jsonb("payload")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("notifications_user_created_idx").on(
+      t.clerkUserId,
+      t.createdAt,
+    ),
+    uniqueIndex("notifications_user_type_target_idx").on(
+      t.clerkUserId,
+      t.type,
+      t.targetUid,
+    ),
+  ],
+);
 
 /**
  * Sondage d'opinion citoyen sur un dossier (pas un scrutin officiel).
@@ -405,7 +453,6 @@ export const sondagesDossiers = pgTable(
       t.dossierUid,
       t.clerkUserId,
     ),
-    index("sondages_dossier_uid_idx").on(t.dossierUid),
   ],
 );
 
@@ -430,6 +477,5 @@ export const sondagesScrutins = pgTable(
       t.scrutinUid,
       t.clerkUserId,
     ),
-    index("sondages_scrutin_uid_idx").on(t.scrutinUid),
   ],
 );

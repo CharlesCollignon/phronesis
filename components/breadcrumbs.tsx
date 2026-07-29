@@ -62,7 +62,7 @@ export function PageShell({
   return (
     <div
       className={
-        `mx-auto max-w-6xl px-4 sm:px-6 ` +
+        `mx-auto max-w-7xl px-4 sm:px-6 ` +
         (compact ? "py-6" : "py-8")
       }
     >

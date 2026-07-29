@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 
 type BoussoleBody = {
   reponses?: Record<string, string>;
+  engagement?: {
+    lastVisit?: string;
+    streakDays?: number;
+  };
 };
 
 function clerkConfigured(): boolean {
@@ -39,6 +43,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({
     reponses: row?.boussoleReponses ?? {},
     theme: row?.theme ?? null,
+    engagement: row?.engagement ?? {},
     updatedAt: row?.updatedAt ?? null,
   });
 }
@@ -67,21 +72,37 @@ export async function PUT(req: Request): Promise<NextResponse> {
       ? body.reponses
       : {};
 
+  const engagement =
+    body.engagement && typeof body.engagement === "object"
+      ? {
+          lastVisit:
+            typeof body.engagement.lastVisit === "string"
+              ? body.engagement.lastVisit
+              : undefined,
+          streakDays:
+            typeof body.engagement.streakDays === "number"
+              ? body.engagement.streakDays
+              : undefined,
+        }
+      : undefined;
+
   const now = new Date();
   await db
     .insert(userProfiles)
     .values({
       clerkUserId: userId,
       boussoleReponses: reponses,
+      engagement: engagement ?? {},
       updatedAt: now,
     })
     .onConflictDoUpdate({
       target: userProfiles.clerkUserId,
       set: {
         boussoleReponses: reponses,
+        ...(engagement ? { engagement } : {}),
         updatedAt: now,
       },
     });
 
-  return NextResponse.json({ ok: true, reponses });
+  return NextResponse.json({ ok: true, reponses, engagement });
 }

@@ -308,7 +308,10 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
           <li>Profil philosophique par élu (député / sénateur)</li>
           <li>Casier judiciaire / affaires en cours / agrégats presse</li>
           <li>Diffs d&apos;amendements sur le texte</li>
-          <li>Notifications push, chat, votes sur scrutins</li>
+          <li>
+            Notifications push / e-mail, chat, votes citoyens sur
+            scrutins (les alertes in-app Boussole existent)
+          </li>
         </ul>
       </section>
 

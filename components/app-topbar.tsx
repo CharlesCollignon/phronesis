@@ -1,6 +1,7 @@
+import { NotificationsBell } from "@/components/notifications-bell";
 import { SearchForm } from "@/components/search-form";
 
-/** Barre supérieure : recherche loi / vote / député. */
+/** Barre supérieure : recherche + notifications. */
 export function AppTopbar(): React.ReactElement {
   return (
     <header
@@ -9,13 +10,14 @@ export function AppTopbar(): React.ReactElement {
         "bg-[var(--topbar)] px-4 py-2 md:px-6"
       }
     >
-      <div className="mx-auto flex max-w-6xl items-center gap-4">
+      <div className="mx-auto flex max-w-7xl items-center gap-3">
         <p className="hidden shrink-0 text-xs font-medium uppercase tracking-wider text-[var(--muted)] sm:block">
           Recherche
         </p>
         <div className="min-w-0 flex-1">
           <SearchForm compact />
         </div>
+        <NotificationsBell />
       </div>
     </header>
   );

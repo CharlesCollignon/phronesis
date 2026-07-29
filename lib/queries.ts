@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
 
@@ -612,6 +612,23 @@ export async function getHomeStats() {
     .orderBy(desc(imports.importedAt))
     .limit(5);
 
+  const dossierUids = derniersDossiers.map((d) => d.uid);
+  const empreinteRows =
+    dossierUids.length === 0
+      ? []
+      : await db
+          .selectDistinct({ dossierUid: empreintes.dossierUid })
+          .from(empreintes)
+          .where(inArray(empreintes.dossierUid, dossierUids));
+
+  const withEmpreinte = new Set(
+    empreinteRows.map((r) => r.dossierUid),
+  );
+
+  const [lastScrutinDate] = await db.execute<{ d: string | null }>(sql`
+    SELECT max(date_scrutin)::text AS d FROM scrutins
+  `);
+
   return {
     counts: counts ?? {
       dossiers: 0,
@@ -620,8 +637,12 @@ export async function getHomeStats() {
       votes: 0,
     },
     derniersScrutins,
-    derniersDossiers,
+    derniersDossiers: derniersDossiers.map((d) => ({
+      ...d,
+      hasEmpreinte: withEmpreinte.has(d.uid),
+    })),
     derniersImports,
+    derniereDateScrutin: lastScrutinDate?.d ?? null,
   };
 }
 

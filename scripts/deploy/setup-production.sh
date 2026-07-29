@@ -96,7 +96,7 @@ run_empreintes() {
         exit 1
       }
       echo "$out" | tail -3
-      if echo "$out" | grep -q "0 dossier(s) sans empreinte"; then
+      if echo "$out" | grep -qE '(^|[^0-9])0 dossier\(s\) sans empreinte'; then
         break
       fi
       sleep 2
