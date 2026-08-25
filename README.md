@@ -88,7 +88,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 
 | Commande | Rôle |
 | --- | --- |
-| `pnpm ingest` | Ingestion complète (acteurs → dossiers → scrutins → amendements) |
+| `pnpm ingest` | Ingestion complète (acteurs → dossiers → scrutins → amendements → Sénat) |
+| `pnpm ingest -- --force` | Idem, en re-téléchargeant les dumps (ignore `data/cache`) |
 | `pnpm ingest:acteurs` | Acteurs, organes, mandats |
 | `pnpm ingest:dossiers` | Dossiers, actes, documents |
 | `pnpm ingest:scrutins` | Scrutins et votes nominatifs |
@@ -146,6 +147,7 @@ Dans `.env`, `DATABASE_URL` = URL Neon **directe** (entre guillemets).
 
 ```bash
 unset DATABASE_URL   # si un export Docker traîne dans le shell
+pnpm ingest -- --force
 pnpm empreintes:generate -- --limit=50
 
 # boucle jusqu'à épuisement :
@@ -154,3 +156,16 @@ LOOP=1 LIMIT=50 ./scripts/deploy/setup-production.sh empreintes
 
 L'app Vercel lit la base à la volée — pas de redéploiement après
 ingestion ou génération d'empreintes.
+
+### Ingestion hebdomadaire (GitHub Actions)
+
+Le workflow `.github/workflows/ingest-weekly.yml` relance
+`pnpm ingest` chaque lundi (et à la demande via *Run workflow*).
+
+Secret GitHub requis — URL Neon **directe** (sans `-pooler`) :
+
+```bash
+gh secret set DATABASE_URL
+```
+
+Les empreintes / résumés IA restent un batch manuel (coût API).

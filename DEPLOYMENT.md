@@ -9,9 +9,22 @@ déploiement Vercel automatique.
 
 ## Maintenance des données (hors Vercel)
 
+En production, l’ingestion open data tourne **chaque lundi** via
+GitHub Actions (`.github/workflows/ingest-weekly.yml`). Relance
+manuelle : onglet Actions → *Ingest open data (weekly)* →
+*Run workflow*.
+
+Secret GitHub : `DATABASE_URL` = URL Neon **directe** (sans `-pooler`).
+
+```bash
+gh secret set DATABASE_URL
+```
+
+En local, vers Neon :
+
 ```bash
 export DATABASE_URL="<NEON_URL_DIRECTE>"
-pnpm ingest
+pnpm ingest -- --force
 pnpm empreintes:generate -- --limit=50
 ```
 

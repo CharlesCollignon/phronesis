@@ -2,7 +2,7 @@
  * Ingestion Sénat : matricules ODSEN + scrutins/votes Dosleg.
  * Sources officielles data.senat.fr (licence ouverte).
  */
-import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { createWriteStream } from "node:fs";
 import { Readable } from "node:stream";
@@ -12,7 +12,7 @@ import yauzl from "yauzl";
 
 import { db } from "../../db";
 import { acteurs, scrutins, votes } from "../../db/schema";
-import { CACHE_DIR, inBatches, logImport } from "./lib";
+import { CACHE_DIR, inBatches, logImport, useCachedFile } from "./lib";
 
 const ODSEN_URL =
   "https://data.senat.fr/data/senateurs/ODSEN_GENERAL.json";
@@ -46,9 +46,7 @@ async function downloadFile(
 ): Promise<string> {
   await mkdir(CACHE_DIR, { recursive: true });
   const dest = path.join(CACHE_DIR, destName);
-  const existing = await stat(dest).catch(() => null);
-  if (existing && existing.size > 0) {
-    console.log(`[cache] ${destName}`);
+  if (await useCachedFile(dest, destName)) {
     return dest;
   }
   console.log(`[download] ${url}`);
@@ -134,9 +132,7 @@ async function readDoslegSql(): Promise<string> {
   const zipPath = await downloadFile(DOSLEG_URL, "dosleg.zip");
   // Cache extracted sql for faster re-runs.
   const sqlPath = path.join(CACHE_DIR, "dosleg.sql");
-  const existing = await stat(sqlPath).catch(() => null);
-  if (existing && existing.size > 0) {
-    console.log("[cache] dosleg.sql");
+  if (await useCachedFile(sqlPath, "dosleg.sql")) {
     return readFile(sqlPath, "latin1");
   }
   console.log("[extract] dosleg.sql…");

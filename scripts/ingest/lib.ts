@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, stat } from "node:fs/promises";
+import { mkdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -34,6 +34,36 @@ export const DATASETS = {
   },
 } as const;
 
+/** True si --force ou INGEST_FORCE=1 : ignore le cache disque. */
+export function shouldForceRefresh(): boolean {
+  const env = process.env.INGEST_FORCE?.trim().toLowerCase();
+  if (env === "1" || env === "true" || env === "yes") {
+    return true;
+  }
+  return process.argv.includes("--force");
+}
+
+/**
+ * True si le fichier cache existe et doit être réutilisé.
+ * Supprime le fichier si un refresh forcé est demandé.
+ */
+export async function useCachedFile(
+  dest: string,
+  label: string,
+): Promise<boolean> {
+  const existing = await stat(dest).catch(() => null);
+  if (!existing || existing.size === 0) return false;
+  if (shouldForceRefresh()) {
+    console.log(`[force] ignore cache ${label}`);
+    await unlink(dest);
+    return false;
+  }
+  console.log(
+    `[cache] ${label} déjà présent (${existing.size} octets)`,
+  );
+  return true;
+}
+
 /** Télécharge un zip dans data/cache (avec cache local). */
 export async function download(dataset: {
   name: string;
@@ -41,9 +71,7 @@ export async function download(dataset: {
 }): Promise<string> {
   await mkdir(CACHE_DIR, { recursive: true });
   const dest = path.join(CACHE_DIR, `${dataset.name}.zip`);
-  const existing = await stat(dest).catch(() => null);
-  if (existing && existing.size > 0) {
-    console.log(`[cache] ${dataset.name}.zip déjà présent (${existing.size} octets)`);
+  if (await useCachedFile(dest, `${dataset.name}.zip`)) {
     return dest;
   }
   console.log(`[download] ${dataset.url}`);
