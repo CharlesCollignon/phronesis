@@ -106,13 +106,29 @@ async function mapMatricules(): Promise<Map<string, string>> {
     uid,
     senatMatricule: mat,
   }));
-  await inBatches(updates, 200, async (batch) => {
-    for (const row of batch) {
-      await db
-        .update(acteurs)
-        .set({ senatMatricule: row.senatMatricule })
-        .where(sql`${acteurs.uid} = ${row.uid}`);
-    }
+
+  // senat_matricule porte un index UNIQUE, et l'appariement se fait
+  // sur prenom|nom normalisés : un dump AMO qui introduit un homonyme
+  // peut déplacer un matricule d'un acteur à l'autre. Écrire la
+  // nouvelle valeur sans avoir libéré l'ancienne viole l'index et
+  // fait échouer toute l'étape Sénat. On repart donc d'un état
+  // propre, ce qui purge aussi les matricules devenus obsolètes.
+  // Le tout en transaction : un échec en cours de route ne doit pas
+  // laisser la table avec des matricules tous à NULL.
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`
+      UPDATE acteurs
+      SET senat_matricule = NULL
+      WHERE senat_matricule IS NOT NULL
+    `);
+    await inBatches(updates, 200, async (batch) => {
+      for (const row of batch) {
+        await tx
+          .update(acteurs)
+          .set({ senatMatricule: row.senatMatricule })
+          .where(sql`${acteurs.uid} = ${row.uid}`);
+      }
+    });
   });
 
   return matToUid;
@@ -122,9 +138,28 @@ function extractCopy(sqlText: string, table: string): string {
   const marker = `COPY ${table} `;
   const i = sqlText.indexOf(marker);
   if (i < 0) throw new Error(`COPY ${table} introuvable`);
-  const j = sqlText.indexOf("FROM stdin;\n", i);
-  const start = j + "FROM stdin;\n".length;
+
+  // « FROM stdin; » clôt la ligne COPY : le chercher au-delà
+  // signifierait qu'on a attrapé un autre bloc.
+  const header = "FROM stdin;\n";
+  const eol = sqlText.indexOf("\n", i);
+  const j = sqlText.indexOf(header, i);
+  if (j < 0 || (eol >= 0 && j > eol)) {
+    throw new Error(
+      `COPY ${table} : en-tête « FROM stdin; » introuvable`,
+    );
+  }
+
+  const start = j + header.length;
   const end = sqlText.indexOf("\n\\.\n", start);
+  // Sans terminateur, slice(start, -1) renverrait tout le reste du
+  // fichier et les lignes parseraient en silence n'importe comment.
+  if (end < 0) {
+    throw new Error(
+      `COPY ${table} : terminateur « \\. » introuvable ` +
+        `(dump tronqué ?)`,
+    );
+  }
   return sqlText.slice(start, end);
 }
 
@@ -139,19 +174,34 @@ async function readDoslegSql(): Promise<string> {
   await new Promise<void>((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
       if (err) return reject(err);
+      let found = false;
+      zip.on("error", reject);
+      // Sans entrée .sql, yauzl émet « end » sans rien extraire :
+      // rejeter explicitement, sinon la promesse ne se résout jamais
+      // et le job consomme tout son timeout.
+      zip.on("end", () => {
+        if (!found) {
+          reject(new Error(`Aucune entrée .sql dans ${DOSLEG_URL}`));
+        }
+      });
       zip.on("entry", (entry) => {
-        if (!entry.fileName.endsWith(".sql")) {
+        if (found || !entry.fileName.endsWith(".sql")) {
           zip.readEntry();
           return;
         }
-        zip.openReadStream(entry, async (e2, stream) => {
+        found = true;
+        zip.openReadStream(entry, (e2, stream) => {
           if (e2) return reject(e2);
           const chunks: Buffer[] = [];
           stream.on("data", (c: Buffer) => chunks.push(c));
           stream.on("error", reject);
-          stream.on("end", async () => {
-            await writeFile(sqlPath, Buffer.concat(chunks));
-            resolve();
+          stream.on("end", () => {
+            // .then(resolve, reject) : une écriture en échec doit
+            // rejeter, pas partir en unhandled rejection.
+            writeFile(sqlPath, Buffer.concat(chunks)).then(
+              resolve,
+              reject,
+            );
           });
         });
       });
