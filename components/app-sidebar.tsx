@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
+import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, PanelLeft, PanelLeftClose } from "lucide-react";
@@ -56,6 +56,131 @@ function subscribeCollapsed(onStoreChange: () => void): () => void {
   };
 }
 
+/**
+ * Date du jour, côté client uniquement : la rendre au SSR
+ * dépendrait du fuseau du serveur et provoquerait un écart
+ * d'hydratation. getSnapshot renvoie la même chaîne tant que le jour
+ * ne change pas, donc React la considère stable.
+ */
+function readTodayLabel(): string {
+  return formatDate(new Date().toISOString().slice(0, 10));
+}
+
+function subscribeNever(): () => void {
+  return () => {};
+}
+
+// Déclarés au niveau module : recréés à chaque rendu, React les
+// traiterait comme des composants neufs et remonterait leur
+// sous-arbre (état et focus perdus) à chaque changement d'état.
+function NavLinks({
+  labels,
+  pathname,
+  onNavigate,
+}: {
+  labels: boolean;
+  pathname: string;
+  onNavigate?: () => void;
+}): React.ReactElement {
+  return (
+    <nav className="flex flex-1 flex-col gap-0 overflow-y-auto px-1 py-2">
+      {NAV.map((item) => {
+        const active =
+          item.href === "/"
+            ? pathname === "/"
+            : pathname.startsWith(item.href);
+        const Icon = NAV_ICON_BY_HREF[item.href];
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            title={item.label}
+            onClick={onNavigate}
+            className={cn(
+              "flex min-h-10 items-center gap-2 px-2 text-sm",
+              "transition-colors",
+              !labels && "justify-center px-0",
+              active
+                ? "bg-sidebar-accent text-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent",
+            )}
+          >
+            {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
+            {labels ? (
+              <span className="truncate">{item.label}</span>
+            ) : null}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SidebarFooter({
+  labels,
+  theme,
+  toggle,
+  mobileOpen,
+}: {
+  labels: boolean;
+  theme: "light" | "dark";
+  toggle: () => void;
+  mobileOpen: boolean;
+}): React.ReactElement {
+  return (
+    <div className="mt-auto space-y-1 border-t border-sidebar-border p-2">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={toggle}
+        className={cn(
+          "h-10 w-full justify-start gap-2 rounded-none px-2",
+          !labels && "justify-center px-0",
+        )}
+        title="Thème"
+      >
+        <span className="num w-4 shrink-0 text-center text-xs text-accent">
+          {theme === "dark" ? "D" : "L"}
+        </span>
+        {labels ? (
+          <span>
+            {theme === "dark" ? "Thème sombre" : "Thème clair"}
+          </span>
+        ) : null}
+      </Button>
+
+      {HAS_CLERK ? (
+        <ClerkAuthControls
+          collapsed={!labels}
+          mobileOpen={mobileOpen}
+        />
+      ) : (
+        <Button
+          asChild
+          variant="outline"
+          className="h-10 w-full rounded-none"
+        >
+          <Link href="/sign-in">
+            {labels ? "Se connecter" : "→"}
+          </Link>
+        </Button>
+      )}
+
+      {labels ? (
+        <p
+          className={
+            "flex items-center gap-1.5 px-1 text-[10px] " +
+            "leading-snug text-muted-foreground"
+          }
+        >
+          <FlagFr className="h-2 w-3 shrink-0 opacity-70" />
+          <span>Données publiques · France</span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function AppSidebar(): React.ReactElement {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
@@ -65,16 +190,14 @@ export function AppSidebar(): React.ReactElement {
     (): boolean => false,
   );
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [todayLabel, setTodayLabel] = useState<string | null>(null);
+  const todayLabel = useSyncExternalStore(
+    subscribeNever,
+    readTodayLabel,
+    (): string | null => null,
+  );
 
   const widthClass = collapsed ? "w-[4.5rem]" : "w-56";
   const showLabels = !collapsed;
-
-  useEffect(() => {
-    setTodayLabel(
-      formatDate(new Date().toISOString().slice(0, 10)),
-    );
-  }, []);
 
   useLayoutEffect(() => {
     const w = collapsed ? "4.5rem" : "14rem";
@@ -84,102 +207,6 @@ export function AppSidebar(): React.ReactElement {
   function persistCollapse(next: boolean): void {
     localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
     emitSidebar();
-  }
-
-  function NavLinks({
-    labels,
-    onNavigate,
-  }: {
-    labels: boolean;
-    onNavigate?: () => void;
-  }): React.ReactElement {
-    return (
-      <nav className="flex flex-1 flex-col gap-0 overflow-y-auto px-1 py-2">
-        {NAV.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-          const Icon = NAV_ICON_BY_HREF[item.href];
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={item.label}
-              onClick={onNavigate}
-              className={cn(
-                "flex min-h-10 items-center gap-2 px-2 text-sm",
-                "transition-colors",
-                !labels && "justify-center px-0",
-                active
-                  ? "bg-sidebar-accent text-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent",
-              )}
-            >
-              {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
-              {labels ? (
-                <span className="truncate">{item.label}</span>
-              ) : null}
-            </Link>
-          );
-        })}
-      </nav>
-    );
-  }
-
-  function Footer({ labels }: { labels: boolean }): React.ReactElement {
-    return (
-      <div className="mt-auto space-y-1 border-t border-sidebar-border p-2">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={toggle}
-          className={cn(
-            "h-10 w-full justify-start gap-2 rounded-none px-2",
-            !labels && "justify-center px-0",
-          )}
-          title="Thème"
-        >
-          <span className="num w-4 shrink-0 text-center text-xs text-accent">
-            {theme === "dark" ? "D" : "L"}
-          </span>
-          {labels ? (
-            <span>
-              {theme === "dark" ? "Thème sombre" : "Thème clair"}
-            </span>
-          ) : null}
-        </Button>
-
-        {HAS_CLERK ? (
-          <ClerkAuthControls
-            collapsed={!labels}
-            mobileOpen={mobileOpen}
-          />
-        ) : (
-          <Button
-            asChild
-            variant="outline"
-            className="h-10 w-full rounded-none"
-          >
-            <Link href="/sign-in">
-              {labels ? "Se connecter" : "→"}
-            </Link>
-          </Button>
-        )}
-
-        {labels ? (
-          <p
-            className={
-              "flex items-center gap-1.5 px-1 text-[10px] " +
-              "leading-snug text-muted-foreground"
-            }
-          >
-            <FlagFr className="h-2 w-3 shrink-0 opacity-70" />
-            <span>Données publiques · France</span>
-          </p>
-        ) : null}
-      </div>
-    );
   }
 
   const logoBlock = (
@@ -243,8 +270,13 @@ export function AppSidebar(): React.ReactElement {
           )}
         </Button>
       </div>
-      <NavLinks labels={showLabels} />
-      <Footer labels={showLabels} />
+      <NavLinks labels={showLabels} pathname={pathname} />
+      <SidebarFooter
+        labels={showLabels}
+        theme={theme}
+        toggle={toggle}
+        mobileOpen={mobileOpen}
+      />
     </div>
   );
 
@@ -300,9 +332,15 @@ export function AppSidebar(): React.ReactElement {
             <div className="flex h-[calc(100%-4.5rem)] flex-col">
               <NavLinks
                 labels
+                pathname={pathname}
                 onNavigate={() => setMobileOpen(false)}
               />
-              <Footer labels />
+              <SidebarFooter
+                labels
+                theme={theme}
+                toggle={toggle}
+                mobileOpen={mobileOpen}
+              />
             </div>
           </SheetContent>
         </Sheet>

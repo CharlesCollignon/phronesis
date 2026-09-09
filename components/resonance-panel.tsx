@@ -73,8 +73,18 @@ function ResonanceInner({
 }: ResonancePanelProps & {
   canUseProfil: boolean;
 }): React.ReactElement {
-  const [profil, setProfil] = useState<ProfilBoussole | null>(null);
-  const [ready, setReady] = useState(false);
+  // On mémorise pour quelle valeur de canUseProfil le chargement a
+  // abouti : `ready` et `profil` en découlent. Auparavant un
+  // setReady(false) synchrone dans le corps de l'effet remettait le
+  // panneau en « Chargement… », au prix d'un rendu en cascade.
+  const [loaded, setLoaded] = useState<{
+    canUseProfil: boolean;
+    profil: ProfilBoussole | null;
+  } | null>(null);
+
+  const ready =
+    loaded !== null && loaded.canUseProfil === canUseProfil;
+  const profil = ready ? loaded.profil : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -82,8 +92,7 @@ function ResonanceInner({
     async function boot(): Promise<void> {
       if (!canUseProfil) {
         if (!cancelled) {
-          setProfil(null);
-          setReady(true);
+          setLoaded({ canUseProfil: false, profil: null });
         }
         return;
       }
@@ -91,12 +100,10 @@ function ResonanceInner({
         syncCloud: HAS_CLERK,
       });
       if (!cancelled) {
-        setProfil(p);
-        setReady(true);
+        setLoaded({ canUseProfil: true, profil: p });
       }
     }
 
-    setReady(false);
     void boot();
     return () => {
       cancelled = true;

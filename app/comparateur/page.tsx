@@ -1,4 +1,3 @@
-import Link from "next/link";
 
 import { ComparaisonResults } from "@/components/comparaison-results";
 import { PageShell } from "@/components/breadcrumbs";

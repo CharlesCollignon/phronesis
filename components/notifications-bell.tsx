@@ -57,6 +57,9 @@ function NotificationsBellInner(): React.ReactElement | null {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
+    // Chargement initial depuis l'API : les setState ont lieu dans
+    // refresh(), après l'await, et non dans le corps de l'effet.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
   }, [isLoaded, isSignedIn, refresh]);
 

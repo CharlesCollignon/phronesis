@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Les scripts d'ingestion sont du Node pur : aucun composant, aucun
+  // hook. Les règles react-hooks n'y voient que des faux positifs —
+  // `useCachedFile` est un helper de cache disque, pas un hook.
+  {
+    files: ["scripts/**/*.ts"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
