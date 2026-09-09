@@ -1,7 +1,7 @@
 /**
  * Notifications in-app (Clerk) — génération à la lecture.
  */
-import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -18,6 +18,30 @@ import { computeResonance } from "@/lib/resonance";
 const RESONANCE_THRESHOLD = 0.55;
 const LOOKBACK_DAYS = 14;
 const MAX_GENERATE = 8;
+
+/**
+ * La génération est idempotente mais coûteuse (plusieurs requêtes par
+ * appel). La cloche interroge l'API à chaque chargement de page : sans
+ * throttle, chaque navigation d'un utilisateur connecté rejouait tout.
+ * Mémoire process : au pire on régénère une fois par instance après un
+ * cold start, ce qui reste borné.
+ */
+const REGEN_TTL_MS = 15 * 60 * 1000;
+const REGEN_MAX_KEYS = 5000;
+const lastRegenByUser = new Map<string, number>();
+
+/** True si la génération doit être rejouée pour cet utilisateur. */
+function shouldRegenerate(clerkUserId: string): boolean {
+  const now = Date.now();
+  const last = lastRegenByUser.get(clerkUserId);
+  if (last != null && now - last < REGEN_TTL_MS) return false;
+  // Borne la carte plutôt que de la laisser croître indéfiniment.
+  if (lastRegenByUser.size >= REGEN_MAX_KEYS) lastRegenByUser.clear();
+  // Marqué avant l'await : deux requêtes concurrentes sur la même
+  // instance ne doivent pas générer deux fois.
+  lastRegenByUser.set(clerkUserId, now);
+  return true;
+}
 
 function daysAgoIso(days: number): string {
   const d = new Date();
@@ -143,16 +167,35 @@ export async function ensureNotificationsForUser(
     .orderBy(desc(dossiers.uid))
     .limit(40);
 
+  // Une seule requête pour les 40 candidats : la boucle faisait
+  // auparavant un aller-retour par dossier.
+  const uids = candidats.map((d) => d.uid);
+  const empreinteRows =
+    uids.length === 0
+      ? []
+      : await db
+          .select({
+            dossierUid: empreintes.dossierUid,
+            axe: empreintes.axe,
+            impact: empreintes.impact,
+          })
+          .from(empreintes)
+          .where(inArray(empreintes.dossierUid, uids));
+
+  const empreintesByDossier = new Map<
+    string,
+    { axe: string; impact: string }[]
+  >();
+  for (const row of empreinteRows) {
+    const list = empreintesByDossier.get(row.dossierUid) ?? [];
+    list.push({ axe: row.axe, impact: row.impact });
+    empreintesByDossier.set(row.dossierUid, list);
+  }
+
   let created = 0;
   for (const d of candidats) {
     if (created >= MAX_GENERATE) break;
-    const rows = await db
-      .select({
-        axe: empreintes.axe,
-        impact: empreintes.impact,
-      })
-      .from(empreintes)
-      .where(eq(empreintes.dossierUid, d.uid));
+    const rows = empreintesByDossier.get(d.uid) ?? [];
     const res = computeResonance(profil, rows);
     if (!res || res.score < RESONANCE_THRESHOLD) continue;
     await insertOnce({
@@ -174,7 +217,9 @@ export async function listNotificationsForUser(
   clerkUserId: string,
   opts?: { unreadOnly?: boolean; limit?: number },
 ) {
-  await ensureNotificationsForUser(clerkUserId);
+  if (shouldRegenerate(clerkUserId)) {
+    await ensureNotificationsForUser(clerkUserId);
+  }
   const limit = opts?.limit ?? 30;
   const unreadOnly = opts?.unreadOnly ?? false;
 
