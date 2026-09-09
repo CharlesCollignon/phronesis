@@ -64,7 +64,107 @@ export async function useCachedFile(
   return true;
 }
 
-/** Télécharge un zip dans data/cache (avec cache local). */
+const DOWNLOAD_ATTEMPTS = 5;
+
+const DOWNLOAD_HEADERS = {
+  Accept: "*/*",
+  "User-Agent":
+    "phronesis-ingest/0.1 (+https://github.com/CharlesCollignon/phronesis)",
+} as const;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function errorCode(err: unknown): string | undefined {
+  if (typeof err !== "object" || err == null) return undefined;
+  const direct = (err as { code?: unknown }).code;
+  if (typeof direct === "string") return direct;
+  const cause = (err as { cause?: unknown }).cause;
+  if (typeof cause === "object" && cause != null) {
+    const nested = (cause as { code?: unknown }).code;
+    if (typeof nested === "string") return nested;
+  }
+  return undefined;
+}
+
+function isRetriableDownloadError(err: unknown): boolean {
+  const code = errorCode(err);
+  if (
+    code === "UND_ERR_SOCKET" ||
+    code === "ECONNRESET" ||
+    code === "ETIMEDOUT" ||
+    code === "ECONNREFUSED" ||
+    code === "EPIPE" ||
+    code === "UND_ERR_CONNECT_TIMEOUT"
+  ) {
+    return true;
+  }
+  const msg =
+    err instanceof Error
+      ? `${err.message} ${err.cause instanceof Error ? err.cause.message : ""}`
+      : String(err);
+  return /terminated|other side closed|socket|network|ECONNRESET|ETIMEDOUT|fetch failed/i.test(
+    msg,
+  );
+}
+
+function parseExpectedTotal(
+  res: Response,
+  offset: number,
+): number | null {
+  const range = res.headers.get("content-range");
+  if (range) {
+    const m = range.match(/\/(\d+)\s*$/);
+    if (m) return Number(m[1]);
+  }
+  const length = Number(res.headers.get("content-length"));
+  if (!Number.isFinite(length) || length <= 0) return null;
+  return res.status === 206 ? offset + length : length;
+}
+
+/** Un essai : GET, éventuellement Range si un partiel est déjà là. */
+async function downloadOnce(url: string, dest: string): Promise<void> {
+  const existing = await stat(dest).catch(() => null);
+  const offset = existing && existing.size > 0 ? existing.size : 0;
+  const headers: Record<string, string> = { ...DOWNLOAD_HEADERS };
+  if (offset > 0) {
+    headers.Range = `bytes=${offset}-`;
+    console.log(`[download] reprise à ${offset} octets`);
+  }
+
+  const res = await fetch(url, { headers });
+  if (res.status === 416) {
+    return;
+  }
+  if (!res.ok || !res.body) {
+    throw new Error(`Téléchargement échoué (${res.status}) : ${url}`);
+  }
+
+  const append = offset > 0 && res.status === 206;
+  if (offset > 0 && res.status === 200) {
+    console.log("[download] le serveur ignore Range, redémarrage");
+    await unlink(dest).catch(() => undefined);
+  }
+
+  const expected = parseExpectedTotal(res, append ? offset : 0);
+  await pipeline(
+    Readable.fromWeb(res.body as import("stream/web").ReadableStream),
+    createWriteStream(dest, { flags: append ? "a" : "w" }),
+  );
+
+  const size = (await stat(dest)).size;
+  if (size === 0) {
+    throw new Error("fichier vide");
+  }
+  if (expected != null && size < expected) {
+    throw new Error(`incomplet : ${size}/${expected} octets`);
+  }
+}
+
+/** Télécharge un zip dans data/cache (cache local, retry + reprise). */
 export async function download(dataset: {
   name: string;
   url: string;
@@ -75,17 +175,35 @@ export async function download(dataset: {
     return dest;
   }
   console.log(`[download] ${dataset.url}`);
-  const res = await fetch(dataset.url);
-  if (!res.ok || !res.body) {
-    throw new Error(`Téléchargement échoué (${res.status}) : ${dataset.url}`);
+
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= DOWNLOAD_ATTEMPTS; attempt++) {
+    try {
+      await downloadOnce(dataset.url, dest);
+      const size = (await stat(dest)).size;
+      console.log(`[download] terminé : ${dest} (${size} octets)`);
+      return dest;
+    } catch (err) {
+      lastErr = err;
+      const size = await stat(dest)
+        .then((s) => s.size)
+        .catch(() => 0);
+      const detail = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[download] tentative ${attempt}/${DOWNLOAD_ATTEMPTS} ` +
+          `échouée (${size} octets) : ${detail}`,
+      );
+      if (attempt >= DOWNLOAD_ATTEMPTS || !isRetriableDownloadError(err)) {
+        break;
+      }
+      const wait = Math.min(30_000, 1000 * 2 ** (attempt - 1));
+      console.log(`[download] nouvel essai dans ${wait / 1000}s`);
+      await sleep(wait);
+    }
   }
-  await pipeline(
-    Readable.fromWeb(res.body as import("stream/web").ReadableStream),
-    createWriteStream(dest),
-  );
-  const size = (await stat(dest)).size;
-  console.log(`[download] terminé : ${dest} (${size} octets)`);
-  return dest;
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error(`Téléchargement échoué : ${dataset.url}`);
 }
 
 /**
