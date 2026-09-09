@@ -60,7 +60,7 @@ disponibles en open data. Voir `/methodologie` dans l'application.
 
 ## Prérequis
 
-- Node.js 20+
+- Node.js 22.13+ (requis par pnpm 11)
 - pnpm
 - Docker
 
@@ -159,8 +159,12 @@ ingestion ou génération d'empreintes.
 
 ### Ingestion hebdomadaire (GitHub Actions)
 
-Le workflow `.github/workflows/ingest-weekly.yml` relance
-`pnpm ingest` chaque lundi (et à la demande via *Run workflow*).
+Le workflow `.github/workflows/ingest-weekly.yml` applique les
+migrations puis relance `pnpm ingest` chaque lundi (et à la demande
+via *Run workflow*).
+
+Le job tourne sur Node 24 : pnpm 11 (épinglé par `packageManager`)
+exige Node >= 22.13.
 
 Secret GitHub requis — URL Neon **directe** (sans `-pooler`) :
 

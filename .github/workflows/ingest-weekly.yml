@@ -21,6 +21,9 @@ jobs:
     timeout-minutes: 180
     env:
       INGEST_FORCE: "1"
+      # Les dumps AN/Sénat sont volumineux (votes AN en mémoire,
+      # dosleg.sql ~126 Mo) : au-delà du cap heap par défaut (~4 Go).
+      NODE_OPTIONS: --max-old-space-size=8192
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Check DATABASE_URL
@@ -43,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install
@@ -53,6 +56,9 @@ jobs:
         run: |
           umask 077
           printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env
+
+      - name: Migrate
+        run: pnpm db:migrate
 
       - name: Ingest
         run: pnpm ingest
