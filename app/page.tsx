@@ -19,7 +19,16 @@ export default async function HomePage(): Promise<React.ReactElement> {
     derniersScrutins,
     derniersDossiers,
     derniereDateScrutin,
+    derniersImports,
   } = await getHomeStats();
+
+  const dernierImportAt = derniersImports[0]?.importedAt ?? null;
+  const dernierImportDate =
+    dernierImportAt instanceof Date
+      ? dernierImportAt.toISOString().slice(0, 10)
+      : dernierImportAt
+        ? String(dernierImportAt).slice(0, 10)
+        : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6">
@@ -73,6 +82,21 @@ export default async function HomePage(): Promise<React.ReactElement> {
           </>
         ) : null}
       </div>
+      {dernierImportDate ? (
+        <p
+          className={
+            "border-b border-border py-2 text-[11px] text-muted-foreground"
+          }
+        >
+          Mise à jour chaque semaine — dernier import :{" "}
+          <time
+            dateTime={dernierImportDate}
+            className="font-medium text-foreground"
+          >
+            {formatDateShort(dernierImportDate)}
+          </time>
+        </p>
+      ) : null}
 
       <header className="border-b border-border pb-8 pt-6">
         <h1
