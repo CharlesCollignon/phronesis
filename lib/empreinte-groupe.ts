@@ -6,6 +6,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { cachedQuery } from "@/lib/cache";
 import {
   AXES_BOUSSOLE,
   type AxeBoussole,
@@ -69,7 +70,7 @@ function emptyProfil(): ProfilBoussole {
  * Calcule le vecteur agrégé d'un groupe à partir des majorités
  * pour/contre sur dossiers pourvus d'une empreinte.
  */
-export async function getEmpreinteGroupe(
+async function getEmpreinteGroupeUncached(
   organeUid: string,
 ): Promise<GroupeEmpreinteAgregat | null> {
   const [groupe] = await db
@@ -211,3 +212,9 @@ export async function getEmpreinteGroupe(
     empreinteSynthetique,
   };
 }
+
+// Agrégat open data mis en cache 24 h (voir lib/cache.ts).
+export const getEmpreinteGroupe = cachedQuery(
+  "getEmpreinteGroupe",
+  getEmpreinteGroupeUncached,
+);

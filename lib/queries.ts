@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { cachedQuery, SONDAGES_TAG } from "@/lib/cache";
 import { computeScorePhronesis } from "@/lib/score-phronesis";
 
 const {
@@ -86,14 +87,14 @@ async function listParlementaires(
 }
 
 /** Députés de la 17e législature (mandat ASSEMBLEE). */
-export async function listDeputes(
+async function listDeputesUncached(
   search?: string,
 ): Promise<DeputeListItem[]> {
   return listParlementaires("ASSEMBLEE", "GP", search, true);
 }
 
 /** Sénateurs en mandat (AMO + groupes Sénat). */
-export async function listSenateurs(
+async function listSenateursUncached(
   search?: string,
 ): Promise<DeputeListItem[]> {
   return listParlementaires("SENAT", "GROUPESENAT", search, false);
@@ -149,7 +150,7 @@ async function getParlementaire(
 }
 
 /** HATVP + décisions définitives curatées pour une fiche acteur. */
-export async function getActeurTransparence(uid: string): Promise<{
+async function getActeurTransparenceUncached(uid: string): Promise<{
   hatvp: {
     hatvpUrl: string;
     qualite: string;
@@ -191,15 +192,15 @@ export async function getActeurTransparence(uid: string): Promise<{
   };
 }
 
-export async function getDepute(uid: string) {
+async function getDeputeUncached(uid: string) {
   return getParlementaire(uid, "ASSEMBLEE", "GP");
 }
 
-export async function getSenateur(uid: string) {
+async function getSenateurUncached(uid: string) {
   return getParlementaire(uid, "SENAT", "GROUPESENAT");
 }
 
-export async function getDeputeStats(uid: string) {
+async function getDeputeStatsUncached(uid: string) {
   const [totals] = await db
     .select({
       total: sql<number>`count(*)::int`,
@@ -271,7 +272,7 @@ export async function getDeputeStats(uid: string) {
   };
 }
 
-export async function getDeputeVotes(uid: string, limit = 50) {
+async function getDeputeVotesUncached(uid: string, limit = 50) {
   return db
     .select({
       scrutinUid: scrutins.uid,
@@ -289,7 +290,7 @@ export async function getDeputeVotes(uid: string, limit = 50) {
     .limit(limit);
 }
 
-export async function listScrutins(opts: {
+async function listScrutinsUncached(opts: {
   search?: string;
   limit?: number;
   offset?: number;
@@ -336,7 +337,7 @@ export async function listScrutins(opts: {
     .offset(offset);
 }
 
-export async function getScrutin(uid: string) {
+async function getScrutinUncached(uid: string) {
   const [scrutin] = await db
     .select()
     .from(scrutins)
@@ -379,7 +380,7 @@ export async function getScrutin(uid: string) {
   return { scrutin, dossier, parGroupe };
 }
 
-export async function getScrutinVotes(
+async function getScrutinVotesUncached(
   uid: string,
   position?: string,
   groupeUid?: string,
@@ -406,7 +407,7 @@ export async function getScrutinVotes(
     .orderBy(acteurs.nom, acteurs.prenom);
 }
 
-export async function listDossiers(opts: {
+async function listDossiersUncached(opts: {
   search?: string;
   limit?: number;
   offset?: number;
@@ -436,7 +437,7 @@ export async function listDossiers(opts: {
     .offset(offset);
 }
 
-export async function getDossier(uid: string) {
+async function getDossierUncached(uid: string) {
   const [dossier] = await db
     .select()
     .from(dossiers)
@@ -520,7 +521,7 @@ export async function getDossier(uid: string) {
   };
 }
 
-export async function searchAll(q: string) {
+async function searchAllUncached(q: string) {
   const query = q.trim();
   if (!query) {
     return { dossiers: [], scrutins: [], deputes: [] };
@@ -587,7 +588,7 @@ export async function searchAll(q: string) {
   };
 }
 
-export async function getHomeStats() {
+async function getHomeStatsUncached() {
   const [counts] = await db.execute<{
     dossiers: number;
     scrutins: number;
@@ -605,8 +606,8 @@ export async function getHomeStats() {
       (SELECT count(*)::int FROM votes) AS votes
   `);
 
-  const derniersScrutins = await listScrutins({ limit: 6 });
-  const derniersDossiers = await listDossiers({ limit: 6 });
+  const derniersScrutins = await listScrutinsUncached({ limit: 6 });
+  const derniersDossiers = await listDossiersUncached({ limit: 6 });
   const derniersImports = await db
     .select()
     .from(imports)
@@ -742,12 +743,12 @@ export async function getHomeStats() {
 }
 
 /** Fil « À l'Assemblée » : activité open data + aperçu sondages. */
-export async function getActualiteAssemblee(opts?: {
+async function getActualiteAssembleeUncached(opts?: {
   limit?: number;
 }) {
   const limit = opts?.limit ?? 12;
-  const scrutins = await listScrutins({ limit });
-  const baseDossiers = await listDossiers({ limit });
+  const scrutins = await listScrutinsUncached({ limit });
+  const baseDossiers = await listDossiersUncached({ limit });
 
   const dossiers = await Promise.all(
     baseDossiers.map(async (d) => {
@@ -781,12 +782,12 @@ export async function getActualiteAssemblee(opts?: {
   return { scrutins, dossiers };
 }
 
-export async function getImportHistory() {
+async function getImportHistoryUncached() {
   return db.select().from(imports).orderBy(desc(imports.importedAt));
 }
 
 /** Effectifs des groupes actifs pour hémicycle (AN ou Sénat). */
-export async function listGroupesEffectifs(
+async function listGroupesEffectifsUncached(
   chambre: "AN" | "SENAT",
 ): Promise<
   {
@@ -862,3 +863,50 @@ export async function listDossiersSansEmpreinte(limit = 20) {
     .orderBy(desc(dossiers.uid))
     .limit(limit);
 }
+
+// Lectures exposées aux pages : mises en cache 24 h (voir lib/cache.ts).
+// listDossiersSansResume / listDossiersSansEmpreinte restent hors cache :
+// les scripts batch les appellent hors runtime Next.
+export const listDeputes = cachedQuery("listDeputes", listDeputesUncached);
+export const listSenateurs = cachedQuery(
+  "listSenateurs",
+  listSenateursUncached,
+);
+export const getActeurTransparence = cachedQuery(
+  "getActeurTransparence",
+  getActeurTransparenceUncached,
+);
+export const getDepute = cachedQuery("getDepute", getDeputeUncached);
+export const getSenateur = cachedQuery("getSenateur", getSenateurUncached);
+export const getDeputeStats = cachedQuery(
+  "getDeputeStats",
+  getDeputeStatsUncached,
+);
+export const getDeputeVotes = cachedQuery(
+  "getDeputeVotes",
+  getDeputeVotesUncached,
+);
+export const listScrutins = cachedQuery("listScrutins", listScrutinsUncached);
+export const getScrutin = cachedQuery("getScrutin", getScrutinUncached);
+export const getScrutinVotes = cachedQuery(
+  "getScrutinVotes",
+  getScrutinVotesUncached,
+);
+export const listDossiers = cachedQuery("listDossiers", listDossiersUncached);
+export const getDossier = cachedQuery("getDossier", getDossierUncached);
+export const searchAll = cachedQuery("searchAll", searchAllUncached);
+export const getHomeStats = cachedQuery("getHomeStats", getHomeStatsUncached);
+// Contient les compteurs de sondages : invalidé à chaque vote.
+export const getActualiteAssemblee = cachedQuery(
+  "getActualiteAssemblee",
+  getActualiteAssembleeUncached,
+  { tags: [SONDAGES_TAG] },
+);
+export const getImportHistory = cachedQuery(
+  "getImportHistory",
+  getImportHistoryUncached,
+);
+export const listGroupesEffectifs = cachedQuery(
+  "listGroupesEffectifs",
+  listGroupesEffectifsUncached,
+);

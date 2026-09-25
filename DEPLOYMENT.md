@@ -16,6 +16,12 @@ manuelle : onglet Actions → *Ingest open data (weekly)* →
 
 Secret GitHub : `DATABASE_URL` = URL Neon **directe** (sans `-pooler`).
 
+Les pages lisent la base à travers un cache de 24 h (`lib/cache.ts`),
+pour ne pas réveiller Neon à chaque visite. Après une ingestion ou une
+génération de résumés, les nouvelles données apparaissent donc sous
+24 h — ou tout de suite après un redéploiement, qui repart d'un cache
+vide.
+
 ```bash
 gh secret set DATABASE_URL
 ```

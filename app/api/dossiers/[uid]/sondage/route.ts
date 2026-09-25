@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { db } from "@/db";
 import { dossiers, sondagesDossiers } from "@/db/schema";
+import { SONDAGES_TAG } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -154,6 +156,7 @@ export async function POST(
         updatedAt: now,
       },
     });
+  revalidateTag(SONDAGES_TAG, { expire: 0 });
 
   const counts = await countsForDossier(uid);
   return NextResponse.json({ counts, mine: body.position });
@@ -196,6 +199,7 @@ export async function DELETE(
         eq(sondagesDossiers.clerkUserId, userId),
       ),
     );
+  revalidateTag(SONDAGES_TAG, { expire: 0 });
 
   const counts = await countsForDossier(uid);
   return NextResponse.json({ counts, mine: null });

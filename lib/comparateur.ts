@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { cachedQuery } from "@/lib/cache";
 
 const { acteurs, mandats, organes } = schema;
 
@@ -41,7 +42,7 @@ export type GroupeBref = {
 };
 
 /** Compare deux députés sur les scrutins publics communs. */
-export async function compareDeputes(
+async function compareDeputesUncached(
   uidA: string,
   uidB: string,
   listLimit = 40,
@@ -189,7 +190,7 @@ async function listScrutinsComparaison(
 }
 
 /** Position majoritaire d'un groupe par scrutin, puis comparaison. */
-export async function compareGroupes(
+async function compareGroupesUncached(
   organeUidA: string,
   organeUidB: string,
   listLimit = 40,
@@ -350,7 +351,7 @@ async function getGroupeBref(uid: string): Promise<GroupeBref | null> {
 }
 
 /** Groupes parlementaires actifs (AN ou Sénat). */
-export async function listGroupesLegislature(
+async function listGroupesLegislatureUncached(
   chambre: "AN" | "SENAT" = "AN",
 ): Promise<GroupeBref[]> {
   const codeType = chambre === "SENAT" ? "GROUPESENAT" : "GP";
@@ -422,16 +423,38 @@ async function searchParlementaires(
 }
 
 /** Recherche légère de députés pour le sélecteur du comparateur. */
-export async function searchDeputesPourComparateur(
+async function searchDeputesPourComparateurUncached(
   q: string,
   limit = 20,
 ): Promise<ActeurBref[]> {
   return searchParlementaires("ASSEMBLEE", q, limit, true);
 }
 
-export async function searchSenateursPourComparateur(
+async function searchSenateursPourComparateurUncached(
   q: string,
   limit = 20,
 ): Promise<ActeurBref[]> {
   return searchParlementaires("SENAT", q, limit, false);
 }
+
+// Lectures open data mises en cache 24 h (voir lib/cache.ts).
+export const compareDeputes = cachedQuery(
+  "compareDeputes",
+  compareDeputesUncached,
+);
+export const compareGroupes = cachedQuery(
+  "compareGroupes",
+  compareGroupesUncached,
+);
+export const listGroupesLegislature = cachedQuery(
+  "listGroupesLegislature",
+  listGroupesLegislatureUncached,
+);
+export const searchDeputesPourComparateur = cachedQuery(
+  "searchDeputesPourComparateur",
+  searchDeputesPourComparateurUncached,
+);
+export const searchSenateursPourComparateur = cachedQuery(
+  "searchSenateursPourComparateur",
+  searchSenateursPourComparateurUncached,
+);
