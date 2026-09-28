@@ -186,6 +186,15 @@ async function main(): Promise<void> {
     }
   }
 
+  // Les dossiers 49.3 reprennent des actes de leur projet de loi
+  // (ex. PLF 2026) : un même uid deux fois dans un lot fait échouer
+  // ON CONFLICT DO UPDATE. On garde la première occurrence.
+  const actesByUid = new Map<string, ActeRow>();
+  for (const acte of acteRows) {
+    if (!actesByUid.has(acte.uid)) actesByUid.set(acte.uid, acte);
+  }
+  const uniqueActes = [...actesByUid.values()];
+
   await inBatches(dossierRows, 500, async (batch) => {
     await db
       .insert(dossiers)
@@ -205,7 +214,7 @@ async function main(): Promise<void> {
   });
 
   // Les actes sont entièrement re-synchronisés dossier par dossier.
-  await inBatches(acteRows, 1000, async (batch) => {
+  await inBatches(uniqueActes, 1000, async (batch) => {
     await db
       .insert(actes)
       .values(batch)
@@ -244,7 +253,7 @@ async function main(): Promise<void> {
   });
 
   const duration = Date.now() - start;
-  const total = dossierRows.length + acteRows.length + documentRows.length;
+  const total = dossierRows.length + uniqueActes.length + documentRows.length;
   await logImport("dossiers", DATASETS.dossiers.url, total, duration);
   console.log(`Import dossiers terminé en ${Math.round(duration / 1000)}s`);
   process.exit(0);
