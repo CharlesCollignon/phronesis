@@ -1,5 +1,6 @@
 # Ingestion hebdomadaire des dumps open data (AN + Sénat) vers Neon.
-# Secret requis : DATABASE_URL = URL Neon DIRECTE (sans -pooler).
+# Secrets requis : DATABASE_URL = URL Neon DIRECTE (sans -pooler),
+# REVALIDATE_SECRET = même valeur que la variable Vercel du même nom.
 name: Ingest open data (weekly)
 
 on:
@@ -62,3 +63,18 @@ jobs:
 
       - name: Ingest
         run: pnpm ingest
+
+      # Les pages lisent la base via un cache sans expiration courte :
+      # on le vide une fois les nouvelles données en base.
+      - name: Refresh site cache
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SITE_URL: https://phronesis-seven-neon.vercel.app
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::error::Secret REVALIDATE_SECRET manquant : le site garde les anciennes données."
+            exit 1
+          fi
+          curl --fail-with-body -sS --retry 3 -X POST \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            "$SITE_URL/api/revalidate"

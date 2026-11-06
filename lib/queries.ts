@@ -864,7 +864,8 @@ export async function listDossiersSansEmpreinte(limit = 20) {
     .limit(limit);
 }
 
-// Lectures exposées aux pages : mises en cache 24 h (voir lib/cache.ts).
+// Lectures exposées aux pages : mises en cache jusqu'à la prochaine
+// ingestion (voir lib/cache.ts).
 // listDossiersSansResume / listDossiersSansEmpreinte restent hors cache :
 // les scripts batch les appellent hors runtime Next.
 export const listDeputes = cachedQuery("listDeputes", listDeputesUncached);

@@ -16,15 +16,30 @@ manuelle : onglet Actions → *Ingest open data (weekly)* →
 
 Secret GitHub : `DATABASE_URL` = URL Neon **directe** (sans `-pooler`).
 
-Les pages lisent la base à travers un cache de 24 h (`lib/cache.ts`),
-pour ne pas réveiller Neon à chaque visite. Après une ingestion ou une
-génération de résumés, les nouvelles données apparaissent donc sous
-24 h — ou tout de suite après un redéploiement, qui repart d'un cache
-vide.
+Les pages lisent la base à travers un cache (`lib/cache.ts`) qui dure
+jusqu'à la prochaine ingestion, pour ne pas réveiller Neon à chaque
+visite. Le cache survit aux déploiements. Le workflow le vide à la fin
+de l'ingestion via `POST /api/revalidate`.
+
+Après une génération de résumés ou d'empreintes en local, vider le
+cache à la main :
+
+```bash
+curl -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" \
+  https://phronesis-seven-neon.vercel.app/api/revalidate
+```
+
+Si un changement de code modifie le format renvoyé par une requête en
+cache, incrémenter `CACHE_VERSION` dans `lib/cache.ts`.
+
+Secrets :
 
 ```bash
 gh secret set DATABASE_URL
+gh secret set REVALIDATE_SECRET   # même valeur que sur Vercel
 ```
+
+Côté Vercel, `REVALIDATE_SECRET` doit être défini en Production.
 
 En local, vers Neon :
 

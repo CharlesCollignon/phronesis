@@ -7,15 +7,27 @@ import { unstable_cache } from "next/cache";
  * sans cache, chaque visite — robots compris — réveille le compute Neon.
  */
 
-/** Durée de vie par défaut d'une entrée : 24 h. */
-const ONE_DAY_SECONDS = 60 * 60 * 24;
+/**
+ * Filet de sécurité : 30 jours. En pratique, les entrées sont invalidées
+ * par `revalidateTag(OPEN_DATA_TAG)` à la fin de chaque ingestion
+ * (POST /api/revalidate), donc Neon n'est relu qu'une fois par semaine
+ * et par page visitée.
+ */
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+
+/** Toutes les lectures en cache : invalidées après chaque ingestion. */
+export const OPEN_DATA_TAG = "open-data";
 
 /** Agrégats de sondages : invalidés à chaque vote. */
 export const SONDAGES_TAG = "sondages";
 
-// Le Data Cache survit aux déploiements : on isole chaque déploiement
-// pour qu'une requête modifiée ne relise jamais un ancien format.
-const DEPLOYMENT_KEY = process.env.VERCEL_DEPLOYMENT_ID ?? "local";
+/**
+ * Le Data Cache survit aux déploiements, pour ne pas réveiller Neon à
+ * chaque push. Incrémenter cette version quand le format renvoyé par une
+ * requête en cache change (colonne ajoutée, objet restructuré…), sinon
+ * le nouveau code relira d'anciennes entrées.
+ */
+const CACHE_VERSION = "v1";
 
 const DATE_KEY = "__date";
 
@@ -52,10 +64,10 @@ export function cachedQuery<Args extends unknown[], Result>(
 ): (...args: Args) => Promise<Result> {
   const cached = unstable_cache(
     async (...args: Args) => encode(await query(...args)),
-    [DEPLOYMENT_KEY, key],
+    [CACHE_VERSION, key],
     {
-      revalidate: options.revalidate ?? ONE_DAY_SECONDS,
-      tags: options.tags,
+      revalidate: options.revalidate ?? MAX_AGE_SECONDS,
+      tags: [OPEN_DATA_TAG, ...(options.tags ?? [])],
     },
   );
   return async (...args: Args) => decode<Result>(await cached(...args));
