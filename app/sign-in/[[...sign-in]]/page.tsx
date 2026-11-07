@@ -26,7 +26,7 @@ export default function SignInPage(): React.ReactElement {
     >
       <PageHeader
         title="Connexion"
-        description="Un compte est facultatif. Il permet de sauvegarder votre Boussole et de participer aux sondages d'opinion sur les lois et les scrutins."
+        description="Un compte est facultatif. Il permet de sauvegarder votre Boussole (avec votre accord) et de participer aux consultations citoyennes sur les lois et les scrutins."
       />
       {hasClerk ? (
         <div className="mt-10 flex justify-center border-t border-border pt-10">

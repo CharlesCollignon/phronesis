@@ -8,6 +8,7 @@ import { AxesBars } from "@/components/profil-axes";
 import {
   loadBoussoleStored,
   pushBoussoleToCloud,
+  retirerConsentementBoussole,
   saveBoussoleStored,
   syncBoussoleAfterAuth,
   touchBoussoleStreak,
@@ -77,6 +78,9 @@ function BoussoleQuizInner({
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [syncNote, setSyncNote] = useState<string | null>(null);
+  /** Date ISO de l'accord pour enregistrer la Boussole sur le compte. */
+  const [consentement, setConsentement] = useState<string | null>(null);
+  const compte = HAS_CLERK && isSignedIn;
   const [engagement, setEngagement] = useState<EngagementStored>({
     lastVisit: "",
     streakDays: 0,
@@ -99,10 +103,13 @@ function BoussoleQuizInner({
       let raw = persistLocal ? loadBoussoleStored().reponses : {};
       if (HAS_CLERK && isSignedIn) {
         try {
-          const synced = await syncBoussoleAfterAuth();
-          if (!cancelled && Object.keys(synced).length > 0) {
-            raw = synced;
-            setSyncNote("Profil synchronisé avec votre compte.");
+          const etat = await syncBoussoleAfterAuth();
+          if (!cancelled) {
+            setConsentement(etat.consentement);
+            if (etat.consentement && Object.keys(etat.reponses).length > 0) {
+              raw = etat.reponses;
+              setSyncNote("Profil synchronisé avec votre compte.");
+            }
           }
         } catch {
           /* keep local */
@@ -121,9 +128,6 @@ function BoussoleQuizInner({
       );
       const streak = touchBoussoleStreak();
       setEngagement(streak);
-      if (HAS_CLERK && isSignedIn) {
-        void pushBoussoleToCloud(valid);
-      }
       setReady(true);
     }
 
@@ -155,7 +159,7 @@ function BoussoleQuizInner({
     setEngagement(touchBoussoleStreak());
     if (persistLocal) {
       saveBoussoleStored({ reponses: next });
-      if (HAS_CLERK && isSignedIn) void pushBoussoleToCloud(next);
+      if (compte && consentement) void pushBoussoleToCloud(next);
     }
     const done =
       DILEMMES.filter((d) => next[d.id]).length === DILEMMES.length;
@@ -168,12 +172,40 @@ function BoussoleQuizInner({
     setReponses({});
     if (persistLocal) {
       saveBoussoleStored({ reponses: {} });
-      if (HAS_CLERK && isSignedIn) void pushBoussoleToCloud({});
+      if (compte && consentement) void pushBoussoleToCloud({});
     }
     setStep(0);
     setShowResults(false);
     setSyncNote(null);
   }
+
+  async function accepterEnregistrement(): Promise<void> {
+    const c = await pushBoussoleToCloud(reponses, { consentement: true });
+    setConsentement(c);
+    setSyncNote(
+      c
+        ? "Boussole enregistrée sur votre compte."
+        : "L'enregistrement sur votre compte a échoué. Réessayez plus tard.",
+    );
+  }
+
+  async function retirerEnregistrement(): Promise<void> {
+    const ok = await retirerConsentementBoussole();
+    if (ok) setConsentement(null);
+    setSyncNote(
+      ok
+        ? "Vos réponses ont été effacées de votre compte. Elles restent sur cet appareil."
+        : "L'effacement a échoué. Réessayez plus tard.",
+    );
+  }
+
+  const blocConsentement = compte ? (
+    <ConsentementCompte
+      consentement={consentement}
+      onAccepter={() => void accepterEnregistrement()}
+      onRetirer={() => void retirerEnregistrement()}
+    />
+  ) : null;
 
   if (!ready) {
     return (
@@ -216,6 +248,7 @@ function BoussoleQuizInner({
             {syncNote}
           </p>
         ) : null}
+        {blocConsentement}
         <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#404040] dark:text-muted-foreground">
           Boussole complète ({DILEMMES.length}/{DILEMMES.length}).
           {engagement.streakDays > 0 ? (
@@ -323,6 +356,7 @@ function BoussoleQuizInner({
           pour sauvegarder et retrouver votre boussole.
         </p>
       ) : null}
+      {blocConsentement ? <div className="mb-6">{blocConsentement}</div> : null}
 
       <div className="flex items-center gap-4">
         <div
@@ -485,6 +519,53 @@ function BoussoleQuizInner({
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+/**
+ * Accord explicite avant d'enregistrer la Boussole sur le compte : les
+ * réponses révèlent des opinions politiques (RGPD, art. 9).
+ */
+function ConsentementCompte({
+  consentement,
+  onAccepter,
+  onRetirer,
+}: {
+  consentement: string | null;
+  onAccepter: () => void;
+  onRetirer: () => void;
+}): React.ReactElement {
+  if (consentement) {
+    return (
+      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+        Boussole enregistrée sur votre compte avec votre accord
+        (depuis le {new Date(consentement).toLocaleDateString("fr-FR")}).{" "}
+        <button type="button" className="ln text-foreground" onClick={onRetirer}>
+          Effacer mes réponses de mon compte
+        </button>
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4 max-w-3xl border border-border p-4 text-[14px] leading-relaxed">
+      <p className="font-medium">Enregistrer votre Boussole sur votre compte ?</p>
+      <p className="mt-1.5 text-muted-foreground">
+        Vos réponses peuvent révéler des opinions politiques. Elles ne sont
+        enregistrées sur votre compte qu&apos;avec votre accord, ne sont
+        jamais publiées ni partagées, et vous pouvez les effacer à tout
+        moment. Sans accord, elles restent uniquement sur cet appareil.{" "}
+        <Link href="/confidentialite" className="ln text-foreground">
+          En savoir plus
+        </Link>
+      </p>
+      <button
+        type="button"
+        className="btn btn-outline mt-3 h-9"
+        onClick={onAccepter}
+      >
+        J&apos;accepte l&apos;enregistrement sur mon compte
+      </button>
     </div>
   );
 }

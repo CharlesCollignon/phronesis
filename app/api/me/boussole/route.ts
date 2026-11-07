@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 
 type BoussoleBody = {
   reponses?: Record<string, string>;
+  /** L'utilisateur accepte l'enregistrement de ses réponses sur le compte. */
+  consentement?: boolean;
+  /** L'utilisateur retire son accord : réponses effacées du compte. */
+  retraitConsentement?: boolean;
   engagement?: {
     lastVisit?: string;
     streakDays?: number;
@@ -40,10 +44,13 @@ export async function GET(): Promise<NextResponse> {
     .where(eq(userProfiles.clerkUserId, userId))
     .limit(1);
 
+  const consentement = row?.engagement?.consentementBoussoleLe ?? null;
   return NextResponse.json({
-    reponses: row?.boussoleReponses ?? {},
+    // Sans consentement, aucune réponse n'est renvoyée (ni conservée).
+    reponses: consentement ? (row?.boussoleReponses ?? {}) : {},
     theme: row?.theme ?? null,
     engagement: row?.engagement ?? {},
+    consentement,
     updatedAt: row?.updatedAt ?? null,
   });
 }
@@ -86,23 +93,54 @@ export async function PUT(req: Request): Promise<NextResponse> {
         }
       : undefined;
 
+  const [existant] = await db
+    .select({ engagement: userProfiles.engagement })
+    .from(userProfiles)
+    .where(eq(userProfiles.clerkUserId, userId))
+    .limit(1);
+
+  // Consentement : accordé dans cette requête, déjà enregistré, ou
+  // retiré (les réponses sont alors effacées du compte).
   const now = new Date();
+  let consentementLe = existant?.engagement?.consentementBoussoleLe;
+  if (body.retraitConsentement) consentementLe = undefined;
+  else if (body.consentement === true) {
+    consentementLe ??= now.toISOString();
+  }
+  const reponsesEnregistrees = body.retraitConsentement ? {} : reponses;
+  if (Object.keys(reponsesEnregistrees).length > 0 && !consentementLe) {
+    return NextResponse.json(
+      { error: "Consentement requis pour enregistrer la Boussole" },
+      { status: 403 },
+    );
+  }
+
+  const engagementFinal = {
+    ...(existant?.engagement ?? {}),
+    ...(engagement ?? {}),
+    consentementBoussoleLe: consentementLe,
+  };
   await db
     .insert(userProfiles)
     .values({
       clerkUserId: userId,
-      boussoleReponses: reponses,
-      engagement: engagement ?? {},
+      boussoleReponses: reponsesEnregistrees,
+      engagement: engagementFinal,
       updatedAt: now,
     })
     .onConflictDoUpdate({
       target: userProfiles.clerkUserId,
       set: {
-        boussoleReponses: reponses,
-        ...(engagement ? { engagement } : {}),
+        boussoleReponses: reponsesEnregistrees,
+        engagement: engagementFinal,
         updatedAt: now,
       },
     });
 
-  return NextResponse.json({ ok: true, reponses, engagement });
+  return NextResponse.json({
+    ok: true,
+    reponses: reponsesEnregistrees,
+    engagement: engagementFinal,
+    consentement: consentementLe ?? null,
+  });
 }

@@ -201,7 +201,9 @@ function SondageInner({
             (<span className="num">{display.total}</span>)
           </>
         ) : null}
-        . Opinion de la plateforme, pas un vote parlementaire.
+        . Consultation non représentative de la population, pas un vote
+        parlementaire. Votre avis est enregistré avec votre compte et
+        n&apos;est publié qu&apos;en total.
         {mine ? " Cliquez à nouveau sur votre choix pour le retirer." : null}
       </p>
 

@@ -27,6 +27,12 @@ export function SiteFooter(): React.ReactElement {
           <Link href="/recherche" className="hover:text-white">
             Recherche
           </Link>
+          <Link href="/mentions-legales" className="hover:text-white">
+            Mentions légales
+          </Link>
+          <Link href="/confidentialite" className="hover:text-white">
+            Confidentialité
+          </Link>
         </nav>
       </div>
       <div className="mx-auto max-w-[1240px] px-5 pb-6 text-[13px] text-[#8a8a8a] sm:px-8 lg:px-12">

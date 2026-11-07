@@ -30,7 +30,7 @@ const TOC: [string, string][] = [
   ["transparence", "Transparence"],
   ["hors-perimetre", "Hors périmètre"],
   ["compte", "Compte optionnel"],
-  ["sondages", "Sondages citoyens"],
+  ["sondages", "Consultations citoyennes"],
   ["fil", "Fil « À l'Assemblée »"],
   ["imports", "Historique des imports"],
 ];
@@ -503,33 +503,36 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
             <p className={P}>
               La consultation des données open data reste possible sans
               compte. Un compte (Google ou autres providers activés dans
-              Clerk) permet de sauvegarder la Boussole et de participer aux
-              sondages d&apos;opinion sur les dossiers.
+              Clerk) permet de sauvegarder la Boussole, avec un accord
+              explicite, et de participer aux consultations citoyennes sur
+              les dossiers et les scrutins.
             </p>
           </Section>
 
-          <Section id="sondages" title="Sondages citoyens">
+          <Section id="sondages" title="Consultations citoyennes">
             <h3 id="sondage-lois" className={cn(H3, "scroll-mt-24")}>
-              Sondage citoyen sur les lois
+              Consultation citoyenne sur les lois
             </h3>
             <p className={P}>
               Sur chaque fiche dossier, les utilisateurs connectés peuvent
               indiquer <strong>pour</strong>, <strong>contre</strong> ou{" "}
-              <strong>pas d&apos;avis</strong>. C&apos;est un sondage
-              d&apos;opinion Phronesis, jamais un scrutin parlementaire. Un
-              avis par utilisateur et par dossier, modifiable.
+              <strong>pas d&apos;avis</strong>. C&apos;est une consultation
+              ouverte aux utilisateurs de Phronesis : elle n&apos;est pas
+              représentative de la population et n&apos;est jamais un scrutin
+              parlementaire. Un avis par utilisateur et par dossier,
+              modifiable ou retirable ; seuls les totaux sont publiés.
             </p>
             <h3 id="sondage-scrutins" className={cn(H3, "scroll-mt-24")}>
-              Sondage citoyen sur les scrutins
+              Consultation citoyenne sur les scrutins
             </h3>
             <p className={P}>
               Sur chaque fiche scrutin public, les utilisateurs connectés
               peuvent indiquer <strong>pour</strong>,{" "}
               <strong>contre</strong>, <strong>abstention</strong> ou{" "}
               <strong>pas d&apos;avis</strong>. L&apos;interface compare
-              visuellement le décompte officiel des députés au sondage
-              citoyen Phronesis, toujours distinct d&apos;un vote
-              parlementaire.
+              visuellement le décompte officiel des députés à la consultation
+              citoyenne Phronesis, non représentative et toujours distincte
+              d&apos;un vote parlementaire.
             </p>
           </Section>
 

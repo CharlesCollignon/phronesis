@@ -132,11 +132,12 @@ function SondageInner({
         Qu&apos;auriez-vous voté ?
       </h2>
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-        Sondage d&apos;opinion,{" "}
+        Consultation non représentative,{" "}
         <strong className="font-medium text-foreground">
           pas un vote parlementaire
         </strong>
-        .
+        . Votre avis est enregistré avec votre compte et n&apos;est publié
+        qu&apos;en total.
       </p>
 
       <div
