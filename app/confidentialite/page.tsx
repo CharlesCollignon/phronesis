@@ -103,8 +103,11 @@ export default function ConfidentialitePage(): React.ReactElement {
             Ces données ne sont ni vendues, ni partagées, ni utilisées à des
             fins publicitaires. Elles sont conservées tant que votre compte
             existe, sauf retrait de votre part. Pour supprimer l&apos;ensemble
-            de vos données, écrivez à <Mail /> : la suppression est faite dans
-            un délai d&apos;un mois.
+            de vos données, supprimez votre compte depuis le menu du compte
+            (« Manage account », puis « Delete account ») : votre profil,
+            votre Boussole, vos notifications et vos avis aux consultations
+            sont alors effacés automatiquement. Vous pouvez aussi écrire à{" "}
+            <Mail /> : la suppression est faite dans un délai d&apos;un mois.
           </p>
         </Bloc>
 
