@@ -3,6 +3,7 @@ import {
   AXE_BOUSSOLE_LABELS,
   AXES_BOUSSOLE,
   type ProfilBoussole,
+  type ProfilDetaille,
 } from "@/lib/dilemmes";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +111,11 @@ type AxesBarsProps = {
   /** N'afficher que certains axes (résonance partielle). */
   axes?: readonly (keyof ProfilBoussole)[];
   showHints?: boolean;
+  /**
+   * Nombre de dilemmes par axe : signale sous le libellé les axes
+   * mesurés sur peu de réponses.
+   */
+  detail?: ProfilDetaille;
 };
 
 function signed(v: number): string {
@@ -181,6 +187,7 @@ export function AxesBars({
   compareLabel = "Comparaison",
   axes = AXES_BOUSSOLE,
   showHints = true,
+  detail,
 }: AxesBarsProps): React.ReactElement {
   const cols = compare
     ? "grid-cols-[minmax(0,100px)_minmax(0,1fr)_76px] sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)_84px]"
@@ -213,6 +220,13 @@ export function AxesBars({
           >
             <span className="text-[15px] leading-snug">
               {AXE_BOUSSOLE_LABELS[axe]}
+              {detail && detail[axe].fiabilite !== "bonne" ? (
+                <span className="block text-[12px] text-muted-foreground">
+                  Fiabilité {detail[axe].fiabilite} ·{" "}
+                  {detail[axe].dilemmes} dilemme
+                  {detail[axe].dilemmes > 1 ? "s" : ""}
+                </span>
+              ) : null}
             </span>
             <span
               className="flex flex-col gap-1.5"

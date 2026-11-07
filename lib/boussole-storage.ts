@@ -78,6 +78,14 @@ export function saveBoussoleStored(data: BoussoleStored): void {
   localStorage.setItem(BOUSSOLE_STORAGE_KEY, JSON.stringify(data));
 }
 
+/** Nombre de dilemmes actuels répondus dans le stockage local. */
+export function nombreDilemmesRepondus(): number {
+  const reponses = loadBoussoleStored().reponses;
+  return DILEMMES.filter((d) =>
+    d.choix.some((c) => c.id === reponses[d.id]),
+  ).length;
+}
+
 /** Profil Boussole si tous les dilemmes sont répondus. */
 export function profilFromReponses(
   reponses: Record<string, string>,
