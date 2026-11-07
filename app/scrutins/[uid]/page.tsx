@@ -12,6 +12,7 @@ import { SondageScrutin } from "@/components/sondage-scrutin";
 import { VoteFilters } from "@/components/vote-filters";
 import {
   capitalizeTitre,
+  decoderEntites,
   formatDate,
   formatNumber,
   formatPosition,
@@ -55,7 +56,7 @@ export default async function ScrutinPage({
   const data = await getScrutin(uid);
   if (!data) notFound();
 
-  const { scrutin, dossier, parGroupe } = data;
+  const { scrutin, dossier, amendement, parGroupe } = data;
   const senat = scrutin.chambre === "SENAT";
   const groupesOrdonnes = [...parGroupe].sort(
     (a, b) =>
@@ -157,6 +158,71 @@ export default async function ScrutinPage({
           sieges={senat ? 348 : 577}
         />
       </section>
+
+      {amendement ? (
+        <section
+          aria-labelledby="amendement"
+          className="mt-12 border-t border-foreground pt-6"
+        >
+          <p id="amendement" className="eyebrow">
+            Amendement mis aux voix
+          </p>
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[15px]">
+            <span className="num font-semibold">
+              n° {amendement.numeroLong ?? "—"}
+            </span>
+            {amendement.auteurUid ? (
+              <Link
+                href={`/deputes/${amendement.auteurUid}`}
+                className="ln font-medium"
+              >
+                {nomComplet(
+                  amendement.auteurPrenom ?? "",
+                  amendement.auteurNom ?? "",
+                )}
+              </Link>
+            ) : null}
+            {amendement.groupeLibelle ? (
+              <GroupeSigle
+                abrege={amendement.groupeLibelle}
+                couleur={amendement.groupeCouleur}
+                className="text-sm text-muted-foreground"
+              />
+            ) : null}
+            {amendement.articleDesignation ? (
+              <span className="text-muted-foreground">
+                {amendement.articleDesignation}
+              </span>
+            ) : null}
+          </div>
+          {amendement.exposeSommaire || amendement.dispositif ? (
+            <div className="mt-4 grid max-w-4xl gap-5 md:grid-cols-2">
+              {amendement.dispositif ? (
+                <div>
+                  <h3 className="text-sm font-semibold">Ce qu&apos;il propose</h3>
+                  <p className="mt-1.5 line-clamp-[8] whitespace-pre-line text-[15px] leading-relaxed">
+                    {decoderEntites(amendement.dispositif)}
+                  </p>
+                </div>
+              ) : null}
+              {amendement.exposeSommaire ? (
+                <div>
+                  <h3 className="text-sm font-semibold">
+                    Exposé de l&apos;auteur
+                  </h3>
+                  <p className="mt-1.5 line-clamp-[8] whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">
+                    {decoderEntites(amendement.exposeSommaire)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <p className="mt-3 text-[13px] text-muted-foreground">
+            Rattaché automatiquement à partir de l&apos;intitulé du scrutin
+            (numéro, auteur, date).
+          </p>
+        </section>
+      ) : null}
 
       <div className="mt-[clamp(56px,7vw,80px)] flex flex-wrap items-start gap-14">
         <div className="min-w-0 flex-[2_1_600px]">

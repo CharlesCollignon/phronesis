@@ -12,6 +12,7 @@ const STEPS = [
   "dossiers.ts",
   "scrutins.ts",
   "amendements.ts",
+  "lier-amendements.ts",
   "senat.ts",
 ] as const;
 
