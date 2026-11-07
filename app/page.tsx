@@ -1,274 +1,367 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { Badge } from "@/components/badge";
-import { HomeDossierCard } from "@/components/home-dossier-card";
+import { BoussoleTeaser } from "@/components/boussole-teaser";
+import { PAGE_WRAP, SectionHeading } from "@/components/breadcrumbs";
+import {
+  EmpreinteGrid,
+  IMPACT_LEGEND,
+} from "@/components/empreinte-grid";
+import { HemicyclePositions } from "@/components/hemicycle-positions";
 import { VoteBar } from "@/components/vote-bar";
 import {
   capitalizeTitre,
+  formatDate,
   formatDateShort,
   formatNumber,
   formatSort,
 } from "@/lib/format";
 import { getHomeStats } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+const ENGAGEMENTS: [string, string][] = [
+  [
+    "Sources officielles",
+    "Chaque fiche renvoie vers le document d'origine sur les sites de l'Assemblée nationale et du Sénat.",
+  ],
+  [
+    "Neutralité",
+    "Aucun classement de partis, aucune note morale, aucune consigne de vote.",
+  ],
+  [
+    "Transparence de l'IA",
+    "Résumés et empreintes indiquent leur modèle et leur version, et restent affichés à côté du texte officiel.",
+  ],
+  [
+    "Confidentialité",
+    "Votre Boussole reste sur votre appareil. Elle n'est synchronisée que si vous créez un compte.",
+  ],
+  [
+    "Limites",
+    "Seuls les scrutins publics sont nominatifs. Les votes à main levée n'apparaissent pas.",
+  ],
+];
+
+function toIsoDate(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
 
 export default async function HomePage(): Promise<React.ReactElement> {
   const {
     counts,
     derniersScrutins,
-    derniersDossiers,
-    derniereDateScrutin,
     derniersImports,
+    dernierGrandScrutin: grand,
+    empreinteExemple,
   } = await getHomeStats();
 
-  const dernierImportAt = derniersImports[0]?.importedAt ?? null;
-  const dernierImportDate =
-    dernierImportAt instanceof Date
-      ? dernierImportAt.toISOString().slice(0, 10)
-      : dernierImportAt
-        ? String(dernierImportAt).slice(0, 10)
-        : null;
+  const dernierImport = toIsoDate(derniersImports[0]?.importedAt);
+
+  const index = [
+    {
+      n: "01",
+      href: "/dossiers",
+      title: "Lois",
+      desc: `${formatNumber(Number(counts.dossiers))} dossiers législatifs, résumés en clair à côté du texte officiel.`,
+    },
+    {
+      n: "02",
+      href: "/scrutins",
+      title: "Votes",
+      desc: `${formatNumber(Number(counts.scrutins))} scrutins publics nominatifs, position par position.`,
+    },
+    {
+      n: "03",
+      href: "/deputes",
+      title: "Élus",
+      desc: "Députés et sénateurs en exercice, avec leur historique de votes.",
+    },
+    {
+      n: "04",
+      href: "/methodologie#empreinte",
+      title: "Empreinte civique",
+      desc: "Ce qu'un texte renforce ou restreint, sur dix axes justifiés.",
+    },
+    {
+      n: "05",
+      href: "/boussole",
+      title: "Boussole",
+      desc: "Des dilemmes concrets pour situer vos propres valeurs.",
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6">
-      <div
-        className={
-          "flex flex-wrap items-center gap-x-3 gap-y-1 border-b " +
-          "border-border py-2 text-[11px] text-muted-foreground"
-        }
-      >
-        <span>
-          <span className="font-medium text-foreground">
-            {formatNumber(Number(counts.dossiers))}
-          </span>{" "}
-          dossiers
-        </span>
-        <span aria-hidden>·</span>
-        <span>
-          <span className="font-medium text-foreground">
-            {formatNumber(Number(counts.scrutins))}
-          </span>{" "}
-          scrutins
-        </span>
-        <span aria-hidden>·</span>
-        <span>
-          <span className="font-medium text-foreground">
-            {formatNumber(Number(counts.deputes))}
-          </span>{" "}
-          députés
-        </span>
-        <span aria-hidden>·</span>
-        <span>
-          <span className="font-medium text-foreground">
-            {formatNumber(Number(counts.votes))}
-          </span>{" "}
-          positions
-        </span>
-        {derniereDateScrutin ? (
-          <>
-            <span aria-hidden className="hidden sm:inline">
-              ·
-            </span>
-            <span className="w-full sm:w-auto">
-              Dernier scrutin en base :{" "}
-              <time
-                dateTime={derniereDateScrutin}
-                className="font-medium text-foreground"
+    <>
+      <section className="bg-[#0a0a0a] text-white">
+        <div
+          className={cn(
+            PAGE_WRAP,
+            "flex flex-wrap items-end justify-between gap-12 pb-[clamp(56px,7vw,88px)] pt-[clamp(56px,8vw,104px)]",
+          )}
+        >
+          <div className="min-w-0 flex-[1_1_560px]">
+            <p className="eyebrow rise text-[#a3a3a3]">
+              Observatoire civique du Parlement · 17<sup>e</sup>{" "}
+              législature
+            </p>
+            <h1
+              className="rise mt-5 max-w-3xl text-[clamp(38px,4.6vw,60px)] font-medium leading-[1.06] tracking-[-0.025em]"
+              style={{ animationDelay: "80ms" }}
+            >
+              Comprendre la loi avant de la juger.
+            </h1>
+            <p
+              className="rise mt-6 max-w-xl text-lg leading-relaxed text-[#c4c4c4]"
+              style={{ animationDelay: "140ms" }}
+            >
+              Les lois, les votes et les élus de l&apos;Assemblée nationale
+              et du Sénat, reliés à leurs sources officielles et lus avec une
+              méthode publique. Sans consigne de vote.
+            </p>
+            <div
+              className="rise mt-8 flex flex-wrap gap-3"
+              style={{ animationDelay: "200ms" }}
+            >
+              <Link href="/dossiers" className="btn btn-accent h-12 px-6">
+                Explorer les lois
+              </Link>
+              <Link
+                href="/boussole"
+                className="btn h-12 border-[#4a4a4a] px-6 text-white hover:border-white"
               >
-                {formatDateShort(derniereDateScrutin)}
-              </time>
-            </span>
-          </>
+                Faire ma Boussole
+              </Link>
+            </div>
+          </div>
+          <dl
+            className="rise grid flex-[0_1_340px] grid-cols-[auto_1fr] gap-x-5 gap-y-3 text-sm"
+            style={{ animationDelay: "260ms" }}
+          >
+            <dt className="text-[#8a8a8a]">Sources</dt>
+            <dd className="text-[#e5e5e5]">Assemblée nationale, Sénat</dd>
+            <dt className="text-[#8a8a8a]">Licence</dt>
+            <dd className="text-[#e5e5e5]">Licence Ouverte (Etalab)</dd>
+            <dt className="text-[#8a8a8a]">Mise à jour</dt>
+            <dd className="text-[#e5e5e5]">Hebdomadaire</dd>
+            {dernierImport ? (
+              <>
+                <dt className="text-[#8a8a8a]">Dernier import</dt>
+                <dd className="num text-[#e5e5e5]">
+                  <time dateTime={dernierImport}>
+                    {formatDate(dernierImport)}
+                  </time>
+                </dd>
+              </>
+            ) : null}
+          </dl>
+        </div>
+      </section>
+
+      <section aria-label="Chiffres clés" className="border-b border-border">
+        <div
+          className={cn(
+            PAGE_WRAP,
+            "grid grid-cols-2 md:grid-cols-4",
+          )}
+        >
+          {[
+            [counts.dossiers, "dossiers législatifs"],
+            [counts.scrutins, "scrutins publics"],
+            [counts.votes, "positions nominatives"],
+            [counts.deputes, "députés de la législature"],
+          ].map(([value, label]) => (
+            <div key={String(label)} className="py-6 pr-6 md:py-7">
+              <p className="num text-[32px] font-medium tracking-[-0.02em]">
+                {formatNumber(Number(value))}
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className={cn(PAGE_WRAP, "pb-28")}>
+        <section className="pt-[clamp(72px,8vw,112px)]">
+          <SectionHeading
+            title="Explorer"
+            aside="Cinq entrées dans les données du Parlement"
+          />
+          <div className="border-b border-border">
+            {index.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="row-link group grid grid-cols-[36px_minmax(0,1fr)_20px] items-center gap-x-6 gap-y-1 border-t border-border py-[22px] md:grid-cols-[56px_minmax(0,1fr)_minmax(0,360px)_24px]"
+              >
+                <span className="num text-sm text-muted-foreground">
+                  {item.n}
+                </span>
+                <span className="text-[clamp(24px,2.6vw,34px)] font-medium tracking-[-0.015em] transition-transform duration-500 ease-[var(--spring)] group-hover:translate-x-2">
+                  {item.title}
+                </span>
+                <span className="col-start-2 row-start-2 text-[15px] leading-snug text-muted-foreground md:col-start-auto md:row-start-auto">
+                  {item.desc}
+                </span>
+                <ArrowRight
+                  aria-hidden
+                  className="nudge col-start-3 row-start-1 size-5 text-muted-foreground group-hover:text-foreground md:col-start-4"
+                  strokeWidth={1.6}
+                />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="pt-[clamp(80px,9vw,128px)]">
+          <p className="max-w-4xl text-[clamp(24px,2.5vw,34px)] leading-[1.4] tracking-[-0.015em]">
+            Phronesis <span className="mk">ne vous dit pas quoi penser.</span>{" "}
+            Il relie chaque texte à sa source, décrit ce qu&apos;il renforce
+            ou restreint, et <span className="mk">vous laisse juger.</span>{" "}
+            Ni gauche ni droite, ni note morale, ni consigne de vote.
+          </p>
+        </section>
+
+        {grand ? (
+          <section className="pt-[clamp(80px,9vw,128px)]">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div className="max-w-3xl">
+                <p className="eyebrow">
+                  Scrutin public n° {formatNumber(grand.numero)} ·{" "}
+                  {formatDate(grand.dateScrutin)}
+                </p>
+                <h2 className="mt-2.5 text-[clamp(22px,2.2vw,28px)] font-semibold leading-snug tracking-[-0.015em]">
+                  <Link href={`/scrutins/${grand.uid}`} className="hover:underline">
+                    {capitalizeTitre(grand.titre)}
+                  </Link>
+                </h2>
+              </div>
+              <Badge
+                tone={
+                  grand.sortCode.toLowerCase().includes("adopt")
+                    ? "adopte"
+                    : "rejete"
+                }
+                className="text-[15px]"
+              >
+                {formatSort(grand.sortCode)}
+              </Badge>
+            </div>
+            <HemicyclePositions
+              className="mt-9"
+              pour={grand.pour ?? 0}
+              contre={grand.contre ?? 0}
+              abstentions={grand.abstentions ?? 0}
+              sieges={577}
+            />
+          </section>
         ) : null}
-      </div>
-      {dernierImportDate ? (
-        <p
-          className={
-            "border-b border-border py-2 text-[11px] text-muted-foreground"
-          }
-        >
-          Mise à jour chaque semaine — dernier import :{" "}
-          <time
-            dateTime={dernierImportDate}
-            className="font-medium text-foreground"
-          >
-            {formatDateShort(dernierImportDate)}
-          </time>
-        </p>
-      ) : null}
 
-      <header className="border-b border-border pb-8 pt-6">
-        <h1
-          className={
-            "font-[family-name:var(--font-logo)] text-4xl " +
-            "tracking-wide text-[var(--logo)] sm:text-5xl"
-          }
-        >
-          PHRONESIS
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Du grec <span className="italic">phrónēsis</span> : sagesse
-          pratique — comprendre les lois et les votes{" "}
-          <strong className="font-medium text-foreground">
-            avant de juger
-          </strong>
-          .
-        </p>
-
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              L&apos;idée
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Croiser l&apos;open data parlementaire (dossiers,
-              scrutins publics, députés) avec une méthode de lecture
-              claire — sans orienter politiquement.
-            </p>
+        <section className="pt-[clamp(80px,9vw,128px)]">
+          <SectionHeading
+            title="Derniers scrutins publics"
+            aside={
+              <Link href="/scrutins" className="ln text-foreground">
+                Voir les {formatNumber(Number(counts.scrutins))} scrutins
+              </Link>
+            }
+          />
+          <div className="hidden grid-cols-[84px_104px_minmax(0,1fr)_92px_120px] gap-5 px-2 pb-2.5 text-[13px] text-muted-foreground md:grid">
+            <span>Numéro</span>
+            <span>Date</span>
+            <span>Objet</span>
+            <span>Résultat</span>
+            <span className="text-right">Pour · contre</span>
           </div>
-          <div className="border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Boussole
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Un quiz de valeurs (pas gauche/droite) qui construit
-              votre carte d&apos;axes — liberté, égalité, écologie…
-            </p>
-            <Link
-              href="/boussole"
-              className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
-            >
-              Faire la Boussole →
-            </Link>
-          </div>
-          <div className="border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Empreinte
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Impacts qualitatifs d&apos;un dossier par axe (renforce /
-              restreint / …), sans note morale ni conseil de vote.
-            </p>
-          </div>
-          <div className="border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Score Phronesis
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Robustesse documentaire du dossier (sources,
-              chronologie, empreinte…) — distinct de la résonance avec
-              vos valeurs.
-            </p>
-            <Link
-              href="/methodologie"
-              className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
-            >
-              Méthodologie →
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="font-serif text-xl">À l&apos;Assemblée</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Scrutins et dossiers récents — open data, pas de fil
-              presse.
-            </p>
-          </div>
-          <Link
-            href="/actualite"
-            className="shrink-0 text-xs text-primary hover:underline"
-          >
-            Tout voir
-          </Link>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-              Derniers scrutins
-            </p>
-            <ul className="divide-y divide-border border border-border bg-card">
-              {derniersScrutins.slice(0, 5).map((s) => {
-                const adopte = s.sortCode
-                  .toLowerCase()
-                  .includes("adopt");
-                return (
-                  <li key={s.uid}>
-                    <Link
-                      href={`/scrutins/${s.uid}`}
-                      className="flex hover:bg-muted"
-                    >
+          <ul className="border-b border-border">
+            {derniersScrutins.slice(0, 6).map((s) => {
+              const adopte = s.sortCode.toLowerCase().includes("adopt");
+              return (
+                <li key={s.uid}>
+                  <Link
+                    href={`/scrutins/${s.uid}`}
+                    className="row-link grid grid-cols-[minmax(0,1fr)_88px] items-baseline gap-5 border-t border-border px-2 py-4 md:grid-cols-[84px_104px_minmax(0,1fr)_92px_120px]"
+                  >
+                    <span className="num hidden text-sm text-muted-foreground md:block">
+                      {formatNumber(s.numero)}
+                    </span>
+                    <span className="num hidden text-sm text-muted-foreground md:block">
+                      {formatDateShort(s.dateScrutin)}
+                    </span>
+                    <span className="text-base leading-snug">
+                      {capitalizeTitre(s.titre)}
+                    </span>
+                    <Badge tone={adopte ? "adopte" : "rejete"}>
+                      {formatSort(s.sortCode)}
+                    </Badge>
+                    <span className="hidden flex-col items-end gap-1.5 md:flex">
                       <VoteBar
-                        orientation="vertical"
                         pour={s.pour ?? 0}
                         contre={s.contre ?? 0}
                         abstentions={s.abstentions ?? 0}
-                        className={
-                          "flex w-1.5 shrink-0 flex-col " +
-                          "self-stretch overflow-hidden"
-                        }
                       />
-                      <div className="min-w-0 flex-1 px-3 py-3">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <time
-                            dateTime={s.dateScrutin}
-                            className="font-medium text-foreground"
-                          >
-                            {formatDateShort(s.dateScrutin)}
-                          </time>
-                          <span className="num">n° {s.numero}</span>
-                          <Badge tone={adopte ? "adopte" : "rejete"}>
-                            {formatSort(s.sortCode)}
-                          </Badge>
-                        </div>
-                        <p className="mt-1.5 line-clamp-2 text-sm leading-snug">
-                          {capitalizeTitre(s.titre)}
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-              Dossiers récents
-            </p>
-            <ul className="divide-y divide-border border border-border bg-card">
-              {derniersDossiers.slice(0, 5).map((d) => (
-                <li key={d.uid}>
-                  <HomeDossierCard
-                    uid={d.uid}
-                    titre={d.titre}
-                    procedureLibelle={d.procedureLibelle}
-                    hasEmpreinte={d.hasEmpreinte}
-                    scoreTotal={d.scoreTotal}
-                    scoreMax={d.scoreMax}
-                    empreinteImpacts={d.empreinteImpacts}
-                  />
+                      <span className="num text-[13px] text-muted-foreground">
+                        {s.pour ?? 0} · {s.contre ?? 0}
+                      </span>
+                    </span>
+                  </Link>
                 </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+              );
+            })}
+          </ul>
+        </section>
 
-      <section className="mt-8 border border-border bg-muted p-4 sm:p-5">
-        <h2 className="font-serif text-lg text-foreground">
-          Transparence
-        </h2>
-        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-          Seuls les scrutins publics sont nominatifs. Les votes à main
-          levée n&apos;apparaissent pas. La Boussole et la résonance
-          mesurent un alignement avec vos valeurs — pas un jugement
-          moral.
-        </p>
-      </section>
-    </div>
+        {empreinteExemple ? (
+          <section className="pt-[clamp(80px,9vw,128px)]">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 pb-6">
+              <div className="max-w-3xl">
+                <p className="eyebrow">Empreinte civique · exemple</p>
+                <h2 className="mt-2.5 text-[clamp(22px,2.2vw,28px)] font-semibold leading-snug tracking-[-0.015em]">
+                  <Link
+                    href={`/dossiers/${empreinteExemple.uid}`}
+                    className="hover:underline"
+                  >
+                    {empreinteExemple.titre}
+                  </Link>
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">{IMPACT_LEGEND}</p>
+            </div>
+            <EmpreinteGrid rows={empreinteExemple.rows} cellMin={176} />
+            <p className="mt-4 text-[13px] text-muted-foreground">
+              Analyse qualitative générée par IA. Aucune note par axe,
+              aucun conseil de vote.
+            </p>
+          </section>
+        ) : null}
+
+        <section className="pt-[clamp(80px,9vw,128px)]">
+          <BoussoleTeaser />
+        </section>
+
+        <section className="pt-[clamp(80px,9vw,128px)]">
+          <SectionHeading title="Nos engagements" />
+          <dl className="border-b border-border">
+            {ENGAGEMENTS.map(([title, text]) => (
+              <div
+                key={title}
+                className="grid gap-1.5 border-t border-border py-5 md:grid-cols-[220px_minmax(0,1fr)] md:gap-6"
+              >
+                <dt className="font-semibold">{title}</dt>
+                <dd className="text-base leading-relaxed text-muted-foreground">
+                  {text}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
+    </>
   );
 }

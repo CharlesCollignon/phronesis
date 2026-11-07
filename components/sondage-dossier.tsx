@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type Counts = {
   pour: number;
@@ -15,42 +15,10 @@ type Counts = {
 
 type Position = "pour" | "contre" | "pas_avis";
 
-const LABELS: {
-  id: Position;
-  label: string;
-  selectedClass: string;
-  idleClass: string;
-}[] = [
-  {
-    id: "pour",
-    label: "Pour",
-    selectedClass:
-      "border-[var(--vote-pour)] bg-[var(--vote-pour)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-pour)]/50 bg-[var(--vote-pour)]/10 " +
-      "text-[var(--vote-pour)] hover:bg-[var(--vote-pour)]/20",
-  },
-  {
-    id: "contre",
-    label: "Contre",
-    selectedClass:
-      "border-[var(--vote-contre)] bg-[var(--vote-contre)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-contre)]/50 bg-[var(--vote-contre)]/10 " +
-      "text-[var(--vote-contre)] hover:bg-[var(--vote-contre)]/20",
-  },
-  {
-    id: "pas_avis",
-    label: "Pas d'avis",
-    selectedClass:
-      "border-[var(--vote-neutre)] bg-[var(--vote-neutre)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-neutre)]/50 bg-[var(--vote-neutre)]/10 " +
-      "text-[var(--vote-neutre)] hover:bg-[var(--vote-neutre)]/20",
-  },
+const LABELS: { id: Position; label: string }[] = [
+  { id: "pour", label: "Pour" },
+  { id: "contre", label: "Contre" },
+  { id: "pas_avis", label: "Sans avis" },
 ];
 
 type SondageDossierProps = {
@@ -149,112 +117,109 @@ function SondageInner({
   const loading = counts === null && error === null;
 
   return (
-    <Card className="rounded-none shadow-sm">
-      <CardHeader className="gap-1 pb-0">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Avis des citoyens Phronesis
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Opinion plateforme — pas un vote parlementaire
-            {display.total > 0 ? (
-              <>
-                {" "}
-                · <span className="num">{display.total}</span> avis
-              </>
-            ) : null}
-          </p>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-3">
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Chargement…</p>
-        ) : (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="min-w-0 flex-1">
-              <div className="flex h-2.5 w-full overflow-hidden bg-muted">
-                <div
-                  className="bg-[var(--vote-pour)]"
-                  style={{ width: `${pPour}%` }}
-                  title={`Pour ${display.pour}`}
-                />
-                <div
-                  className="bg-[var(--vote-contre)]"
-                  style={{ width: `${pContre}%` }}
-                  title={`Contre ${display.contre}`}
-                />
-                <div
-                  className="bg-[var(--vote-neutre)]"
-                  style={{ width: `${pAvis}%` }}
-                  title={`Pas d'avis ${display.pasAvis}`}
-                />
-              </div>
-              <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Pour</dt>
-                  <dd className="num font-medium text-foreground">
-                    {display.pour}
-                  </dd>
-                </div>
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Contre</dt>
-                  <dd className="num font-medium text-foreground">
-                    {display.contre}
-                  </dd>
-                </div>
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Pas d&apos;avis</dt>
-                  <dd className="num font-medium text-foreground">
-                    {display.pasAvis}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div className="flex shrink-0 gap-1.5">
-              {LABELS.map((opt) => {
-                const selected = mine === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    disabled={saving || loading}
-                    aria-pressed={selected}
-                    title={
-                      selected ? "Retirer mon avis" : undefined
-                    }
-                    onClick={() => void vote(opt.id)}
-                    className={
-                      `min-h-9 border px-3 text-sm font-medium ` +
-                      `transition ${
-                        selected
-                          ? opt.selectedClass
-                          : opt.idleClass
-                      }`
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {!isSignedIn ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            <Link
-              href="/sign-in"
-              className="font-medium text-primary underline-offset-2 hover:underline"
+    <section aria-labelledby={`sondage-${dossierUid}`}>
+      <p id={`sondage-${dossierUid}`} className="eyebrow">
+        Et vous ?
+      </p>
+      <p className="mt-2.5 text-base leading-snug">
+        Seriez-vous favorable à ce texte ?
+      </p>
+      <div
+        role="group"
+        aria-label="Votre avis"
+        className="mt-3.5 flex gap-1.5"
+      >
+        {LABELS.map((opt) => {
+          const selected = mine === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={saving || loading}
+              aria-pressed={selected}
+              title={selected ? "Retirer mon avis" : undefined}
+              onClick={() => void vote(opt.id)}
+              className={cn(
+                "h-12 flex-1 border text-[15px] font-medium",
+                "transition-[background-color,border-color,box-shadow] duration-300 ease-[var(--spring)]",
+                "disabled:cursor-not-allowed disabled:opacity-60",
+                selected
+                  ? "border-foreground bg-[var(--highlight)] shadow-[inset_0_-3px_0_0_var(--accent)]"
+                  : "border-input bg-background hover:border-foreground",
+              )}
             >
-              Se connecter
-            </Link>{" "}
-            pour voter (re-clic pour retirer).
-          </p>
-        ) : null}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {error ? <p className="mt-2 text-xs text-rose-900">{error}</p> : null}
-      </CardContent>
-    </Card>
+      {loading ? (
+        <p className="mt-3.5 text-sm text-muted-foreground">Chargement…</p>
+      ) : (
+        <div key={display.total} className="reveal mt-4">
+          <div
+            className="flex h-1.5 w-full overflow-hidden bg-[var(--vote-neutre)]"
+            role="img"
+            aria-label={`Pour ${display.pour}, contre ${display.contre}, sans avis ${display.pasAvis}`}
+          >
+            <div
+              className="bg-[var(--vote-pour)]"
+              style={{ width: `${pPour}%` }}
+            />
+            <div
+              className="bg-[var(--vote-contre)]"
+              style={{ width: `${pContre}%` }}
+            />
+            <div
+              className="bg-[var(--vote-abstention)]"
+              style={{ width: `${pAvis}%` }}
+            />
+          </div>
+          <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[13px]">
+            <div className="flex gap-1.5">
+              <dt className="text-muted-foreground">Pour</dt>
+              <dd className="num font-medium">{display.pour}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-muted-foreground">Contre</dt>
+              <dd className="num font-medium">{display.contre}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-muted-foreground">Sans avis</dt>
+              <dd className="num font-medium">{display.pasAvis}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
+      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+        Avis des citoyens Phronesis
+        {display.total > 0 ? (
+          <>
+            {" "}
+            (<span className="num">{display.total}</span>)
+          </>
+        ) : null}
+        . Opinion de la plateforme, pas un vote parlementaire.
+        {mine ? " Cliquez à nouveau sur votre choix pour le retirer." : null}
+      </p>
+
+      {!isSignedIn ? (
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          <Link href="/sign-in" className="ln font-medium text-foreground">
+            Se connecter
+          </Link>{" "}
+          pour donner votre avis.
+        </p>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="mt-2 text-[13px] font-medium">
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }
 
@@ -264,11 +229,10 @@ function SondageWithClerk({
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <Card className="rounded-none shadow-sm">
-        <CardContent className="py-3 text-sm text-muted-foreground">
-          Chargement…
-        </CardContent>
-      </Card>
+      <section>
+        <p className="eyebrow">Et vous ?</p>
+        <p className="mt-2.5 text-sm text-muted-foreground">Chargement…</p>
+      </section>
     );
   }
   return (

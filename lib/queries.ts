@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
 import { cachedQuery, SONDAGES_TAG } from "@/lib/cache";
@@ -295,6 +295,10 @@ async function listScrutinsUncached(opts: {
   limit?: number;
   offset?: number;
   chambre?: "AN" | "SENAT" | "all";
+  /** Sort du scrutin (codes AN « adopté », Sénat « adopte »…). */
+  resultat?: "adopte" | "rejete" | "all";
+  /** Vote sur l'ensemble d'un texte, ou sur un amendement. */
+  type?: "ensemble" | "amendement" | "all";
 }) {
   const limit = opts.limit ?? 40;
   const offset = opts.offset ?? 0;
@@ -307,6 +311,16 @@ async function listScrutinsUncached(opts: {
   }
   if (chambre === "AN" || chambre === "SENAT") {
     clauses.push(eq(scrutins.chambre, chambre));
+  }
+  if (opts.resultat === "adopte") {
+    clauses.push(sql`${scrutins.sortCode} ILIKE 'adopt%'`);
+  } else if (opts.resultat === "rejete") {
+    clauses.push(sql`${scrutins.sortCode} ILIKE 'rejet%'`);
+  }
+  if (opts.type === "ensemble") {
+    clauses.push(sql`${scrutins.titre} ILIKE '%l''ensemble%'`);
+  } else if (opts.type === "amendement") {
+    clauses.push(sql`${scrutins.titre} ILIKE '%amendement%'`);
   }
   const where =
     clauses.length === 0
@@ -407,16 +421,46 @@ async function getScrutinVotesUncached(
     .orderBy(acteurs.nom, acteurs.prenom);
 }
 
+/** Familles de procédures pour filtrer la liste des dossiers. */
+const PROCEDURES_PAR_TYPE = {
+  // Projets et propositions de loi (ordinaire, organique,
+  // constitutionnelle, finances, ratification).
+  lois: ["1", "2", "3", "4", "5", "6", "7", "21"],
+  resolutions: ["8", "22"],
+} as const;
+
+export type TypeDossierFiltre = "lois" | "resolutions" | "controle" | "all";
+
 async function listDossiersUncached(opts: {
   search?: string;
   limit?: number;
   offset?: number;
+  type?: TypeDossierFiltre;
 }) {
   const limit = opts.limit ?? 40;
   const offset = opts.offset ?? 0;
-  const searchClause = opts.search?.trim()
-    ? sql`${dossiers.searchVector} @@ plainto_tsquery('french', ${opts.search})`
-    : undefined;
+  const clauses = [eq(dossiers.legislature, 17)];
+  if (opts.search?.trim()) {
+    clauses.push(
+      sql`${dossiers.searchVector} @@ plainto_tsquery('french', ${opts.search})`,
+    );
+  }
+  if (opts.type === "lois" || opts.type === "resolutions") {
+    clauses.push(
+      inArray(dossiers.procedureCode, [...PROCEDURES_PAR_TYPE[opts.type]]),
+    );
+  } else if (opts.type === "controle") {
+    // Rapports, missions, commissions d'enquête, engagements de
+    // responsabilité… : tout ce qui n'est ni loi ni résolution.
+    clauses.push(
+      sql`coalesce(${dossiers.procedureCode}, '') NOT IN (${sql.join(
+        [...PROCEDURES_PAR_TYPE.lois, ...PROCEDURES_PAR_TYPE.resolutions].map(
+          (c) => sql`${c}`,
+        ),
+        sql`, `,
+      )})`,
+    );
+  }
 
   return db
     .select({
@@ -425,13 +469,22 @@ async function listDossiersUncached(opts: {
       titreChemin: dossiers.titreChemin,
       procedureLibelle: dossiers.procedureLibelle,
       legislature: dossiers.legislature,
+      /** Impacts d'empreinte (axe, impact), vide si non générée. */
+      empreinteImpacts: sql<{ axe: string; impact: string }[]>`(
+        SELECT coalesce(
+          json_agg(json_build_object('axe', e.axe, 'impact', e.impact)),
+          '[]'::json
+        )
+        FROM empreintes e
+        WHERE e.dossier_uid = ${dossiers.uid}
+      )`,
+      hasResume: sql<boolean>`EXISTS (
+        SELECT 1 FROM resumes_ia r
+        WHERE r.sujet_type = 'dossier' AND r.sujet_uid = ${dossiers.uid}
+      )`,
     })
     .from(dossiers)
-    .where(
-      searchClause
-        ? and(eq(dossiers.legislature, 17), searchClause)
-        : eq(dossiers.legislature, 17),
-    )
+    .where(and(...clauses))
     .orderBy(desc(dossiers.uid))
     .limit(limit)
     .offset(offset);
@@ -722,6 +775,61 @@ async function getHomeStatsUncached() {
     SELECT max(date_scrutin)::text AS d FROM scrutins
   `);
 
+  // Dernier « grand » vote de l'Assemblée (vote sur l'ensemble d'un
+  // texte, la plupart du temps) : les scrutins d'amendements ne
+  // réunissent souvent que quelques dizaines de votants.
+  const [dernierGrandScrutin] = await db
+    .select({
+      uid: scrutins.uid,
+      numero: scrutins.numero,
+      dateScrutin: scrutins.dateScrutin,
+      titre: scrutins.titre,
+      sortCode: scrutins.sortCode,
+      pour: scrutins.pour,
+      contre: scrutins.contre,
+      abstentions: scrutins.abstentions,
+      nombreVotants: scrutins.nombreVotants,
+    })
+    .from(scrutins)
+    .where(
+      and(eq(scrutins.chambre, "AN"), gte(scrutins.nombreVotants, 300)),
+    )
+    .orderBy(desc(scrutins.dateScrutin), desc(scrutins.numero))
+    .limit(1);
+
+  // Exemple d'empreinte : le dossier dont l'empreinte est la plus récente.
+  const [derniereEmpreinte] = await db
+    .select({ dossierUid: empreintes.dossierUid })
+    .from(empreintes)
+    .orderBy(desc(empreintes.genereLe))
+    .limit(1);
+  let empreinteExemple: {
+    uid: string;
+    titre: string;
+    procedureLibelle: string | null;
+    rows: { axe: string; impact: string; justification: string }[];
+  } | null = null;
+  if (derniereEmpreinte) {
+    const [d] = await db
+      .select({
+        uid: dossiers.uid,
+        titre: dossiers.titre,
+        procedureLibelle: dossiers.procedureLibelle,
+      })
+      .from(dossiers)
+      .where(eq(dossiers.uid, derniereEmpreinte.dossierUid))
+      .limit(1);
+    const rows = await db
+      .select({
+        axe: empreintes.axe,
+        impact: empreintes.impact,
+        justification: empreintes.justification,
+      })
+      .from(empreintes)
+      .where(eq(empreintes.dossierUid, derniereEmpreinte.dossierUid));
+    if (d) empreinteExemple = { ...d, rows };
+  }
+
   return {
     counts: counts ?? {
       dossiers: 0,
@@ -739,6 +847,8 @@ async function getHomeStatsUncached() {
     })),
     derniersImports,
     derniereDateScrutin: lastScrutinDate?.d ?? null,
+    dernierGrandScrutin: dernierGrandScrutin ?? null,
+    empreinteExemple,
   };
 }
 
@@ -864,6 +974,59 @@ export async function listDossiersSansEmpreinte(limit = 20) {
     .limit(limit);
 }
 
+/**
+ * Positions d'un groupe sur ses derniers votes « sur l'ensemble » d'un
+ * texte (pas les amendements), pour mesurer sa cohésion.
+ */
+async function getGroupePositionsRecentesUncached(
+  groupeUid: string,
+  limit = 8,
+) {
+  const rows = await db.execute<{
+    uid: string;
+    numero: number;
+    date_scrutin: string;
+    titre: string;
+    sort_code: string;
+    pour: number;
+    contre: number;
+    abstention: number;
+    non_votant: number;
+  }>(sql`
+    SELECT
+      s.uid,
+      s.numero,
+      s.date_scrutin::text AS date_scrutin,
+      s.titre,
+      s.sort_code,
+      count(*) FILTER (WHERE v.position = 'pour')::int AS pour,
+      count(*) FILTER (WHERE v.position = 'contre')::int AS contre,
+      count(*) FILTER (WHERE v.position = 'abstention')::int AS abstention,
+      count(*) FILTER (WHERE v.position = 'nonVotant')::int AS non_votant
+    FROM votes v
+    JOIN scrutins s ON s.uid = v.scrutin_uid
+    WHERE v.groupe_uid = ${groupeUid}
+      AND s.titre ILIKE '%l''ensemble%'
+      -- Votes solennels ou très suivis : les votes d'ensemble à faible
+      -- présence ne disent rien de la cohésion d'un groupe.
+      AND s.nombre_votants >= 200
+    GROUP BY s.uid
+    ORDER BY s.date_scrutin DESC, s.numero DESC
+    LIMIT ${limit}
+  `);
+  return [...rows].map((r) => ({
+    uid: r.uid,
+    numero: Number(r.numero),
+    dateScrutin: r.date_scrutin,
+    titre: r.titre,
+    sortCode: r.sort_code,
+    pour: Number(r.pour),
+    contre: Number(r.contre),
+    abstention: Number(r.abstention),
+    nonVotant: Number(r.non_votant),
+  }));
+}
+
 // Lectures exposées aux pages : mises en cache jusqu'à la prochaine
 // ingestion (voir lib/cache.ts).
 // listDossiersSansResume / listDossiersSansEmpreinte restent hors cache :
@@ -910,4 +1073,8 @@ export const getImportHistory = cachedQuery(
 export const listGroupesEffectifs = cachedQuery(
   "listGroupesEffectifs",
   listGroupesEffectifsUncached,
+);
+export const getGroupePositionsRecentes = cachedQuery(
+  "getGroupePositionsRecentes",
+  getGroupePositionsRecentesUncached,
 );

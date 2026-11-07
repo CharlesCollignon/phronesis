@@ -6,39 +6,30 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
-import { Button } from "@/components/ui/button";
-
-export function ClerkAuthControls({
-  collapsed,
-  mobileOpen,
-}: {
-  collapsed: boolean;
-  mobileOpen: boolean;
-}): React.ReactElement {
-  const showLabels = !collapsed || mobileOpen;
+/** Connexion / compte Clerk, sur fond noir (en-tête). */
+export function ClerkAuthControls(): React.ReactElement {
   return (
-    <div className="flex min-h-10 items-center gap-2 px-1">
+    <div className="flex min-h-9 items-center">
       <Show when="signed-in">
         <UserButton
           appearance={{
             elements: { avatarBox: "h-8 w-8" },
           }}
         />
-        {showLabels ? (
-          <span className="truncate text-xs text-muted-foreground">
-            Compte
-          </span>
-        ) : null}
       </Show>
       <Show when="signed-out">
         <SignInButton mode="modal">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="h-10 w-full rounded-none text-xs"
+            className="ml-2 text-[15px] text-[#c4c4c4] transition-colors hover:text-white"
           >
-            {showLabels ? "Se connecter" : "→"}
-          </Button>
+            <span className="roll">
+              <span>
+                <span>Connexion</span>
+                <span aria-hidden>Connexion</span>
+              </span>
+            </span>
+          </button>
         </SignInButton>
       </Show>
     </div>

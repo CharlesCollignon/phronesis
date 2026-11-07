@@ -1,6 +1,8 @@
+import Link from "next/link";
+import { ArrowLeftRight } from "lucide-react";
 
 import { ComparaisonResults } from "@/components/comparaison-results";
-import { PageShell } from "@/components/breadcrumbs";
+import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { FilterTabs } from "@/components/filter-tabs";
 import {
   compareDeputes,
@@ -38,6 +40,13 @@ function resolveType(raw: string | undefined): ComparateurType {
   return "deputes";
 }
 
+const SUJET: Record<ComparateurType, string> = {
+  deputes: "les deux députés",
+  senateurs: "les deux sénateurs",
+  groupes: "les deux groupes",
+  groupes_senat: "les deux groupes",
+};
+
 export default async function ComparateurPage({
   searchParams,
 }: PageProps): Promise<React.ReactElement> {
@@ -50,8 +59,8 @@ export default async function ComparateurPage({
   const [acteurs, groupes] = await Promise.all([
     isActeur
       ? type === "senateurs"
-        ? searchSenateursPourComparateur("", 400)
-        : searchDeputesPourComparateur("", 400)
+        ? searchSenateursPourComparateur("", 700)
+        : searchDeputesPourComparateur("", 700)
       : Promise.resolve([]),
     listGroupesLegislature(
       type === "groupes_senat" ? "SENAT" : "AN",
@@ -72,6 +81,8 @@ export default async function ComparateurPage({
             labelB={nomComplet(cmp.acteurB.prenom, cmp.acteurB.nom)}
             hrefA={`${base}/${cmp.acteurA.uid}`}
             hrefB={`${base}/${cmp.acteurB.uid}`}
+            sujet={SUJET[type]}
+            kind={type === "senateurs" ? "Sénateur" : "Député"}
             resume={cmp.resume}
             convergences={cmp.convergences}
             divergences={cmp.divergences}
@@ -90,6 +101,16 @@ export default async function ComparateurPage({
             labelB={
               cmp.groupeB.libelleAbrege ?? cmp.groupeB.libelle
             }
+            hrefA={`/groupes/${cmp.groupeA.uid}`}
+            hrefB={`/groupes/${cmp.groupeB.uid}`}
+            metaA={
+              cmp.groupeA.libelleAbrege ? cmp.groupeA.libelle : undefined
+            }
+            metaB={
+              cmp.groupeB.libelleAbrege ? cmp.groupeB.libelle : undefined
+            }
+            sujet={SUJET[type]}
+            kind="Groupe"
             resume={cmp.resume}
             convergences={cmp.convergences}
             divergences={cmp.divergences}
@@ -113,6 +134,17 @@ export default async function ComparateurPage({
       }))
     : groupes.map((g) => ({ uid: g.uid, label: g.libelle }));
 
+  const sideLabel = isActeur
+    ? type === "senateurs"
+      ? "Sénateur"
+      : "Député"
+    : "Groupe";
+
+  const swapHref =
+    uidA && uidB && uidA !== uidB
+      ? `/comparateur?${new URLSearchParams({ type, a: uidB, b: uidA }).toString()}`
+      : null;
+
   return (
     <PageShell
       breadcrumbs={[
@@ -120,16 +152,14 @@ export default async function ComparateurPage({
         { label: "Comparateur" },
       ]}
     >
-      <h1 className="font-serif text-4xl tracking-tight">
-        Comparateur
-      </h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">
-        Comparez les positions de vote sur les scrutins publics —
-        Assemblée nationale ou Sénat.
-      </p>
+      <PageHeader
+        title="Comparateur"
+        description="Comparez les positions de deux élus ou de deux groupes sur l'ensemble des scrutins publics où ils se sont tous deux exprimés, à l'Assemblée nationale ou au Sénat."
+      />
 
-      <div className="mt-6">
+      <div className="mt-8 border-b border-border">
         <FilterTabs
+          label="Type de comparaison"
           activeId={type}
           tabs={tabs.map((tab) => ({
             id: tab.id,
@@ -141,16 +171,16 @@ export default async function ComparateurPage({
 
       <form
         method="get"
-        className="mt-6 grid gap-4 border border-border bg-card p-5 sm:grid-cols-[1fr_1fr_auto]"
+        className="mt-7 flex flex-wrap items-end gap-4"
       >
         <input type="hidden" name="type" value={type} />
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          A
+        <label className="flex min-w-0 flex-[1_1_280px] flex-col gap-2">
+          <span className="eyebrow">{sideLabel} A</span>
           <select
             name="a"
             defaultValue={uidA}
             required
-            className="border border-input bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--accent)]"
+            className="field w-full"
           >
             <option value="">Choisir…</option>
             {options.map((o) => (
@@ -160,13 +190,27 @@ export default async function ComparateurPage({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          B
+        {swapHref ? (
+          <Link
+            href={swapHref}
+            aria-label="Inverser A et B"
+            title="Inverser A et B"
+            className="group inline-flex size-11 shrink-0 items-center justify-center border border-foreground transition-colors duration-200 hover:bg-[var(--accent)] hover:text-[#0a0a0a]"
+          >
+            <ArrowLeftRight
+              aria-hidden
+              className="size-[18px] transition-transform duration-500 ease-[var(--spring)] group-hover:rotate-180"
+              strokeWidth={1.8}
+            />
+          </Link>
+        ) : null}
+        <label className="flex min-w-0 flex-[1_1_280px] flex-col gap-2">
+          <span className="eyebrow">{sideLabel} B</span>
           <select
             name="b"
             defaultValue={uidB}
             required
-            className="border border-input bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--accent)]"
+            className="field w-full"
           >
             <option value="">Choisir…</option>
             {options.map((o) => (
@@ -176,23 +220,32 @@ export default async function ComparateurPage({
             ))}
           </select>
         </label>
-        <div className="flex items-end">
-          <button
-            type="submit"
-            className="w-full bg-foreground px-5 py-2.5 text-sm font-medium text-[var(--background)] transition hover:bg-[var(--accent)] sm:w-auto"
-          >
-            Comparer
-          </button>
-        </div>
+        <button type="submit" className="btn btn-dark w-full sm:w-auto">
+          Comparer
+        </button>
       </form>
 
       {uidA && uidB && uidA === uidB ? (
-        <p className="mt-6 text-sm text-rose-700">
+        <p
+          role="alert"
+          className="mt-6 bg-[var(--highlight)] px-4 py-3 text-[15px] shadow-[inset_3px_0_0_0_var(--accent)] dark:text-foreground"
+        >
           Choisissez deux entités distinctes.
         </p>
       ) : null}
 
-      {results}
+      {results ??
+        (!uidA || !uidB ? (
+          <p className="mt-10 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
+            Choisissez deux {isActeur ? "élus" : "groupes"} puis lancez la
+            comparaison. Le taux d&apos;accord est calculé sur les scrutins
+            publics où les deux se sont exprimés ;{" "}
+            <Link href="/methodologie#comparateur" className="ln text-foreground">
+              voir la méthode
+            </Link>
+            .
+          </p>
+        ) : null)}
     </PageShell>
   );
 }

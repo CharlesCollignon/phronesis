@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ExternalLink } from "@/components/external-link";
 import { formatDateShort } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type TransparencePanelProps = {
   hatvp: {
@@ -16,6 +17,7 @@ type TransparencePanelProps = {
     sourceUrl: string;
     sourceLabel: string;
   }[];
+  className?: string;
 };
 
 /**
@@ -25,63 +27,91 @@ type TransparencePanelProps = {
 export function TransparencePanel({
   hatvp,
   faits,
+  className,
 }: TransparencePanelProps): React.ReactElement {
   return (
-    <aside className="mt-6 border border-border bg-card p-4 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section
+      aria-labelledby="transparence-titre"
+      className={cn("border-t border-foreground pt-5", className)}
+    >
+      <h2 id="transparence-titre" className="eyebrow">
         Transparence
-      </p>
+      </h2>
 
-      {hatvp ? (
-        <p className="mt-2">
-          <ExternalLink href={hatvp.hatvpUrl}>
-            Déclaration HATVP
-          </ExternalLink>
-          <span className="text-muted-foreground">
-            {" "}
-            · {hatvp.qualite}
-          </span>
-        </p>
-      ) : null}
-
-      <div className="mt-3">
-        <p className="text-xs font-medium text-foreground/80">
-          Décisions judiciaires publiques (définitives)
-        </p>
-        {faits.length === 0 ? (
-          <p className="mt-1 text-muted-foreground">
-            Aucune décision définitive référencée ici
-          </p>
-        ) : (
-          <ul className="mt-1.5 space-y-2">
-            {faits.map((f) => (
-              <li key={f.id}>
-                <p>
-                  {f.dateDecision
-                    ? `${formatDateShort(f.dateDecision)} · `
-                    : ""}
-                  {f.juridiction ? `${f.juridiction} · ` : ""}
-                  {f.resume}
-                </p>
-                <ExternalLink href={f.sourceUrl}>
-                  {f.sourceLabel}
+      <dl className="mt-4 grid gap-4 text-[15px]">
+        <div>
+          <dt className="text-sm text-muted-foreground">
+            Déclarations d&apos;intérêts et de patrimoine
+          </dt>
+          <dd className="mt-1">
+            {hatvp ? (
+              <>
+                <ExternalLink href={hatvp.hatvpUrl}>
+                  Déclaration HATVP
                 </ExternalLink>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {hatvp.qualite}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                Aucune fiche HATVP rattachée
+              </span>
+            )}
+          </dd>
+        </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-        Sources officielles uniquement · pas un casier ·
-        présomption d&apos;innocence pour tout le reste.{" "}
-        <Link
-          href="/methodologie"
-          className="text-[var(--accent)] hover:underline"
-        >
+        <div>
+          <dt className="text-sm text-muted-foreground">
+            Décisions judiciaires publiques (définitives)
+          </dt>
+          <dd className="mt-1">
+            {faits.length === 0 ? (
+              <span className="text-muted-foreground">
+                Aucune décision définitive référencée ici
+              </span>
+            ) : (
+              <ul className="border-b border-border">
+                {faits.map((f) => (
+                  <li
+                    key={f.id}
+                    className="border-t border-border py-3 leading-relaxed"
+                  >
+                    <p className="num text-[13px] text-muted-foreground">
+                      {[
+                        f.dateDecision
+                          ? formatDateShort(f.dateDecision)
+                          : null,
+                        f.juridiction,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="mt-1">{f.resume}</p>
+                    <p className="mt-1.5">
+                      <ExternalLink
+                        href={f.sourceUrl}
+                        className="text-sm"
+                      >
+                        {f.sourceLabel}
+                      </ExternalLink>
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </dd>
+        </div>
+      </dl>
+
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+        Sources officielles uniquement · pas un casier · présomption
+        d&apos;innocence pour tout le reste.{" "}
+        <Link href="/methodologie" className="ln text-foreground">
           Méthode
         </Link>
       </p>
-    </aside>
+    </section>
   );
 }

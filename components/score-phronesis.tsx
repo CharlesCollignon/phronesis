@@ -1,12 +1,5 @@
 import Link from "next/link";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import type { ScorePhronesis } from "@/lib/score-phronesis";
 
 type ScorePhronesisPanelProps = {
@@ -17,73 +10,68 @@ type ScorePhronesisPanelProps = {
 export function ScorePhronesisPanel({
   score,
 }: ScorePhronesisPanelProps): React.ReactElement {
-  const pct =
-    score.maxTotal > 0
-      ? Math.round((100 * score.total) / score.maxTotal)
-      : 0;
-
   return (
-    <Card className="shrink-0 rounded-none shadow-sm">
-      <CardHeader className="gap-1">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Score Phronesis
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {score.version}
-          </p>
-        </div>
-        <CardDescription>
-          Robustesse du socle documentaire — pas une note sur la
-          loi.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <p className="num text-3xl text-foreground">
+    <section
+      aria-labelledby="score-phronesis-titre"
+      className="border border-border p-6"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p id="score-phronesis-titre" className="eyebrow">
+          Score Phronesis
+        </p>
+        <p className="text-xs text-muted-foreground">{score.version}</p>
+      </div>
+      <p className="mt-2.5 flex items-baseline gap-1.5">
+        <span className="num text-5xl font-medium leading-none tracking-[-0.03em]">
           {score.total}
-          <span className="text-lg text-muted-foreground">
-            {" "}
-            / {score.maxTotal}
-          </span>
-        </p>
-        <div className="mt-2 h-2 w-full overflow-hidden bg-foreground/10">
-          <div
-            className="h-full bg-foreground"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <ul className="mt-4 space-y-2 text-sm">
-          {score.criteres.map((c) => (
-            <li
-              key={c.id}
-              className="flex items-start justify-between gap-3"
-            >
-              <span>
-                <span className="mr-1.5" aria-hidden>
-                  {c.rempli ? "✓" : "○"}
+        </span>
+        <span className="text-base text-muted-foreground">
+          / {score.maxTotal}
+        </span>
+      </p>
+      <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+        Robustesse du socle documentaire du dossier. Ce n&apos;est pas une
+        note sur la loi.
+      </p>
+      <ul className="mt-5 flex flex-col gap-3.5">
+        {score.criteres.map((c, i) => {
+          const pct =
+            c.maxPoints > 0 ? Math.round((100 * c.points) / c.maxPoints) : 0;
+          return (
+            <li key={c.id}>
+              <div className="flex justify-between gap-3 text-[13px]">
+                <span>
+                  {c.label}
+                  <span className="text-muted-foreground"> · {c.detail}</span>
                 </span>
-                {c.label}
-                <span className="ml-1 text-xs text-muted-foreground">
-                  ({c.detail})
+                <span className="num shrink-0 text-muted-foreground">
+                  {c.points} / {c.maxPoints}
                 </span>
-              </span>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {c.points}/{c.maxPoints}
-              </span>
+              </div>
+              <div
+                className="mt-1.5 h-1 bg-[var(--vote-neutre)]"
+                role="img"
+                aria-label={`${c.label} : ${c.points} sur ${c.maxPoints}`}
+              >
+                <div
+                  className="grow-x h-full bg-foreground"
+                  style={{
+                    width: `${pct}%`,
+                    animationDelay: `${200 + i * 60}ms`,
+                  }}
+                />
+              </div>
             </li>
-          ))}
-        </ul>
-        <p className="mt-auto pt-4 text-xs leading-relaxed text-muted-foreground">
-          Formule détaillée dans la{" "}
-          <Link
-            href="/methodologie"
-            className="font-medium text-primary underline-offset-2 hover:underline"
-          >
-            méthodologie
-          </Link>
-          .
-        </p>
-      </CardContent>
-    </Card>
+          );
+        })}
+      </ul>
+      <p className="mt-5 text-[13px] leading-relaxed text-muted-foreground">
+        Formule détaillée dans la{" "}
+        <Link href="/methodologie" className="ln text-foreground">
+          méthodologie
+        </Link>
+        .
+      </p>
+    </section>
   );
 }

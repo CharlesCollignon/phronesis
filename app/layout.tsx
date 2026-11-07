@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Fugaz_One, Inter, JetBrains_Mono } from "next/font/google";
+import { Archivo, Fugaz_One } from "next/font/google";
 
-import { AppSidebar } from "@/components/app-sidebar";
-import { AppTopbar } from "@/components/app-topbar";
 import { Providers } from "@/components/providers";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +11,9 @@ import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
 
-const fontSans = Inter({
+const fontSans = Archivo({
   subsets: ["latin"],
   variable: "--font-sans",
-});
-
-const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
 });
 
 const fontLogo = Fugaz_One({
@@ -47,28 +42,23 @@ export default function RootLayout({
     <html
       lang="fr"
       suppressHydrationWarning
-      className={cn(
-        fontSans.variable,
-        fontMono.variable,
-        fontLogo.variable,
-        "h-full antialiased",
-      )}
+      className={cn(fontSans.variable, fontLogo.variable, "h-full")}
     >
       <body className="min-h-full bg-background font-sans text-foreground">
         <Providers>
           <TooltipProvider>
-            <div className="flex min-h-screen">
-              <AppSidebar />
-              <div
-                className={
-                  "flex min-w-0 flex-1 flex-col pt-11 " +
-                  "md:ml-[var(--sidebar-width)] md:pt-0 " +
-                  "md:transition-[margin] md:duration-300"
-                }
+            <div className="flex min-h-screen flex-col">
+              <a
+                href="#contenu"
+                className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:text-black"
               >
-                <AppTopbar />
-                <main className="flex-1">{children}</main>
-              </div>
+                Aller au contenu
+              </a>
+              <SiteHeader />
+              <main id="contenu" className="flex-1">
+                {children}
+              </main>
+              <SiteFooter />
             </div>
           </TooltipProvider>
         </Providers>

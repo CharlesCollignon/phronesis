@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 type ExternalLinkProps = {
   href: string;
   children: React.ReactNode;
@@ -8,22 +10,17 @@ type ExternalLinkProps = {
 export function ExternalLink({
   href,
   children,
-  className = "",
+  className,
 }: ExternalLinkProps): React.ReactElement {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={
-        className ||
-        "inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] underline-offset-2 hover:underline"
-      }
+      className={cn("ln text-[15px] font-medium", className)}
     >
       {children}
-      <span aria-hidden className="text-xs">
-        ↗
-      </span>
+      <span aria-hidden> ↗</span>
     </a>
   );
 }

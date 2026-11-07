@@ -1,37 +1,24 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
 type StatProps = {
   label: string;
   value: string;
   hint?: string;
 };
 
+/** Chiffre clé : grand nombre tabulaire, libellé discret. */
 export function Stat({
   label,
   value,
   hint,
 }: StatProps): React.ReactElement {
   return (
-    <Card className="rounded-none shadow-sm">
-      <CardHeader className="gap-0 p-4 pb-0">
-        <CardDescription className="text-xs uppercase tracking-wide">
-          {label}
-        </CardDescription>
-        <CardTitle className="num mt-1 text-2xl font-normal">
-          {value}
-        </CardTitle>
-      </CardHeader>
+    <div className="border-t border-foreground pt-4">
+      <p className="num text-[clamp(28px,3vw,36px)] font-medium leading-none tracking-[-0.02em]">
+        {value}
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{label}</p>
       {hint ? (
-        <CardContent className="p-4 pt-1">
-          <p className="text-xs text-muted-foreground">{hint}</p>
-        </CardContent>
+        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
       ) : null}
-    </Card>
+    </div>
   );
 }

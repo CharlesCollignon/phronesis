@@ -27,7 +27,7 @@ export const SONDAGES_TAG = "sondages";
  * requête en cache change (colonne ajoutée, objet restructuré…), sinon
  * le nouveau code relira d'anciennes entrées.
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v3";
 
 const DATE_KEY = "__date";
 
