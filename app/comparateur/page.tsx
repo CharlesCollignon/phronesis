@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeftRight } from "lucide-react";
 
 import { ComparaisonResults } from "@/components/comparaison-results";
+import { ComparateurCombobox } from "@/components/comparateur-combobox";
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { FilterTabs } from "@/components/filter-tabs";
 import {
@@ -12,6 +13,7 @@ import {
   searchSenateursPourComparateur,
 } from "@/lib/comparateur";
 import { nomComplet } from "@/lib/format";
+import { listDeputes, listSenateurs } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +58,7 @@ export default async function ComparateurPage({
   const uidB = params.b ?? "";
 
   const isActeur = type === "deputes" || type === "senateurs";
-  const [acteurs, groupes] = await Promise.all([
+  const [acteurs, groupes, elus] = await Promise.all([
     isActeur
       ? type === "senateurs"
         ? searchSenateursPourComparateur("", 700)
@@ -65,7 +67,19 @@ export default async function ComparateurPage({
     listGroupesLegislature(
       type === "groupes_senat" ? "SENAT" : "AN",
     ),
+    // Groupe de chaque élu, pour l'afficher dans la recherche.
+    isActeur
+      ? type === "senateurs"
+        ? listSenateurs("")
+        : listDeputes("")
+      : Promise.resolve([]),
   ]);
+  const groupeParElu = new Map(
+    elus.map((e) => [
+      e.uid,
+      { abrege: e.groupeAbrege, couleur: e.groupeCouleur },
+    ]),
+  );
 
   let results: React.ReactNode = null;
 
@@ -131,8 +145,15 @@ export default async function ComparateurPage({
     ? acteurs.map((d) => ({
         uid: d.uid,
         label: nomComplet(d.prenom, d.nom),
+        hint: groupeParElu.get(d.uid)?.abrege ?? null,
+        couleur: groupeParElu.get(d.uid)?.couleur ?? null,
       }))
-    : groupes.map((g) => ({ uid: g.uid, label: g.libelle }));
+    : groupes.map((g) => ({
+        uid: g.uid,
+        label: g.libelle,
+        hint: g.libelleAbrege,
+        couleur: g.couleur,
+      }));
 
   const sideLabel = isActeur
     ? type === "senateurs"
@@ -174,22 +195,14 @@ export default async function ComparateurPage({
         className="mt-7 flex flex-wrap items-end gap-4"
       >
         <input type="hidden" name="type" value={type} />
-        <label className="flex min-w-0 flex-[1_1_280px] flex-col gap-2">
-          <span className="eyebrow">{sideLabel} A</span>
-          <select
-            name="a"
-            defaultValue={uidA}
-            required
-            className="field w-full"
-          >
-            <option value="">Choisir…</option>
-            {options.map((o) => (
-              <option key={o.uid} value={o.uid}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ComparateurCombobox
+          key={`a-${type}-${uidA}`}
+          name="a"
+          label={`${sideLabel} A`}
+          options={options}
+          defaultValue={uidA}
+          placeholder={isActeur ? "Rechercher un nom…" : "Rechercher un groupe…"}
+        />
         {swapHref ? (
           <Link
             href={swapHref}
@@ -204,22 +217,14 @@ export default async function ComparateurPage({
             />
           </Link>
         ) : null}
-        <label className="flex min-w-0 flex-[1_1_280px] flex-col gap-2">
-          <span className="eyebrow">{sideLabel} B</span>
-          <select
-            name="b"
-            defaultValue={uidB}
-            required
-            className="field w-full"
-          >
-            <option value="">Choisir…</option>
-            {options.map((o) => (
-              <option key={o.uid} value={o.uid}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ComparateurCombobox
+          key={`b-${type}-${uidB}`}
+          name="b"
+          label={`${sideLabel} B`}
+          options={options}
+          defaultValue={uidB}
+          placeholder={isActeur ? "Rechercher un nom…" : "Rechercher un groupe…"}
+        />
         <button type="submit" className="btn btn-dark w-full sm:w-auto">
           Comparer
         </button>
