@@ -122,7 +122,7 @@ function getModel(): {
   const provider = (process.env.AI_PROVIDER ?? "mistral").toLowerCase();
   const modelId =
     process.env.AI_MODEL ??
-    (provider === "openai" ? "gpt-4o-mini" : "mistral-large-latest");
+    (provider === "openai" ? "gpt-4o-mini" : "mistral-large-4");
 
   if (provider === "openai") {
     if (!process.env.OPENAI_API_KEY) {
