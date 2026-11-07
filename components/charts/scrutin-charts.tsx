@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { EChartsCoreOption } from "echarts/core";
 
 import { EChart } from "@/components/charts/echart";
+import { couleurDe } from "@/components/groupe-couleur";
 
 type GroupeVote = {
   groupeUid: string | null;
@@ -29,10 +30,14 @@ type Palette = {
   background: string;
 };
 
+/*
+ * Positions en couleurs distinctes et lisibles par les daltoniens
+ * (palette Okabe-Ito : bleu / orange), abstention en gris.
+ */
 const LIGHT: Palette = {
-  pour: "#0A0A0A",
-  contre: "#8A8A8A",
-  abstention: "#CFCFCF",
+  pour: "#0072B2",
+  contre: "#E69F00",
+  abstention: "#A3A3A3",
   text: "#0A0A0A",
   muted: "#5C5C5C",
   border: "#DADADA",
@@ -44,10 +49,11 @@ function readPalette(): Palette {
   const css = getComputedStyle(document.documentElement);
   const v = (name: string, fallback: string): string =>
     css.getPropertyValue(name).trim() || fallback;
+  const dark = document.documentElement.classList.contains("dark");
   return {
-    pour: v("--vote-pour", LIGHT.pour),
-    contre: v("--vote-contre", LIGHT.contre),
-    abstention: v("--vote-abstention", LIGHT.abstention),
+    pour: dark ? "#56B4E9" : LIGHT.pour,
+    contre: LIGHT.contre,
+    abstention: dark ? "#6B6B6B" : LIGHT.abstention,
     text: v("--foreground", LIGHT.text),
     muted: v("--muted-foreground", LIGHT.muted),
     border: v("--border", LIGHT.border),
@@ -55,7 +61,10 @@ function readPalette(): Palette {
   };
 }
 
-/** Effectifs par groupe (barres empilées, monochrome). */
+/**
+ * Effectifs par groupe : barres empilées pour / contre / abstention,
+ * avec la couleur du groupe en carré sous son sigle.
+ */
 export function ScrutinCharts({
   parGroupe,
 }: ScrutinChartsProps): React.ReactElement {
@@ -86,6 +95,17 @@ export function ScrutinCharts({
     const labels = rows.map(
       (g) => g.libelleAbrege ?? g.libelle ?? "?",
     );
+    // Un style « rich » par groupe : carré à sa couleur devant le sigle.
+    const rich: Record<string, Record<string, unknown>> = {
+      l: { fontSize: 12, color: palette.muted, fontFamily: "Archivo, system-ui, sans-serif" },
+    };
+    rows.forEach((g, i) => {
+      rich[`c${i}`] = {
+        backgroundColor: couleurDe(g.libelleAbrege, g.couleur),
+        width: 9,
+        height: 9,
+      };
+    });
     const font = "Archivo, system-ui, sans-serif";
     const serie = (
       name: string,
@@ -112,19 +132,20 @@ export function ScrutinCharts({
         textStyle: { color: palette.text, fontFamily: font, fontSize: 13 },
       },
       legend: {
-        bottom: 0,
-        left: 0,
+        top: 0,
+        right: 0,
         icon: "rect",
         itemWidth: 10,
         itemHeight: 10,
         itemGap: 18,
         textStyle: { color: palette.muted, fontSize: 13, fontFamily: font },
       },
+      // ECharts 6 réserve d'office la place des libellés d'axe (outerBounds).
       grid: {
         left: 0,
         right: 8,
-        top: 12,
-        bottom: 40,
+        top: 40,
+        bottom: 4,
       },
       xAxis: {
         type: "category",
@@ -137,6 +158,8 @@ export function ScrutinCharts({
           fontSize: 12,
           color: palette.muted,
           fontFamily: font,
+          formatter: (value: string, i: number) => `{c${i}|} {l|${value}}`,
+          rich,
         },
       },
       yAxis: {
