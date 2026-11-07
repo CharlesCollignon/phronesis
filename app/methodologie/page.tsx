@@ -376,9 +376,19 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
           <Section id="groupes" title="Empreinte agrégée des groupes">
             <p className={P}>
               Pour un groupe parlementaire (AN ou Sénat), Phronesis agrège les
-              empreintes des dossiers liés aux scrutins où le groupe a une
-              majorité pour ou contre : le vecteur est ajouté (pour) ou
-              inversé (contre), puis normalisé.
+              empreintes des dossiers sur lesquels le groupe a une majorité
+              pour ou contre : le vecteur est ajouté (pour) ou inversé
+              (contre), puis normalisé.
+            </p>
+            <p className={P}>
+              Seuls comptent les votes qui portent sur le texte lui-même :
+              vote sur l&apos;ensemble, article unique, texte entier ou partie
+              d&apos;une loi de finances. Les motions de censure (qui portent
+              sur la confiance au gouvernement) et les motions de rejet ou de
+              renvoi (parfois votées par la majorité contre son propre texte,
+              pour l&apos;envoyer directement en commission mixte paritaire)
+              sont exclues. Un dossier voté plusieurs fois ne compte
+              qu&apos;une fois, avec le dernier vote où le groupe a tranché.
             </p>
             <p className={P}>
               Limites : scrutins publics seulement ; dossiers sans empreinte

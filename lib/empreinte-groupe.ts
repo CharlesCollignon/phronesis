@@ -3,7 +3,7 @@
  * (majorités pour/contre sur dossiers avec empreinte).
  */
 
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql, type SQL } from "drizzle-orm";
 
 import { db, schema } from "@/db";
 import { cachedQuery } from "@/lib/cache";
@@ -67,8 +67,33 @@ function emptyProfil(): ProfilBoussole {
 }
 
 /**
- * Calcule le vecteur agrégé d'un groupe à partir des majorités
- * pour/contre sur dossiers pourvus d'une empreinte.
+ * Condition SQL : le scrutin porte sur le texte lui-même, de sorte
+ * que voter « pour » revient à soutenir le texte. Retient le vote sur
+ * l'ensemble, l'article unique, le texte entier (« le projet de loi… »)
+ * et les parties d'une loi de finances.
+ *
+ * Exclut :
+ * - les motions de censure, qui portent sur la confiance au
+ *   gouvernement et non sur le contenu du texte ;
+ * - les motions de rejet ou de renvoi, souvent tactiques : la majorité
+ *   vote parfois le rejet de son propre texte pour l'envoyer
+ *   directement en commission mixte paritaire.
+ */
+export function estVoteSurLeTexte(titre: SQL): SQL {
+  return sql`(
+    ${titre} ~* '^l[’'']ensemble '
+    OR ${titre} ~* '^l[’'']article unique '
+    OR ${titre} ~* '^(le projet|la proposition) de (loi|résolution)'
+    OR ${titre} ~* '^la (première|deuxième|seconde) partie du projet de loi'
+  )`;
+}
+
+/**
+ * Calcule le vecteur agrégé d'un groupe à partir de sa majorité
+ * pour/contre sur les votes portant sur l'ensemble des textes pourvus
+ * d'une empreinte. Un dossier voté plusieurs fois (première lecture,
+ * texte de CMP, lecture définitive) ne compte qu'une fois, avec le
+ * dernier vote où le groupe a tranché.
  */
 async function getEmpreinteGroupeUncached(
   organeUid: string,
@@ -86,6 +111,8 @@ async function getEmpreinteGroupeUncached(
     .limit(1);
   if (!groupe) return null;
 
+  // Du plus récent au plus ancien, pour garder le dernier vote de
+  // chaque dossier.
   const majorites = await db.execute<{
     scrutin_uid: string;
     dossier_uid: string;
@@ -93,8 +120,10 @@ async function getEmpreinteGroupeUncached(
   }>(sql`
     WITH counts AS (
       SELECT
-        v.scrutin_uid,
+        s.uid AS scrutin_uid,
         s.dossier_uid,
+        s.date_scrutin,
+        s.numero,
         count(*) FILTER (
           WHERE v.position = 'pour'
         )::int AS pour,
@@ -106,21 +135,20 @@ async function getEmpreinteGroupeUncached(
       WHERE v.groupe_uid = ${organeUid}
         AND v.position IN ('pour', 'contre')
         AND s.dossier_uid IS NOT NULL
-      GROUP BY v.scrutin_uid, s.dossier_uid
+        AND ${estVoteSurLeTexte(sql`s.titre`)}
+        AND EXISTS (
+          SELECT 1 FROM empreintes e
+          WHERE e.dossier_uid = s.dossier_uid
+        )
+      GROUP BY s.uid, s.dossier_uid, s.date_scrutin, s.numero
     )
     SELECT
       scrutin_uid,
       dossier_uid,
-      CASE
-        WHEN pour > contre THEN 'pour'
-        WHEN contre > pour THEN 'contre'
-      END AS maj
+      CASE WHEN pour > contre THEN 'pour' ELSE 'contre' END AS maj
     FROM counts
     WHERE pour <> contre
-      AND EXISTS (
-        SELECT 1 FROM empreintes e
-        WHERE e.dossier_uid = counts.dossier_uid
-      )
+    ORDER BY date_scrutin DESC, numero DESC
   `);
 
   const rows = Array.from(majorites);
@@ -165,6 +193,9 @@ async function getEmpreinteGroupeUncached(
 
   const dossiersVus = new Set<string>();
   for (const row of rows) {
+    // Lignes triées du plus récent au plus ancien : seul le dernier
+    // vote tranché de chaque dossier compte.
+    if (dossiersVus.has(row.dossier_uid)) continue;
     const emp = byDossier.get(row.dossier_uid);
     if (!emp) continue;
     dossiersVus.add(row.dossier_uid);
@@ -213,8 +244,10 @@ async function getEmpreinteGroupeUncached(
   };
 }
 
-// Agrégat open data mis en cache 24 h (voir lib/cache.ts).
+// Agrégat open data mis en cache jusqu'à la prochaine ingestion (voir
+// lib/cache.ts). Le suffixe de clé change avec la méthode de calcul :
+// le cache Vercel survit aux déploiements.
 export const getEmpreinteGroupe = cachedQuery(
-  "getEmpreinteGroupe",
+  "getEmpreinteGroupe:vote-sur-le-texte",
   getEmpreinteGroupeUncached,
 );
