@@ -1,5 +1,3 @@
-import { sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { actes, documents, dossiers } from "../../db/schema";
 import {
@@ -13,6 +11,7 @@ import {
   forEachZipEntry,
   inBatches,
   logImport,
+  upsertSiChange,
 } from "./lib";
 
 type Json = Record<string, unknown>;
@@ -144,10 +143,6 @@ function parseDocument(raw: Json): DocumentRow | null {
   };
 }
 
-function sqlExcluded(column: string): ReturnType<typeof sql> {
-  return sql.raw(`excluded."${column}"`);
-}
-
 async function main(): Promise<void> {
   const start = Date.now();
   const zipPath = await download(DATASETS.dossiers);
@@ -203,15 +198,15 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: dossiers.uid,
-        set: {
-          titre: sqlExcluded("titre"),
-          titreChemin: sqlExcluded("titre_chemin"),
-          senatChemin: sqlExcluded("senat_chemin"),
-          procedureCode: sqlExcluded("procedure_code"),
-          procedureLibelle: sqlExcluded("procedure_libelle"),
-          typeDossier: sqlExcluded("type_dossier"),
-          initiateurActeurUid: sqlExcluded("initiateur_acteur_uid"),
-        },
+        ...upsertSiChange(dossiers, [
+          "titre",
+          "titreChemin",
+          "senatChemin",
+          "procedureCode",
+          "procedureLibelle",
+          "typeDossier",
+          "initiateurActeurUid",
+        ]),
       });
   });
 
@@ -222,17 +217,17 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: actes.uid,
-        set: {
-          libelle: sqlExcluded("libelle"),
-          date: sqlExcluded("date"),
-          ordre: sqlExcluded("ordre"),
-          profondeur: sqlExcluded("profondeur"),
-          parentUid: sqlExcluded("parent_uid"),
-          organeRef: sqlExcluded("organe_ref"),
-          texteAssocieRef: sqlExcluded("texte_associe_ref"),
-          statut: sqlExcluded("statut"),
-          voteRefs: sqlExcluded("vote_refs"),
-        },
+        ...upsertSiChange(actes, [
+          "libelle",
+          "date",
+          "ordre",
+          "profondeur",
+          "parentUid",
+          "organeRef",
+          "texteAssocieRef",
+          "statut",
+          "voteRefs",
+        ]),
       });
   });
 
@@ -242,15 +237,15 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: documents.uid,
-        set: {
-          dossierUid: sqlExcluded("dossier_uid"),
-          classeCode: sqlExcluded("classe_code"),
-          typeCode: sqlExcluded("type_code"),
-          sousTypeCode: sqlExcluded("sous_type_code"),
-          titre: sqlExcluded("titre"),
-          dateDepot: sqlExcluded("date_depot"),
-          legislature: sqlExcluded("legislature"),
-        },
+        ...upsertSiChange(documents, [
+          "dossierUid",
+          "classeCode",
+          "typeCode",
+          "sousTypeCode",
+          "titre",
+          "dateDepot",
+          "legislature",
+        ]),
       });
   });
 

@@ -1,5 +1,3 @@
-import { sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { acteurs, mandats, organes } from "../../db/schema";
 import {
@@ -12,6 +10,7 @@ import {
   forEachZipEntry,
   inBatches,
   logImport,
+  upsertSiChange,
 } from "./lib";
 
 type Json = Record<string, unknown>;
@@ -138,16 +137,16 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: organes.uid,
-        set: {
-          codeType: sqlExcluded("code_type"),
-          libelle: sqlExcluded("libelle"),
-          libelleAbrege: sqlExcluded("libelle_abrege"),
-          couleur: sqlExcluded("couleur"),
-          positionPolitique: sqlExcluded("position_politique"),
-          dateDebut: sqlExcluded("date_debut"),
-          dateFin: sqlExcluded("date_fin"),
-          legislature: sqlExcluded("legislature"),
-        },
+        ...upsertSiChange(organes, [
+          "codeType",
+          "libelle",
+          "libelleAbrege",
+          "couleur",
+          "positionPolitique",
+          "dateDebut",
+          "dateFin",
+          "legislature",
+        ]),
       });
   });
 
@@ -157,14 +156,14 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: acteurs.uid,
-        set: {
-          civilite: sqlExcluded("civilite"),
-          prenom: sqlExcluded("prenom"),
-          nom: sqlExcluded("nom"),
-          dateNaissance: sqlExcluded("date_naissance"),
-          villeNaissance: sqlExcluded("ville_naissance"),
-          profession: sqlExcluded("profession"),
-        },
+        ...upsertSiChange(acteurs, [
+          "civilite",
+          "prenom",
+          "nom",
+          "dateNaissance",
+          "villeNaissance",
+          "profession",
+        ]),
       });
   });
 
@@ -174,15 +173,15 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: mandats.uid,
-        set: {
-          organeUid: sqlExcluded("organe_uid"),
-          libelleQualite: sqlExcluded("libelle_qualite"),
-          dateDebut: sqlExcluded("date_debut"),
-          dateFin: sqlExcluded("date_fin"),
-          circoDepartement: sqlExcluded("circo_departement"),
-          circoNumDepartement: sqlExcluded("circo_num_departement"),
-          circoNum: sqlExcluded("circo_num"),
-        },
+        ...upsertSiChange(mandats, [
+          "organeUid",
+          "libelleQualite",
+          "dateDebut",
+          "dateFin",
+          "circoDepartement",
+          "circoNumDepartement",
+          "circoNum",
+        ]),
       });
   });
 
@@ -191,10 +190,6 @@ async function main(): Promise<void> {
   await logImport("acteurs", DATASETS.acteurs.url, total, duration);
   console.log(`Import acteurs terminé en ${Math.round(duration / 1000)}s`);
   process.exit(0);
-}
-
-function sqlExcluded(column: string): ReturnType<typeof sql> {
-  return sql.raw(`excluded."${column}"`);
 }
 
 main().catch((e) => {

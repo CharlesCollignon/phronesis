@@ -12,6 +12,7 @@ import {
   forEachZipEntry,
   inBatches,
   logImport,
+  upsertSiChange,
 } from "./lib";
 
 type Json = Record<string, unknown>;
@@ -95,10 +96,6 @@ function parseScrutin(
   return { scrutin, votes: voteRows };
 }
 
-function sqlExcluded(column: string): ReturnType<typeof sql> {
-  return sql.raw(`excluded."${column}"`);
-}
-
 async function main(): Promise<void> {
   const start = Date.now();
   const zipPath = await download(DATASETS.scrutins);
@@ -153,17 +150,17 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: scrutins.uid,
-        set: {
-          titre: sqlExcluded("titre"),
-          sortCode: sqlExcluded("sort_code"),
-          nombreVotants: sqlExcluded("nombre_votants"),
-          suffragesExprimes: sqlExcluded("suffrages_exprimes"),
-          suffragesRequis: sqlExcluded("suffrages_requis"),
-          pour: sqlExcluded("pour"),
-          contre: sqlExcluded("contre"),
-          abstentions: sqlExcluded("abstentions"),
-          nonVotants: sqlExcluded("non_votants"),
-        },
+        ...upsertSiChange(scrutins, [
+          "titre",
+          "sortCode",
+          "nombreVotants",
+          "suffragesExprimes",
+          "suffragesRequis",
+          "pour",
+          "contre",
+          "abstentions",
+          "nonVotants",
+        ]),
       });
   });
 
@@ -173,12 +170,12 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: [votes.scrutinUid, votes.acteurUid],
-        set: {
-          groupeUid: sqlExcluded("groupe_uid"),
-          position: sqlExcluded("position"),
-          parDelegation: sqlExcluded("par_delegation"),
-          causePosition: sqlExcluded("cause_position"),
-        },
+        ...upsertSiChange(votes, [
+          "groupeUid",
+          "position",
+          "parDelegation",
+          "causePosition",
+        ]),
       });
   });
 
@@ -193,6 +190,7 @@ async function main(): Promise<void> {
       WHERE vote_refs IS NOT NULL
     ) a
     WHERE s.uid = a.vote_ref
+      AND s.dossier_uid IS DISTINCT FROM a.dossier_uid
   `);
   console.log(`Scrutins liés à un dossier : ${linked.count ?? "?"}`);
 

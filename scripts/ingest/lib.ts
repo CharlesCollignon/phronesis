@@ -3,6 +3,13 @@ import { mkdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import {
+  getTableColumns,
+  getTableName,
+  sql,
+  type SQL,
+} from "drizzle-orm";
+import type { PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import yauzl from "yauzl";
 
 import { db } from "../../db";
@@ -357,6 +364,36 @@ export async function logImport(
   durationMs: number,
 ): Promise<void> {
   await db.insert(imports).values({ dataset, sourceUrl, rowCount, durationMs });
+}
+
+/**
+ * Clauses `ON CONFLICT DO UPDATE` qui ne réécrivent une ligne que si
+ * l'une des colonnes a réellement changé.
+ *
+ * Postgres crée une nouvelle version de ligne à chaque UPDATE, même
+ * sans changement : sans ce filtre, chaque ingestion hebdomadaire
+ * réécrivait toutes les lignes et faisait gonfler tables et index
+ * (votes : 489 Mo pour 260 Mo de données utiles).
+ */
+export function upsertSiChange<T extends PgTable>(
+  table: T,
+  keys: (keyof T["_"]["columns"] & string)[],
+): { set: PgUpdateSetSource<T>; setWhere: SQL } {
+  const columns = getTableColumns(table);
+  const tableName = sql.identifier(getTableName(table));
+  const set: Record<string, SQL> = {};
+  const actuel: SQL[] = [];
+  const nouveau: SQL[] = [];
+  for (const key of keys) {
+    const name = sql.identifier(columns[key].name);
+    set[key] = sql`excluded.${name}`;
+    actuel.push(sql`${tableName}.${name}`);
+    nouveau.push(sql`excluded.${name}`);
+  }
+  return {
+    set: set as PgUpdateSetSource<T>,
+    setWhere: sql`(${sql.join(actuel, sql`, `)}) is distinct from (${sql.join(nouveau, sql`, `)})`,
+  };
 }
 
 /** Insère par lots pour éviter les requêtes géantes. */
