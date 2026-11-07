@@ -16,6 +16,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { jsonSchema, Output } from "ai";
 import { sql } from "drizzle-orm";
 
 import { db } from "../../db";
@@ -30,8 +31,10 @@ import {
   isTheme,
 } from "../../lib/amendements-classement";
 import { decoderEntites } from "../../lib/format";
-import { extractJson, genererAvecAttente, getModel } from "../lib/ia";
+import { genererAvecAttente, getModel } from "../lib/ia";
 
+// La version du prompt ne change pas : seul le format de sortie est
+// contraint, les classements déjà faits restent valides.
 const PROMPT_VERSION = "v2-orientation-par-theme";
 const PAR_APPEL = 10;
 const MAX_CARACTERES = 1500;
@@ -71,9 +74,66 @@ Méthode :
 - redactionnel et rapport : orientations, gagnants et perdants vides.
 - N'invente pas d'effet : un amendement mineur a des listes vides.
 
-Réponds UNIQUEMENT avec un tableau JSON compact (sans texte autour), un
-objet par amendement, dans l'ordre reçu : { "id", "nature", "themes",
-"resume", "orientations", "gagnants", "perdants", "confiance" }.`;
+Réponds avec un objet JSON { "amendements": [...] }, un élément par
+amendement, dans l'ordre reçu : { "id", "nature", "themes", "resume",
+"orientations", "gagnants", "perdants", "confiance" }.`;
+
+const POLES = Object.values(ORIENTATIONS).flatMap((p) => p.map((x) => x.id));
+const enumChaines = (valeurs: readonly string[]) => ({
+  type: "array" as const,
+  items: { type: "string" as const, enum: [...valeurs] },
+});
+
+/**
+ * Schéma imposé à la réponse : Mistral contraint sa sortie à ce schéma
+ * (mode JSON strict), ce qui évite le JSON mal formé et impose la forme
+ * { theme, sens } des orientations.
+ */
+const SCHEMA = jsonSchema<{ amendements: Record<string, unknown>[] }>({
+  type: "object",
+  properties: {
+    amendements: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          nature: { type: "string", enum: [...NATURES] },
+          themes: enumChaines(THEMES),
+          resume: { type: "string" },
+          orientations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                theme: { type: "string", enum: Object.keys(ORIENTATIONS) },
+                sens: { type: "string", enum: POLES },
+              },
+              required: ["theme", "sens"],
+              additionalProperties: false,
+            },
+          },
+          gagnants: enumChaines(CATEGORIES),
+          perdants: enumChaines(CATEGORIES),
+          confiance: { type: "string", enum: [...CONFIANCES] },
+        },
+        required: [
+          "id",
+          "nature",
+          "themes",
+          "resume",
+          "orientations",
+          "gagnants",
+          "perdants",
+          "confiance",
+        ],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["amendements"],
+  additionalProperties: false,
+});
 
 type Amendement = {
   uid: string;
@@ -209,29 +269,59 @@ async function main(): Promise<void> {
   let echecs = 0;
   const debut = Date.now();
 
+  const appeler = async (
+    lot: Amendement[],
+  ): Promise<Record<string, unknown>[]> => {
+    const resultat = await genererAvecAttente({
+      model,
+      system: SYSTEM,
+      prompt: `${lot.map(bloc).join("\n\n")}\n\nProduis l'objet JSON.`,
+      temperature: 0,
+      topP: 1,
+      output: Output.object({ schema: SCHEMA }),
+      providerOptions: {
+        mistral: { reasoningEffort: raisonnement, strictJsonSchema: true },
+      },
+    });
+    const sortie = resultat.output as { amendements?: unknown } | undefined;
+    return liste(sortie?.amendements) as Record<string, unknown>[];
+  };
+
+  /**
+   * En cas d'échec, recoupe le lot en deux et réessaie chaque moitié,
+   * jusqu'à l'amendement seul : un amendement problématique ne fait plus
+   * perdre tout son lot.
+   */
+  const classerLot = async (
+    lot: Amendement[],
+  ): Promise<{ reponses: Record<string, unknown>[]; perdus: number }> => {
+    try {
+      return { reponses: await appeler(lot), perdus: 0 };
+    } catch (e) {
+      if (lot.length === 1) {
+        console.warn(`  ${lot[0]!.uid} en échec : ${(e as Error).message}`);
+        return { reponses: [], perdus: 1 };
+      }
+      const milieu = Math.ceil(lot.length / 2);
+      const a = await classerLot(lot.slice(0, milieu));
+      const b = await classerLot(lot.slice(milieu));
+      return {
+        reponses: [...a.reponses, ...b.reponses],
+        perdus: a.perdus + b.perdus,
+      };
+    }
+  };
+
   for (let i = 0; i < amendements.length; i += PAR_APPEL) {
     const lot = amendements.slice(i, i + PAR_APPEL);
-    let reponses: Record<string, unknown>[];
-    try {
-      const { text } = await genererAvecAttente({
-        model,
-        system: SYSTEM,
-        prompt: `${lot.map(bloc).join("\n\n")}\n\nProduis le tableau JSON.`,
-        temperature: 0,
-        topP: 1,
-        providerOptions: { mistral: { reasoningEffort: raisonnement } },
-      });
-      reponses = liste(extractJson(text)) as Record<string, unknown>[];
-      echecs = 0;
-    } catch (e) {
+    const { reponses, perdus } = await classerLot(lot);
+    if (perdus === lot.length) {
       echecs += 1;
-      console.warn(
-        `  lot ${i / PAR_APPEL + 1} en échec : ${(e as Error).message}`,
-      );
       if (echecs >= ECHECS_CONSECUTIFS_MAX) {
-        throw new Error(`${echecs} lots en échec d'affilée, arrêt.`);
+        throw new Error(`${echecs} lots entièrement en échec d'affilée, arrêt.`);
       }
-      continue;
+    } else {
+      echecs = 0;
     }
 
     const valides: Classement[] = [];
