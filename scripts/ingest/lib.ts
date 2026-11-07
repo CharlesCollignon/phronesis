@@ -265,6 +265,69 @@ export function asText(value: unknown): string | null {
   return null;
 }
 
+/**
+ * Certains titres de l'open data AN sont publiés en double, recollés
+ * sans espace : « … par le travail indépendantde l'insertion par … par le
+ * travail indépendant ». La seconde moitié reprend la fin de la
+ * première. On ne garde que la première quand la répétition est longue
+ * (au moins 30 caractères et 40 % du titre), pour ne pas toucher aux
+ * titres qui répètent légitimement une courte formule.
+ */
+export function dedoublonnerTitre(titre: string): string {
+  const t = titre.trim();
+  const min = Math.max(30, Math.floor(t.length * 0.4));
+  // La répétition ne peut pas dépasser la moitié du titre.
+  for (let i = Math.ceil(t.length / 2); i <= t.length - min; i++) {
+    const head = t.slice(0, i);
+    const tail = t.slice(i);
+    if (tail.length >= min && head.endsWith(tail)) return head.trim();
+  }
+  return t;
+}
+
+/**
+ * Caractères Windows-1252 restés sous forme de codes de contrôle C1
+ * (U+0080–U+009F) dans un texte par ailleurs en UTF-8 : apostrophe
+ * typographique (0x92), tirets, guillemets, œ, €… Le dump Dosleg du
+ * Sénat en contient plusieurs milliers.
+ */
+const CP1252_C1: Record<number, string> = {
+  0x80: "€",
+  0x82: "‚",
+  0x83: "ƒ",
+  0x84: "„",
+  0x85: "…",
+  0x86: "†",
+  0x87: "‡",
+  0x88: "ˆ",
+  0x89: "‰",
+  0x8a: "Š",
+  0x8b: "‹",
+  0x8c: "Œ",
+  0x8e: "Ž",
+  0x91: "‘",
+  0x92: "’",
+  0x93: "“",
+  0x94: "”",
+  0x95: "•",
+  0x96: "–",
+  0x97: "—",
+  0x98: "˜",
+  0x99: "™",
+  0x9a: "š",
+  0x9b: "›",
+  0x9c: "œ",
+  0x9e: "ž",
+  0x9f: "Ÿ",
+};
+
+export function reparerControlesCp1252(text: string): string {
+  return text.replace(
+    /[\u0080-\u009f]/g,
+    (c) => CP1252_C1[c.charCodeAt(0)] ?? "",
+  );
+}
+
 /** Normalise les tableaux XML→JSON (élément unique = objet nu). */
 export function asArray<T>(value: T | T[] | null | undefined): T[] {
   if (value == null) return [];
