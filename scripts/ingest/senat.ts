@@ -12,7 +12,13 @@ import yauzl from "yauzl";
 
 import { db } from "../../db";
 import { acteurs, scrutins, votes } from "../../db/schema";
-import { CACHE_DIR, inBatches, logImport, useCachedFile } from "./lib";
+import {
+  CACHE_DIR,
+  inBatches,
+  logImport,
+  reparerControlesCp1252,
+  useCachedFile,
+} from "./lib";
 
 const ODSEN_URL =
   "https://data.senat.fr/data/senateurs/ODSEN_GENERAL.json";
@@ -163,12 +169,21 @@ function extractCopy(sqlText: string, table: string): string {
   return sqlText.slice(start, end);
 }
 
+/**
+ * Le dump Dosleg est en UTF-8 (le lire en latin1 produisait « prÃ©rogatives »),
+ * mais il contient des caractères Windows-1252 restés en codes C1 : on les
+ * remplace par leur équivalent (apostrophe, tirets, œ…).
+ */
+async function readSqlText(sqlPath: string): Promise<string> {
+  return reparerControlesCp1252(await readFile(sqlPath, "utf-8"));
+}
+
 async function readDoslegSql(): Promise<string> {
   const zipPath = await downloadFile(DOSLEG_URL, "dosleg.zip");
   // Cache extracted sql for faster re-runs.
   const sqlPath = path.join(CACHE_DIR, "dosleg.sql");
   if (await useCachedFile(sqlPath, "dosleg.sql")) {
-    return readFile(sqlPath, "latin1");
+    return readSqlText(sqlPath);
   }
   console.log("[extract] dosleg.sql…");
   await new Promise<void>((resolve, reject) => {
@@ -208,7 +223,7 @@ async function readDoslegSql(): Promise<string> {
       zip.readEntry();
     });
   });
-  return readFile(sqlPath, "latin1");
+  return readSqlText(sqlPath);
 }
 
 function sqlExcluded(column: string): ReturnType<typeof sql> {
@@ -230,7 +245,7 @@ async function ingestScrutinsAndVotes(
     // sesann scrnum code scrint scrdat scrpou scrcon scrvot scrsuf …
     const sesann = parseInt(cols[0] ?? "", 10);
     const scrnum = parseInt(cols[1] ?? "", 10);
-    const titre = (cols[3] ?? "").replace(/\u00c2/g, "").trim();
+    const titre = (cols[3] ?? "").trim();
     const dateRaw = cols[4] ?? "";
     const dateScrutin = dateRaw.slice(0, 10);
     const pour = parseInt(cols[5] ?? "0", 10) || 0;

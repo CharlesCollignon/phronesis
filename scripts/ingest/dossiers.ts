@@ -8,6 +8,7 @@ import {
   asDate,
   asInt,
   asText,
+  dedoublonnerTitre,
   download,
   forEachZipEntry,
   inBatches,
@@ -80,7 +81,8 @@ function parseDossier(
   const uid = asText(d.uid);
   const legislature = asInt(d.legislature);
   const titreDossier = (d.titreDossier ?? {}) as Json;
-  const titre = asText(titreDossier.titre);
+  const titreBrut = asText(titreDossier.titre);
+  const titre = titreBrut ? dedoublonnerTitre(titreBrut) : null;
   if (!uid || !legislature || !titre) return null;
   const procedure = (d.procedureParlementaire ?? {}) as Json;
   const initiateur = (d.initiateur ?? {}) as Json;
