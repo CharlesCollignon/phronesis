@@ -175,7 +175,10 @@ export default async function GroupePage({
 
           {votesParTheme ? (
             <div className="pb-16">
-              <VotesParThemeSection data={votesParTheme} sujet="ses membres" />
+              <VotesParThemeSection
+                data={votesParTheme}
+                sujet="ses membres (position majoritaire du groupe sur chaque scrutin)"
+              />
             </div>
           ) : null}
 
