@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Moon, Search, Sun } from "lucide-react";
 
 import { ClerkAuthControls } from "@/components/clerk-auth-controls";
+import { DrapeauFrance } from "@/components/drapeau-france";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
@@ -81,9 +82,10 @@ export function SiteHeader(): React.ReactElement {
       <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
         <Link
           href="/"
-          className="font-[family-name:var(--font-logo)] text-[22px] uppercase tracking-[0.03em] text-[var(--logo)]"
+          className="inline-flex items-center gap-2.5 font-[family-name:var(--font-logo)] text-[22px] uppercase tracking-[0.03em] text-[var(--logo)]"
         >
           Phronesis
+          <DrapeauFrance />
         </Link>
 
         <nav
