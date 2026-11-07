@@ -296,6 +296,35 @@ export const empreintes = pgTable(
 );
 
 /**
+ * Classement IA d'un amendement mis aux voix : nature, thèmes,
+ * orientation par thème, catégories qui y gagnent ou y perdent.
+ * Généré sans connaître l'auteur ni son groupe.
+ */
+export const amendementsClassements = pgTable(
+  "amendements_classements",
+  {
+    amendementUid: text("amendement_uid")
+      .primaryKey()
+      .references(() => amendements.uid, { onDelete: "cascade" }),
+    nature: text("nature").notNull(),
+    themes: jsonb("themes").$type<string[]>().notNull().default([]),
+    resume: text("resume").notNull(),
+    orientations: jsonb("orientations")
+      .$type<{ theme: string; sens: string }[]>()
+      .notNull()
+      .default([]),
+    gagnants: jsonb("gagnants").$type<string[]>().notNull().default([]),
+    perdants: jsonb("perdants").$type<string[]>().notNull().default([]),
+    confiance: text("confiance").notNull(),
+    modele: text("modele").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    genereLe: timestamp("genere_le", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/**
  * Résumés IA : séparés des données factuelles.
  * Chaque résumé porte son modèle, sa version de prompt et ses sources.
  */

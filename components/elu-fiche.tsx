@@ -9,6 +9,7 @@ import { EluVotes, type EluVote } from "@/components/elu-votes";
 import { Hemicycle } from "@/components/hemicycle";
 import { TransparencePanel } from "@/components/transparence-panel";
 import { TravailParlementaire } from "@/components/travail-parlementaire";
+import { VotesParThemeSection } from "@/components/votes-par-theme";
 import { formatDate, formatNumber, nomComplet } from "@/lib/format";
 import type { GroupeHemicycleInput } from "@/lib/hemicycle";
 import type {
@@ -16,6 +17,7 @@ import type {
   Mesure,
   NomMesure,
 } from "@/lib/travail-parlementaire";
+import type { VotesParTheme } from "@/lib/votes-par-theme";
 
 type EluFicheProps = {
   chambre: "AN" | "SENAT";
@@ -55,6 +57,8 @@ type EluFicheProps = {
     mesures: Record<NomMesure, Mesure>;
     brut: IndicateursDepute;
   } | null;
+  /** Députés uniquement : votes sur les amendements classés, par thème. */
+  votesParTheme?: VotesParTheme | null;
 };
 
 function pct(part: number, total: number): string {
@@ -74,6 +78,7 @@ export function EluFiche({
   groupes,
   ficheOfficielle,
   travail,
+  votesParTheme,
 }: EluFicheProps): React.ReactElement {
   const isAN = chambre === "AN";
   const nom = nomComplet(acteur.prenom, acteur.nom);
@@ -352,6 +357,13 @@ export function EluFiche({
           ) : null}
         </aside>
       </div>
+
+      {votesParTheme ? (
+        <VotesParThemeSection
+          data={votesParTheme}
+          sujet={feminin ? "la députée" : "le député"}
+        />
+      ) : null}
 
       <EluVotes
         votes={historique}

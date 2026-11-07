@@ -15,6 +15,7 @@ import { AxesBars, RadarProfil } from "@/components/profil-axes";
 import { ResonancePanel } from "@/components/resonance-panel";
 import { Stat } from "@/components/stat";
 import { TravailParlementaire } from "@/components/travail-parlementaire";
+import { VotesParThemeSection } from "@/components/votes-par-theme";
 import { getEmpreinteGroupe } from "@/lib/empreinte-groupe";
 import { formatNumber } from "@/lib/format";
 import {
@@ -28,6 +29,7 @@ import {
   mesuresGroupe,
 } from "@/lib/travail-parlementaire";
 import { urlPhotoDepute, urlPhotoSenateur } from "@/lib/urls";
+import { getVotesParThemeGroupe } from "@/lib/votes-par-theme";
 
 export const dynamic = "force-dynamic";
 
@@ -61,13 +63,19 @@ export default async function GroupePage({
     groupe.codeType === "GROUPESENAT" ? "SENAT" : "AN";
   const isAN = chambre === "AN";
   const compareType = isAN ? "groupes" : "groupes_senat";
-  const [effectifs, parlementaires, positionsRecentes, indicateurs] =
-    await Promise.all([
-      listGroupesEffectifs(chambre),
-      isAN ? listDeputes("") : listSenateurs(""),
-      getGroupePositionsRecentes(groupe.uid),
-      isAN ? listIndicateursDeputes() : Promise.resolve([]),
-    ]);
+  const [
+    effectifs,
+    parlementaires,
+    positionsRecentes,
+    indicateurs,
+    votesParTheme,
+  ] = await Promise.all([
+    listGroupesEffectifs(chambre),
+    isAN ? listDeputes("") : listSenateurs(""),
+    getGroupePositionsRecentes(groupe.uid),
+    isAN ? listIndicateursDeputes() : Promise.resolve([]),
+    isAN ? getVotesParThemeGroupe(groupe.uid) : Promise.resolve(null),
+  ]);
   const travail = isAN ? mesuresGroupe(indicateurs, groupe.uid) : null;
   const membres = parlementaires.filter((p) => p.groupeUid === groupe.uid);
   const effectif =
@@ -163,6 +171,15 @@ export default async function GroupePage({
                 <TravailParlementaire mesures={travail.mesures} />
               </div>
             </section>
+          ) : null}
+
+          {votesParTheme ? (
+            <div className="pb-16">
+              <VotesParThemeSection
+                data={votesParTheme}
+                sujet="ses membres (position majoritaire du groupe sur chaque scrutin)"
+              />
+            </div>
           ) : null}
 
           <section>
