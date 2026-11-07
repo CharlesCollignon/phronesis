@@ -26,7 +26,8 @@
     "ingest:hatvp": "tsx --env-file=.env scripts/ingest/hatvp.ts",
     "ingest:faits": "tsx --env-file=.env scripts/ingest/faits-judiciaires.ts",
     "resumes:generate": "tsx --env-file=.env scripts/resumes/generate.ts",
-    "empreintes:generate": "tsx --env-file=.env scripts/empreintes/generate.ts"
+    "empreintes:generate": "tsx --env-file=.env scripts/empreintes/generate.ts",
+    "amendements:classer": "tsx --env-file=.env scripts/amendements/classer.ts"
   },
   "dependencies": {
     "@ai-sdk/mistral": "^4.0.14",

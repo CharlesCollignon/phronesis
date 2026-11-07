@@ -26,6 +26,7 @@ const TOC: [string, string][] = [
   ["philosophies", "Conceptions philosophiques"],
   ["resonance", "Résonance"],
   ["groupes", "Empreinte des groupes"],
+  ["amendements", "Votes sur les amendements"],
   ["transparence", "Transparence"],
   ["hors-perimetre", "Hors périmètre"],
   ["compte", "Compte optionnel"],
@@ -415,6 +416,29 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
               Limites : scrutins publics seulement ; dossiers sans empreinte
               exclus ; majorité ≠ unanimité. Aucun score philosophique
               n&apos;est calculé au niveau d&apos;un élu.
+            </p>
+          </Section>
+
+          <Section id="amendements" title="Votes sur les amendements, par thème">
+            <p className={P}>
+              Les scrutins publics sur un amendement sont rattachés à
+              l&apos;amendement voté à partir de leur intitulé (numéro, auteur,
+              date). Chaque amendement est ensuite classé par une IA qui ne
+              voit que son contenu, jamais son auteur ni son groupe : nature
+              (rédactionnel, demande de rapport, suppression, ajout,
+              modification), un ou deux thèmes, l&apos;orientation propre à
+              chaque thème (par exemple plus ou moins protecteur de
+              l&apos;environnement, plus ou moins de prélèvements) et les
+              catégories qui y gagnent ou y perdent directement.
+            </p>
+            <p className={P}>
+              Pour un groupe, on retient sa position majoritaire sur chaque
+              scrutin (pour ou contre ; égalités et abstentions majoritaires
+              écartées) ; pour un député, sa propre position. On affiche la
+              part de votes « pour » sur les amendements qui poussent vers
+              chaque pôle, à partir de 5 votes. Limites : classement
+              automatique, un seul sens par thème, scrutins publics seulement
+              (la plupart des amendements sont votés à main levée).
             </p>
           </Section>
 
