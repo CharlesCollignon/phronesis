@@ -1,5 +1,3 @@
-import { sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { amendements, documents, dossiers } from "../../db/schema";
 import {
@@ -10,6 +8,7 @@ import {
   download,
   forEachZipEntry,
   logImport,
+  upsertSiChange,
 } from "./lib";
 
 type Json = Record<string, unknown>;
@@ -85,10 +84,6 @@ function parseAmendement(
   };
 }
 
-function sqlExcluded(column: string): ReturnType<typeof sql> {
-  return sql.raw(`excluded."${column}"`);
-}
-
 async function main(): Promise<void> {
   const start = Date.now();
   const zipPath = await download(DATASETS.amendements);
@@ -119,20 +114,20 @@ async function main(): Promise<void> {
       .values(batch)
       .onConflictDoUpdate({
         target: amendements.uid,
-        set: {
-          numeroLong: sqlExcluded("numero_long"),
-          dossierUid: sqlExcluded("dossier_uid"),
-          texteRef: sqlExcluded("texte_ref"),
-          auteurType: sqlExcluded("auteur_type"),
-          auteurActeurUid: sqlExcluded("auteur_acteur_uid"),
-          auteurGroupeUid: sqlExcluded("auteur_groupe_uid"),
-          articleDesignation: sqlExcluded("article_designation"),
-          dispositif: sqlExcluded("dispositif"),
-          exposeSommaire: sqlExcluded("expose_sommaire"),
-          sort: sqlExcluded("sort"),
-          etat: sqlExcluded("etat"),
-          dateDepot: sqlExcluded("date_depot"),
-        },
+        ...upsertSiChange(amendements, [
+          "numeroLong",
+          "dossierUid",
+          "texteRef",
+          "auteurType",
+          "auteurActeurUid",
+          "auteurGroupeUid",
+          "articleDesignation",
+          "dispositif",
+          "exposeSommaire",
+          "sort",
+          "etat",
+          "dateDepot",
+        ]),
       });
   };
 

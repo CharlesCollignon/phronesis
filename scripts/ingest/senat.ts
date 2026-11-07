@@ -18,6 +18,7 @@ import {
   logImport,
   reparerControlesCp1252,
   useCachedFile,
+  upsertSiChange,
 } from "./lib";
 
 const ODSEN_URL =
@@ -226,10 +227,6 @@ async function readDoslegSql(): Promise<string> {
   return readSqlText(sqlPath);
 }
 
-function sqlExcluded(column: string): ReturnType<typeof sql> {
-  return sql.raw(`excluded."${column}"`);
-}
-
 async function ingestScrutinsAndVotes(
   matToUid: Map<string, string>,
 ): Promise<void> {
@@ -279,14 +276,14 @@ async function ingestScrutinsAndVotes(
       .values(batch)
       .onConflictDoUpdate({
         target: scrutins.uid,
-        set: {
-          titre: sqlExcluded("titre"),
-          sortCode: sqlExcluded("sort_code"),
-          pour: sqlExcluded("pour"),
-          contre: sqlExcluded("contre"),
-          nombreVotants: sqlExcluded("nombre_votants"),
-          suffragesExprimes: sqlExcluded("suffrages_exprimes"),
-        },
+        ...upsertSiChange(scrutins, [
+          "titre",
+          "sortCode",
+          "pour",
+          "contre",
+          "nombreVotants",
+          "suffragesExprimes",
+        ]),
       });
   });
 
@@ -320,11 +317,11 @@ async function ingestScrutinsAndVotes(
       .values(batch)
       .onConflictDoUpdate({
         target: [votes.scrutinUid, votes.acteurUid],
-        set: {
-          position: sqlExcluded("position"),
-          groupeUid: sqlExcluded("groupe_uid"),
-          parDelegation: sqlExcluded("par_delegation"),
-        },
+        ...upsertSiChange(votes, [
+          "position",
+          "groupeUid",
+          "parDelegation",
+        ]),
       });
   };
 
@@ -387,6 +384,7 @@ async function ingestScrutinsAndVotes(
       GROUP BY scrutin_uid
     ) c
     WHERE s.uid = c.scrutin_uid AND s.chambre = 'SENAT'
+      AND (s.abstentions, s.non_votants) IS DISTINCT FROM (c.abst, c.nv)
   `);
 }
 
