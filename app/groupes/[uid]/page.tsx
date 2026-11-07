@@ -192,6 +192,13 @@ export default async function GroupePage({
               score moral, ni le Score Phronesis. Majorité ≠ unanimité ;
               votes à main levée exclus.
             </p>
+            <p className="mt-3 max-w-2xl border-l-2 border-[var(--accent)] pl-3 text-[14px] leading-relaxed text-[#404040] dark:text-muted-foreground">
+              À lire avec prudence : les empreintes des textes sont générées
+              par IA, et la plupart des textes sont adoptés par la plupart des
+              groupes, si bien que ce profil distingue mal les groupes entre
+              eux. Pour comparer les positions, préférez les votes sur les
+              amendements par thème.
+            </p>
             <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-6">
               <Stat
                 label="Votes sur l'ensemble"

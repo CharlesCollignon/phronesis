@@ -113,8 +113,8 @@ export async function loadBoussoleProfil(opts?: {
   if (local) return local;
   if (!opts?.syncCloud) return null;
   try {
-    const synced = await syncBoussoleAfterAuth();
-    return profilFromReponses(synced);
+    const { reponses } = await syncBoussoleAfterAuth();
+    return profilFromReponses(reponses);
   } catch {
     return null;
   }
@@ -126,14 +126,21 @@ function isNonEmpty(
   return Object.keys(reponses).length > 0;
 }
 
+export type EtatBoussoleCompte = {
+  reponses: Record<string, string>;
+  /** Date ISO du consentement à l'enregistrement sur le compte, ou null. */
+  consentement: string | null;
+};
+
 /**
- * Sync post-auth : cloud gagne si non vide, sinon local → cloud.
+ * Sync post-auth. Sans consentement, rien ne part sur le compte : les
+ * réponses restent sur l'appareil. Avec consentement, le compte gagne
+ * s'il n'est pas vide, sinon les réponses locales y sont envoyées.
  */
-export async function syncBoussoleAfterAuth(): Promise<
-  Record<string, string>
-> {
+export async function syncBoussoleAfterAuth(): Promise<EtatBoussoleCompte> {
   const local = loadBoussoleStored().reponses;
   let cloud: Record<string, string> = {};
+  let consentement: string | null = null;
 
   try {
     const res = await fetch("/api/me/boussole");
@@ -141,11 +148,13 @@ export async function syncBoussoleAfterAuth(): Promise<
       const data = (await res.json()) as {
         reponses?: Record<string, string>;
         engagement?: EngagementStored | null;
+        consentement?: string | null;
       };
       cloud =
         data.reponses && typeof data.reponses === "object"
           ? data.reponses
           : {};
+      consentement = data.consentement ?? null;
       if (data.engagement?.lastVisit) {
         const localEng = loadEngagement();
         if (
@@ -154,54 +163,70 @@ export async function syncBoussoleAfterAuth(): Promise<
         ) {
           localStorage.setItem(
             ENGAGEMENT_STORAGE_KEY,
-            JSON.stringify(data.engagement),
+            JSON.stringify({
+              lastVisit: data.engagement.lastVisit,
+              streakDays: data.engagement.streakDays ?? 0,
+            }),
           );
         }
       }
-    } else if (res.status === 401 || res.status === 503) {
-      return local;
+    } else {
+      return { reponses: local, consentement: null };
     }
   } catch {
-    return local;
+    return { reponses: local, consentement: null };
   }
+
+  if (!consentement) return { reponses: local, consentement: null };
 
   if (isNonEmpty(cloud)) {
     saveBoussoleStored({ reponses: cloud });
-    return cloud;
+    return { reponses: cloud, consentement };
   }
-
   if (isNonEmpty(local)) {
-    try {
-      await fetch("/api/me/boussole", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reponses: local,
-          engagement: loadEngagement(),
-        }),
-      });
-    } catch {
-      /* local remains source of truth offline */
-    }
-    return local;
+    await pushBoussoleToCloud(local);
   }
-
-  return {};
+  return { reponses: local, consentement };
 }
 
+/**
+ * Enregistre les réponses sur le compte. Le serveur refuse (403) tant
+ * que l'utilisateur n'a pas donné son accord ; `consentement: true`
+ * l'enregistre en même temps.
+ */
 export async function pushBoussoleToCloud(
   reponses: Record<string, string>,
-): Promise<void> {
+  opts?: { consentement?: boolean },
+): Promise<string | null> {
   try {
-    await fetch("/api/me/boussole", {
+    const res = await fetch("/api/me/boussole", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reponses,
         engagement: loadEngagement(),
+        ...(opts?.consentement ? { consentement: true } : {}),
       }),
     });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { consentement?: string | null };
+    return data.consentement ?? null;
   } catch {
     /* ignore network errors — local already saved */
+    return null;
+  }
+}
+
+/** Retire l'accord : les réponses sont effacées du compte. */
+export async function retirerConsentementBoussole(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/me/boussole", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reponses: {}, retraitConsentement: true }),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }

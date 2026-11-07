@@ -37,7 +37,7 @@ const ENGAGEMENTS: [string, string][] = [
   ],
   [
     "Confidentialité",
-    "Votre Boussole reste sur votre appareil. Elle n'est synchronisée que si vous créez un compte.",
+    "Sans compte, vos réponses à la Boussole ne sont pas conservées. Avec un compte, elles restent sur votre appareil et ne sont enregistrées sur votre compte qu'avec votre accord explicite.",
   ],
   [
     "Limites",

@@ -406,6 +406,12 @@ export const faitsJudiciairesPublics = pgTable(
 export type UserEngagement = {
   lastVisit?: string;
   streakDays?: number;
+  /**
+   * Date (ISO) du consentement explicite à l'enregistrement de la
+   * Boussole sur le compte : ses réponses révèlent des opinions
+   * politiques (RGPD, art. 9). Absent = pas de consentement.
+   */
+  consentementBoussoleLe?: string;
 };
 
 /**
