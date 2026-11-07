@@ -140,14 +140,16 @@ export default async function GroupePage({
           <section>
             <SectionHeading title="Empreinte agrégée" rule />
             <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[#404040] dark:text-muted-foreground">
-              Vecteur construit à partir des majorités pour/contre du
-              groupe sur des scrutins publics liés à des dossiers avec
-              empreinte. Ce n&apos;est pas un score moral, ni le Score
-              Phronesis. Majorité ≠ unanimité ; votes à main levée exclus.
+              Vecteur construit à partir de la majorité pour/contre du
+              groupe sur les votes portant sur l&apos;ensemble des textes
+              pourvus d&apos;une empreinte (dernier vote de chaque dossier).
+              Motions de censure et de rejet exclues. Ce n&apos;est pas un
+              score moral, ni le Score Phronesis. Majorité ≠ unanimité ;
+              votes à main levée exclus.
             </p>
             <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-6">
               <Stat
-                label="Scrutins mobilisés"
+                label="Votes sur l'ensemble"
                 value={formatNumber(data.scrutinsMobilises)}
               />
               <Stat
