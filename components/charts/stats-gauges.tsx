@@ -1,6 +1,8 @@
 type StatsGaugesProps = {
   participation: number | null;
   fidelite: number | null;
+  participationLabel?: string;
+  participationHint?: string;
 };
 
 const R = 80;
@@ -63,13 +65,15 @@ function Gauge({
 export function StatsGauges({
   participation,
   fidelite,
+  participationLabel = "Participation",
+  participationHint = "Part des scrutins publics tenus pendant le mandat",
 }: StatsGaugesProps): React.ReactElement {
   return (
     <div className="grid gap-8 sm:grid-cols-2">
       <Gauge
         value={participation}
-        label="Participation"
-        hint="Positions exprimées sur les scrutins où l'élu apparaît"
+        label={participationLabel}
+        hint={participationHint}
       />
       <Gauge
         value={fidelite}

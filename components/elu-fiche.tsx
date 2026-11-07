@@ -7,10 +7,15 @@ import { StatsGauges } from "@/components/charts/stats-gauges";
 import { libelleCirco } from "@/components/elu-liste";
 import { EluVotes, type EluVote } from "@/components/elu-votes";
 import { Hemicycle } from "@/components/hemicycle";
-import { Stat } from "@/components/stat";
 import { TransparencePanel } from "@/components/transparence-panel";
+import { TravailParlementaire } from "@/components/travail-parlementaire";
 import { formatDate, formatNumber, nomComplet } from "@/lib/format";
 import type { GroupeHemicycleInput } from "@/lib/hemicycle";
+import type {
+  IndicateursDepute,
+  Mesure,
+  NomMesure,
+} from "@/lib/travail-parlementaire";
 
 type EluFicheProps = {
   chambre: "AN" | "SENAT";
@@ -39,15 +44,17 @@ type EluFicheProps = {
     contre: number;
     abstention: number;
     nonVotant: number;
-    tauxParticipation: number | null;
     fideliteGroupe: number | null;
-    amendementsDeposes: number;
-    amendementsAdoptes: number;
   };
   historique: EluVote[];
   transparence: React.ComponentProps<typeof TransparencePanel>;
   groupes: GroupeHemicycleInput[];
   ficheOfficielle: { href: string; label: string } | null;
+  /** Députés uniquement : indicateurs comparés à l'Assemblée. */
+  travail?: {
+    mesures: Record<NomMesure, Mesure>;
+    brut: IndicateursDepute;
+  } | null;
 };
 
 function pct(part: number, total: number): string {
@@ -66,6 +73,7 @@ export function EluFiche({
   transparence,
   groupes,
   ficheOfficielle,
+  travail,
 }: EluFicheProps): React.ReactElement {
   const isAN = chambre === "AN";
   const nom = nomComplet(acteur.prenom, acteur.nom);
@@ -273,28 +281,54 @@ export function EluFiche({
 
       <div className="flex flex-wrap items-start gap-x-14 gap-y-16 pt-16">
         <div className="min-w-0 flex-[2_1_600px]">
-          <SectionHeading title="Participation et cohésion" />
+          <SectionHeading title="Travail parlementaire" />
           <StatsGauges
-            participation={stats.tauxParticipation}
+            participation={
+              isAN ? (travail?.mesures.solennels.valeur ?? null) : null
+            }
+            participationLabel={
+              isAN ? "Votes solennels" : "Participation"
+            }
+            participationHint={
+              isAN
+                ? travail
+                  ? `${formatNumber(travail.brut.solennelsVotes)} sur ${formatNumber(travail.brut.solennelsTenus)} pendant le mandat · médiane de l'Assemblée : ${Math.round((travail.mesures.solennels.mediane ?? 0) * 100)} %`
+                  : "Pas assez de scrutins pendant le mandat"
+                : "Non mesurable au Sénat : un délégué vote pour tout son groupe"
+            }
             fidelite={stats.fideliteGroupe}
           />
-          <div className="mt-10 grid grid-cols-2 gap-6">
-            <Stat
-              label="Amendements déposés"
-              value={formatNumber(stats.amendementsDeposes)}
-            />
-            <Stat
-              label="Amendements adoptés"
-              value={formatNumber(stats.amendementsAdoptes)}
-            />
-          </div>
+          {isAN && travail ? (
+            <div className="mt-10">
+              <TravailParlementaire
+                mesures={travail.mesures}
+                brut={travail.brut}
+              />
+            </div>
+          ) : null}
           <p className="mt-6 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-            Méthode : participation = votes hors non-votants / scrutins
-            publics où {isAN ? "le député" : "le sénateur"} apparaît.
-            Fidélité = accord avec la position majoritaire de son groupe
-            (pour/contre/abstention). Une participation faible peut tenir
-            au grand nombre de scrutins sur amendements, tenus en séance
-            avec peu d&apos;élus présents. Voir la{" "}
+            {isAN ? (
+              <>
+                Méthode : un député absent n&apos;apparaît pas dans la liste
+                d&apos;un scrutin, donc la participation rapporte ses votes
+                aux scrutins tenus pendant son mandat. Les votes solennels
+                portent sur les grands textes, où tous les députés sont
+                attendus ; les scrutins ordinaires (amendements, souvent en
+                soirée) se tiennent avec peu d&apos;élus présents. Le travail
+                en commission n&apos;est pas compté. Un député de
+                l&apos;opposition fait mécaniquement adopter moins
+                d&apos;amendements. Fidélité = accord avec la position
+                majoritaire de son groupe.{" "}
+              </>
+            ) : (
+              <>
+                Méthode : au Sénat, les scrutins publics ordinaires sont
+                votés par un délégué pour l&apos;ensemble de son groupe, ce
+                qui ne dit rien de la présence individuelle. Fidélité =
+                accord avec la position majoritaire de son groupe.{" "}
+              </>
+            )}
+            Voir la{" "}
             <Link href="/methodologie" className="ln text-foreground">
               méthodologie
             </Link>
