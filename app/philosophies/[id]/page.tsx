@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AxesBars, RadarProfil } from "@/components/profil-axes";
-import { PageShell } from "@/components/breadcrumbs";
+import { AxesBars } from "@/components/profil-axes";
+import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { AXE_BOUSSOLE_LABELS } from "@/lib/dilemmes";
 import {
   PHILOSOPHIES,
@@ -10,6 +10,7 @@ import {
   getPhilosophie,
   profilPhilosophieNormalise,
 } from "@/lib/philosophies";
+import { cn } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -40,7 +41,6 @@ export default async function PhilosophiePage({
 
   const profil = profilPhilosophieNormalise(philo.profil);
   const { forts, faibles } = axesMarques(philo.profil);
-  const autres = PHILOSOPHIES.filter((p) => p.id !== philo.id);
 
   return (
     <PageShell
@@ -50,100 +50,113 @@ export default async function PhilosophiePage({
         { label: philo.label },
       ]}
     >
-      <h1 className="font-serif text-4xl tracking-tight">
-        {philo.label}
-      </h1>
-      <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
-        {philo.description}
-      </p>
+      <PageHeader
+        eyebrow="Conception de référence"
+        title={philo.label}
+        description={philo.description}
+      />
 
-      <p className="mt-6 max-w-3xl text-sm leading-relaxed">
-        {philo.presentation}
-      </p>
+      <div className="mt-12 flex flex-wrap items-start gap-x-14 gap-y-16">
+        <article className="min-w-0 flex-[2_1_600px]">
+          <p className="max-w-3xl text-[17px] leading-[1.7]">
+            {philo.presentation}
+          </p>
 
-      <ul className="mt-6 max-w-xl list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-        {philo.pointsCles.map((p) => (
-          <li key={p}>{p}</li>
-        ))}
-      </ul>
+          <h2 className="mt-10 text-[17px] font-semibold">Points clés</h2>
+          <ul className="mt-2.5 max-w-3xl border-b border-border">
+            {philo.pointsCles.map((p) => (
+              <li
+                key={p}
+                className="border-t border-border py-3 text-base leading-relaxed"
+              >
+                {p}
+              </li>
+            ))}
+          </ul>
 
-      <section className="mt-12 grid gap-8 lg:grid-cols-2">
-        <div>
-          <h2 className="font-serif text-2xl">
-            Profil de référence
+          <h2 className="mt-12 text-[clamp(22px,2.2vw,28px)] font-semibold leading-tight tracking-[-0.015em]">
+            Profil sur les axes de la Boussole
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Profil type normalisé (−1 … +1) sur les axes de la
-            Boussole. Idéal-type simplifié, pas un programme
+          <p className="mt-2 max-w-3xl pb-5 text-[15px] leading-relaxed text-muted-foreground">
+            Profil type normalisé (−1 … +1, affiché de −100 à +100) sur les
+            axes de la Boussole. Idéal-type simplifié, pas un programme
             électoral.
           </p>
-          <div className="mt-6">
-            <RadarProfil
-              profil={profil}
-              ariaLabel={`Profil ${philo.label}`}
-            />
-          </div>
-        </div>
-        <div>
-          <h3 className="font-serif text-xl">
-            Lecture des axes
-          </h3>
-          <div className="mt-3">
-            <AxesBars profil={profil} />
-          </div>
-        </div>
-      </section>
+          <AxesBars profil={profil} />
 
-      <section className="mt-10 grid gap-6 sm:grid-cols-2">
-        <div className=" border border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Axes les plus marqués
-          </p>
-          <ul className="mt-3 space-y-1 text-sm">
-            {forts.map((axe) => (
-              <li key={axe}>{AXE_BOUSSOLE_LABELS[axe]}</li>
-            ))}
-          </ul>
-        </div>
-        <div className=" border border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Axes les moins marqués
-          </p>
-          <ul className="mt-3 space-y-1 text-sm">
-            {faibles.map((axe) => (
-              <li key={axe}>{AXE_BOUSSOLE_LABELS[axe]}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2">
+            <div>
+              <p className="eyebrow">Axes les plus marqués</p>
+              <ul className="mt-2.5 border-b border-border">
+                {forts.map((axe) => (
+                  <li
+                    key={axe}
+                    className="border-t border-border py-2.5 text-base"
+                  >
+                    {AXE_BOUSSOLE_LABELS[axe]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="eyebrow">Axes les moins marqués</p>
+              <ul className="mt-2.5 border-b border-border">
+                {faibles.map((axe) => (
+                  <li
+                    key={axe}
+                    className="border-t border-border py-2.5 text-base"
+                  >
+                    {AXE_BOUSSOLE_LABELS[axe]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
-      <section className="mt-12">
-        <h2 className="font-serif text-2xl">
-          Autres conceptions
-        </h2>
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {autres.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`/philosophies/${p.id}`}
-                className="inline-block border border-border px-3 py-1.5 text-sm hover:border-[var(--accent)]/40"
-              >
-                {p.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Comparer à votre profil :{" "}
-          <Link
-            href="/boussole"
-            className="text-[var(--accent)] hover:underline"
-          >
-            faire la Boussole
-          </Link>
-          .
-        </p>
-      </section>
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Link href="/boussole" className="btn btn-accent">
+              Me comparer à ce profil
+            </Link>
+            <span className="text-sm text-muted-foreground">
+              Faites la Boussole pour situer vos propres valeurs.
+            </span>
+          </div>
+        </article>
+
+        <aside className="min-w-0 flex-[1_1_300px]">
+          <p className="eyebrow pb-3">Les six conceptions</p>
+          <ul className="border-b border-border">
+            {PHILOSOPHIES.map((p) => {
+              const on = p.id === philo.id;
+              return (
+                <li key={p.id}>
+                  <Link
+                    href={`/philosophies/${p.id}`}
+                    aria-current={on ? "page" : undefined}
+                    className={cn(
+                      "row-link block border-t border-border px-4 py-4",
+                      on &&
+                        "bg-[var(--highlight)] shadow-[inset_3px_0_0_0_var(--accent)] dark:text-foreground",
+                    )}
+                  >
+                    <span className="block text-[17px] font-medium">
+                      {p.label}
+                    </span>
+                    <span className="mt-1 block text-sm leading-snug text-muted-foreground">
+                      {p.description}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-4 text-sm text-muted-foreground">
+            <Link href="/philosophies#glossaire" className="ln text-foreground">
+              Glossaire des axes
+            </Link>
+          </p>
+        </aside>
+      </div>
     </PageShell>
   );
 }

@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
-import { PageShell } from "@/components/breadcrumbs";
+import {
+  PageHeader,
+  PageShell,
+  SectionHeading,
+} from "@/components/breadcrumbs";
 import { AXE_FONDEMENTS } from "@/lib/axes-boussole-fondements";
 import {
   AXE_BOUSSOLE_LABELS,
@@ -20,95 +25,99 @@ export default function PhilosophiesPage(): React.ReactElement {
         { label: "Philosophies" },
       ]}
     >
-      <h1 className="font-serif text-4xl tracking-tight">
-        Conceptions philosophiques
-      </h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">
-        Six façons de concevoir la justice, la liberté ou le rôle de
-        l&apos;État — des profils de référence pour situer des
-        valeurs, pas des étiquettes partisanes. Elles servent à la{" "}
-        <Link
-          href="/boussole"
-          className="text-[var(--accent)] hover:underline"
-        >
-          Boussole
-        </Link>{" "}
-        et, plus loin, à lire des résonances avec des lois ou des
-        groupes.
-      </p>
+      <PageHeader
+        title="Philosophies"
+        description={
+          <>
+            Six façons de concevoir la justice, la liberté ou le rôle de
+            l&apos;État : des profils de référence pour situer des valeurs,
+            pas des étiquettes partisanes. Elles servent à la{" "}
+            <Link href="/boussole" className="ln text-foreground">
+              Boussole
+            </Link>{" "}
+            et, plus loin, à lire des résonances avec des lois ou des
+            groupes.
+          </>
+        }
+      />
 
-      <section className="mt-10">
-        <h2 className="font-serif text-2xl">
-          Les six conceptions
-        </h2>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PHILOSOPHIES.map((philo) => (
+      <section className="pt-14">
+        <SectionHeading
+          title="Les six conceptions"
+          aside="Idéal-types simplifiés, pas des programmes"
+        />
+        <ul className="border-b border-border">
+          {PHILOSOPHIES.map((philo, i) => (
             <li key={philo.id}>
               <Link
                 href={`/philosophies/${philo.id}`}
-                className="block h-full border border-border bg-card p-5 transition hover:border-[var(--accent)]/40"
+                className="row-link group grid grid-cols-[32px_minmax(0,1fr)_20px] items-baseline gap-x-6 gap-y-1.5 border-t border-border px-2 py-6 md:grid-cols-[48px_minmax(0,280px)_minmax(0,1fr)_24px]"
               >
-                <p className="font-medium">{philo.label}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <span className="num text-sm text-muted-foreground">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-[clamp(22px,2.2vw,28px)] font-medium leading-tight tracking-[-0.015em] transition-transform duration-500 ease-[var(--spring)] group-hover:translate-x-1.5">
+                  {philo.label}
+                </span>
+                <span className="col-start-2 row-start-2 text-[15px] leading-relaxed text-muted-foreground md:col-start-auto md:row-start-auto">
                   {philo.description}
-                </p>
-                <p className="mt-3 text-xs text-[var(--accent)]">
-                  Lire la fiche →
-                </p>
+                </span>
+                <ArrowRight
+                  aria-hidden
+                  className="nudge col-start-3 row-start-1 size-5 self-center text-muted-foreground group-hover:text-foreground md:col-start-auto"
+                  strokeWidth={1.6}
+                />
               </Link>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="mt-14">
-        <h2 className="font-serif text-2xl">
-          Glossaire des axes
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Les mêmes dix axes structurent la Boussole et ces fiches.
-          Ce ne sont pas des notes morales : ce sont des dimensions
+      <section id="glossaire" className="scroll-mt-16 pt-20">
+        <SectionHeading title="Glossaire des axes" />
+        <p className="max-w-3xl pb-6 text-base leading-relaxed text-muted-foreground">
+          Les mêmes dix axes structurent la Boussole et ces fiches. Ce ne
+          sont pas des notes morales : ce sont des dimensions
           d&apos;arbitrage, avec un fondement conceptuel explicite.
         </p>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+        <dl className="border-b border-border">
           {AXES_BOUSSOLE.map((axe) => {
             const f = AXE_FONDEMENTS[axe];
             return (
-              <li
+              <div
                 key={axe}
                 id={`axe-${axe}`}
-                className="scroll-mt-24 border border-border bg-card p-4"
+                className="grid scroll-mt-24 gap-2 border-t border-border py-6 target:bg-[var(--highlight)] target:shadow-[inset_3px_0_0_0_var(--accent)] md:grid-cols-[220px_minmax(0,1fr)] md:gap-8 md:px-2"
               >
-                <p className="font-medium">
+                <dt className="text-lg font-semibold">
                   {AXE_BOUSSOLE_LABELS[axe]}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/90">
-                  {f.sens}
-                </p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Distinction
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  {f.distinction}
-                </p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ce que ce n&apos;est pas
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  {f.ceQueCeNestPas}
-                </p>
-              </li>
+                </dt>
+                <dd className="max-w-3xl">
+                  <p className="text-base leading-relaxed">{f.sens}</p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-8">
+                    <div>
+                      <p className="eyebrow">Distinction</p>
+                      <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
+                        {f.distinction}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="eyebrow">Ce que ce n&apos;est pas</p>
+                      <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
+                        {f.ceQueCeNestPas}
+                      </p>
+                    </div>
+                  </div>
+                </dd>
+              </div>
             );
           })}
-        </ul>
+        </dl>
       </section>
 
-      <p className="mt-10 text-sm text-muted-foreground">
+      <p className="mt-10 text-[15px] text-muted-foreground">
         Méthode détaillée :{" "}
-        <Link
-          href="/methodologie"
-          className="text-[var(--accent)] hover:underline"
-        >
+        <Link href="/methodologie#boussole" className="ln text-foreground">
           méthodologie
         </Link>
         .

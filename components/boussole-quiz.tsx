@@ -4,8 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-import { AxesBars, RadarProfil } from "@/components/profil-axes";
-import { Button } from "@/components/ui/button";
+import { AxesBars } from "@/components/profil-axes";
 import {
   loadBoussoleStored,
   pushBoussoleToCloud,
@@ -179,11 +178,40 @@ function BoussoleQuizInner({
 
   if (showResults && complete && profil) {
     return (
-      <div className="space-y-10">
+      <section className="reveal" aria-labelledby="boussole-carte">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2
+            id="boussole-carte"
+            className="text-[clamp(22px,2.2vw,28px)] font-semibold leading-tight tracking-[-0.015em]"
+          >
+            Votre carte, après {DILEMMES.length} dilemmes
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="btn btn-outline h-10"
+              onClick={() => {
+                setShowResults(false);
+                setStep(0);
+              }}
+            >
+              Revoir les questions
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline h-10"
+              onClick={reset}
+            >
+              Recommencer
+            </button>
+          </div>
+        </div>
         {syncNote ? (
-          <p className="text-xs text-primary">{syncNote}</p>
+          <p className="mt-3 text-sm font-medium" role="status">
+            {syncNote}
+          </p>
         ) : null}
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#404040] dark:text-muted-foreground">
           Boussole complète ({DILEMMES.length}/{DILEMMES.length}).
           {engagement.streakDays > 0 ? (
             <>
@@ -192,111 +220,83 @@ function BoussoleQuizInner({
               {engagement.streakDays > 1 ? "s" : ""} d&apos;affilée.
             </>
           ) : null}{" "}
-          Explorez un{" "}
-          <Link
-            href="/dossiers"
-            className="text-primary hover:underline"
-          >
+          Carte de valeurs construite à partir de vos {DILEMMES.length}{" "}
+          réponses, pas une étiquette partisane. Explorez un{" "}
+          <Link href="/dossiers" className="ln text-foreground">
             dossier
           </Link>{" "}
           pour voir la résonance avec votre profil.
         </p>
-        <section className="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h2 className="font-serif text-2xl">
-              Votre boussole
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Carte de valeurs construite à partir de vos{" "}
-              {DILEMMES.length} réponses — pas une étiquette
-              partisane. Les barres vont de « peu marqué » (gauche)
-              à « très marqué » (droite) pour chaque axe.
-            </p>
-            <div className="mt-6">
-              <RadarProfil
-                profil={profil}
-                ariaLabel="Boussole des valeurs"
-              />
-            </div>
-          </div>
-          <div>
-            <h3 className="font-serif text-xl">
-              Lecture des axes
-            </h3>
-            <div className="mt-3">
-              <AxesBars profil={profil} />
-            </div>
-          </div>
-        </section>
 
-        <section>
-          <h2 className="font-serif text-2xl">
-            Proximité avec des conceptions philosophiques
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Similarité de profil (cosinus). Ce n&apos;est pas « vous
-            êtes de tel parti », mais une proximité avec une façon
-            de concevoir la justice, la liberté ou l&apos;État.{" "}
-            <Link
-              href="/philosophies"
-              className="text-[var(--accent)] hover:underline"
-            >
-              Voir toutes les fiches
-            </Link>
-            .
-          </p>
-          <ul className="mt-4 space-y-3">
-            {ranking.map(({ philo, score }) => (
-              <li
-                key={philo.id}
-                className=" border border-border bg-card p-4"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-medium">
+        <div className="mt-10 flex flex-wrap gap-14">
+          <div className="min-w-0 flex-[1.3_1_480px]">
+            <p className="eyebrow pb-3">Lecture des axes</p>
+            <AxesBars profil={profil} />
+          </div>
+
+          <div className="min-w-0 flex-[1_1_340px]">
+            <p className="eyebrow">Conceptions les plus proches</p>
+            <ol className="mt-3 border-b border-border">
+              {ranking.map(({ philo, score }, i) => {
+                const top = i === 0;
+                const w = Math.max(0, score) * 100;
+                return (
+                  <li key={philo.id}>
                     <Link
                       href={`/philosophies/${philo.id}`}
-                      className="hover:text-[var(--accent)] hover:underline"
+                      aria-current={top ? "true" : undefined}
+                      className={cn(
+                        "row-link grid grid-cols-[24px_minmax(0,1fr)_52px] items-baseline gap-x-4 gap-y-1 border-t border-border px-2 py-3.5 sm:grid-cols-[28px_minmax(0,1fr)_120px_52px]",
+                        top &&
+                          "bg-[var(--highlight)] shadow-[inset_3px_0_0_0_var(--accent)] dark:text-foreground",
+                      )}
                     >
-                      {philo.label}
+                      <span className="num text-sm text-muted-foreground">
+                        {i + 1}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-base font-medium">
+                          {philo.label}
+                        </span>
+                        <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+                          {philo.description}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden
+                        className="hidden h-1.5 self-center bg-current/10 sm:block"
+                      >
+                        <span
+                          className="grow-x block h-full bg-current"
+                          style={{
+                            width: `${w}%`,
+                            animationDelay: `${200 + i * 60}ms`,
+                          }}
+                        />
+                      </span>
+                      <span className="num text-right text-sm font-semibold">
+                        {(score * 100).toFixed(0)} %
+                      </span>
                     </Link>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {(score * 100).toFixed(0)} % de similarité
-                  </p>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {philo.description}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-none"
-            onClick={reset}
-          >
-            Recommencer
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-none"
-            onClick={() => {
-              setShowResults(false);
-              setStep(0);
-            }}
-          >
-            Revoir les questions
-          </Button>
-          <Button asChild variant="link" className="rounded-none">
-            <Link href="/methodologie">Voir la méthode</Link>
-          </Button>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+              Similarité de profil (cosinus). Ce n&apos;est pas « vous
+              êtes de tel parti », mais une proximité avec une façon de
+              concevoir la justice, la liberté ou l&apos;État.{" "}
+              <Link href="/philosophies" className="ln text-foreground">
+                Voir toutes les fiches
+              </Link>
+              {" · "}
+              <Link href="/methodologie#boussole" className="ln text-foreground">
+                Voir la méthode
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -305,156 +305,181 @@ function BoussoleQuizInner({
   const progress = Math.round(
     (100 * answeredCount) / DILEMMES.length,
   );
+  const current = reponses[dilemme.id];
+  const isLast = step >= DILEMMES.length - 1;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       {HAS_CLERK && !isSignedIn ? (
-        <p className="mb-4 border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-          <Link
-            href="/sign-in"
-            className="text-primary hover:underline"
-          >
+        <p className="mb-6 text-[15px] text-muted-foreground">
+          <Link href="/sign-in" className="ln font-medium text-foreground">
             Connectez-vous
           </Link>{" "}
           pour sauvegarder et retrouver votre boussole.
         </p>
       ) : null}
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-xs text-muted-foreground">
-        <span>
-          Progression : {answeredCount}/{DILEMMES.length} dilemmes
+
+      <div className="flex items-center gap-4">
+        <div
+          role="progressbar"
+          aria-label="Progression"
+          aria-valuemin={0}
+          aria-valuemax={DILEMMES.length}
+          aria-valuenow={answeredCount}
+          className="h-1 flex-1 bg-current/10"
+        >
+          <div
+            className="h-full bg-[var(--accent)] transition-[width] duration-700 ease-[var(--spring)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <span className="num text-sm font-semibold">
+          {answeredCount} / {DILEMMES.length}
         </span>
         {engagement.streakDays > 0 ? (
-          <span>Série {engagement.streakDays} j.</span>
+          <span className="text-sm text-muted-foreground">
+            Série {engagement.streakDays} j.
+          </span>
         ) : null}
       </div>
-      <div className="mb-4 h-1.5 overflow-hidden bg-muted">
-        <div
-          className="h-full bg-accent transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">
-        Question {step + 1} / {DILEMMES.length}
-        {reponses[dilemme.id] ? " · répondue" : ""}
-      </p>
-      <h2 className="mt-2 font-serif text-2xl leading-snug">
-        {dilemme.question}
-      </h2>
 
-      <aside className="mt-4 space-y-3 border border-border bg-muted p-4 text-sm leading-relaxed">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Contexte
+      <section
+        key={dilemme.id}
+        className="reveal mt-10 flex flex-wrap gap-12"
+        aria-labelledby={`dilemme-${dilemme.id}`}
+      >
+        <div className="min-w-0 flex-[1_1_300px]">
+          <p className="eyebrow">
+            Dilemme {step + 1} sur {DILEMMES.length}
+            {current ? " · répondu" : ""}
           </p>
-          <p className="mt-1 text-foreground/90">{dilemme.contexte}</p>
+          <h2
+            id={`dilemme-${dilemme.id}`}
+            className="mt-3 text-[clamp(24px,2.6vw,34px)] font-medium leading-[1.2] tracking-[-0.02em]"
+          >
+            {dilemme.question}
+          </h2>
+
+          <dl className="mt-8 border-b border-border text-[15px] leading-relaxed">
+            <div className="border-t border-border py-4">
+              <dt className="eyebrow">Contexte</dt>
+              <dd className="mt-1.5">{dilemme.contexte}</dd>
+            </div>
+            <div className="border-t border-border py-4">
+              <dt className="eyebrow">Ce que l&apos;on cherche à éclairer</dt>
+              <dd className="mt-1.5">{dilemme.enjeu}</dd>
+            </div>
+            {axesPrincipaux.length > 0 ? (
+              <div className="border-t border-border py-4">
+                <dt className="eyebrow">Axes en jeu</dt>
+                <dd>
+                  <ul className="mt-1.5 space-y-3">
+                    {axesPrincipaux.map((axe) => {
+                      const f = AXE_FONDEMENTS[axe];
+                      return (
+                        <li key={axe}>
+                          <p className="font-medium">
+                            {AXE_BOUSSOLE_LABELS[axe]}
+                          </p>
+                          <p>{f.contexteCourt}</p>
+                          <p className="mt-0.5 text-[13px] text-muted-foreground">
+                            {f.distinction}
+                          </p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-3 text-[13px] text-muted-foreground">
+                    Fondements détaillés :{" "}
+                    <Link
+                      href={`/philosophies#axe-${axesPrincipaux[0]}`}
+                      className="ln text-foreground"
+                    >
+                      glossaire des axes
+                    </Link>
+                    .
+                  </p>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
         </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Ce que l&apos;on cherche à éclairer
+
+        <div className="min-w-0 flex-[1.4_1_460px]">
+          <p className="pb-3 text-sm text-muted-foreground">
+            Quatre réponses, des logiques distinctes, pas un simple
+            curseur. Il n&apos;y a pas de bonne réponse.
           </p>
-          <p className="mt-1 text-foreground/90">{dilemme.enjeu}</p>
-        </div>
-        {axesPrincipaux.length > 0 ? (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Axes en jeu
-            </p>
-            <ul className="mt-2 space-y-2">
-              {axesPrincipaux.map((axe) => {
-                const f = AXE_FONDEMENTS[axe];
-                return (
-                  <li key={axe}>
-                    <p className="text-sm font-medium text-foreground">
-                      {AXE_BOUSSOLE_LABELS[axe]}
-                    </p>
-                    <p className="text-sm text-foreground/90">
-                      {f.contexteCourt}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {f.distinction}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Fondements détaillés :{" "}
-              <Link
-                href={`/philosophies#axe-${axesPrincipaux[0]}`}
-                className="text-primary underline-offset-2 hover:underline"
-              >
-                glossaire des axes
-              </Link>
-              .
-            </p>
+          <div
+            role="radiogroup"
+            aria-labelledby={`dilemme-${dilemme.id}`}
+            className="border-b border-border"
+          >
+            {dilemme.choix.map((c, i) => {
+              const on = current === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => choose(dilemme.id, c.id)}
+                  className={cn(
+                    "grid w-full grid-cols-[40px_minmax(0,1fr)] items-baseline gap-3 border-t border-border py-5 pr-3 text-left",
+                    "transition-[background-color,box-shadow,color] duration-500 ease-[var(--spring)]",
+                    on
+                      ? "bg-[var(--highlight)] shadow-[inset_3px_0_0_0_var(--accent)] dark:text-foreground"
+                      : "hover:bg-[var(--hover)]",
+                    current && !on && "text-muted-foreground",
+                  )}
+                >
+                  <span className="pl-3.5 text-sm font-semibold text-muted-foreground">
+                    {"ABCD".charAt(i)}
+                  </span>
+                  <span>
+                    <span className="block text-lg leading-snug">
+                      {c.label}
+                    </span>
+                    <span className="mt-1 block text-[15px] leading-snug text-muted-foreground">
+                      {c.nuance}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        ) : null}
-      </aside>
 
-      <p className="mt-5 text-xs text-muted-foreground">
-        Quatre réponses — des logiques distinctes, pas un
-        simple curseur. Il n&apos;y a pas de bonne réponse.
-      </p>
-
-      <div className="mt-3 grid gap-3">
-        {dilemme.choix.map((c, index) => (
-          <Button
-            key={c.id}
-            type="button"
-            variant="outline"
-            onClick={() => choose(dilemme.id, c.id)}
-            className={cn(
-              "h-auto flex-col items-start gap-1 rounded-none px-5 py-4",
-              "whitespace-normal shadow-none",
-              reponses[dilemme.id] === c.id &&
-                "border-2 border-accent bg-accent",
+          <div className="mt-6 flex justify-between gap-3">
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={step === 0}
+              onClick={() => setStep(Math.max(0, step - 1))}
+            >
+              Précédent
+            </button>
+            {!isLast ? (
+              <button
+                type="button"
+                className="btn btn-accent"
+                disabled={!current}
+                onClick={() => setStep(step + 1)}
+              >
+                Suivant
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-accent"
+                disabled={!complete}
+                onClick={() => setShowResults(true)}
+              >
+                Voir ma carte
+              </button>
             )}
-          >
-            <span className="text-xs text-muted-foreground">
-              Option {index + 1} / 4
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {c.label}
-            </span>
-            <span className="text-sm leading-snug font-normal text-muted-foreground">
-              {c.nuance}
-            </span>
-          </Button>
-        ))}
-      </div>
-
-      <div className="mt-6 flex justify-between text-sm">
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={step === 0}
-          onClick={() => setStep(Math.max(0, step - 1))}
-          className="rounded-none"
-        >
-          ← Précédent
-        </Button>
-        {step < DILEMMES.length - 1 ? (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!reponses[dilemme.id]}
-            onClick={() => setStep(step + 1)}
-            className="rounded-none text-primary"
-          >
-            Suivant →
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!complete}
-            onClick={() => setShowResults(true)}
-            className="rounded-none font-medium text-primary"
-          >
-            Voir mon résultat →
-          </Button>
-        )}
-      </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

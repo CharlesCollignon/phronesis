@@ -1,12 +1,9 @@
-import Link from "next/link";
-
-import { AvatarParlementaire } from "@/components/avatar-parlementaire";
-import { PageShell } from "@/components/breadcrumbs";
-import { SearchForm } from "@/components/search-form";
-import { nomComplet } from "@/lib/format";
-import { listSenateurs } from "@/lib/queries";
-import { couleurGroupe } from "@/lib/spectre-groupes";
-import { urlPhotoSenateur } from "@/lib/urls";
+import { EluListe } from "@/components/elu-liste";
+import {
+  listDeputes,
+  listGroupesEffectifs,
+  listSenateurs,
+} from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -15,81 +12,37 @@ export const metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; groupe?: string }>;
 };
 
 export default async function SenateursPage({
   searchParams,
 }: PageProps): Promise<React.ReactElement> {
-  const { q = "" } = await searchParams;
-  const rows = await listSenateurs(q);
+  const { q = "", groupe = "" } = await searchParams;
+  const [rows, tous, deputes, groupes] = await Promise.all([
+    listSenateurs(q),
+    listSenateurs(""),
+    listDeputes(""),
+    listGroupesEffectifs("SENAT"),
+  ]);
+  const visibles = groupe
+    ? rows.filter((r) => r.groupeUid === groupe)
+    : rows;
 
   return (
-    <PageShell
-      breadcrumbs={[
-        { label: "Accueil", href: "/" },
-        { label: "Sénateurs" },
-      ]}
-    >
-      <h1 className="font-serif text-4xl tracking-tight">
-        Sénateurs
-      </h1>
-      <p className="mt-2 text-muted-foreground">
-        {rows.length} sénateurs en mandat (données AMO Assemblée /
-        open data Sénat).
-      </p>
-      <div className="mt-6 max-w-xl">
-        <SearchForm
-          action="/senateurs"
-          placeholder="Nom d'un sénateur…"
-          defaultValue={q}
-          compact
-        />
-      </div>
-
-      <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((d) => (
-          <li key={d.uid}>
-            <Link
-              href={`/senateurs/${d.uid}`}
-              className="flex h-full min-h-11 gap-3 border border-border bg-card p-4 transition hover:border-[var(--accent)]/40"
-            >
-              <AvatarParlementaire
-                src={urlPhotoSenateur(
-                  d.senatMatricule,
-                  d.prenom,
-                  d.nom,
-                )}
-                prenom={d.prenom}
-                nom={d.nom}
-                size={48}
-              />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="inline-block h-2.5 w-2.5 shrink-0"
-                    style={{
-                      background: couleurGroupe(
-                        d.groupeAbrege,
-                        d.groupeCouleur,
-                      ),
-                    }}
-                  />
-                  <p className="truncate font-medium">
-                    {nomComplet(d.prenom, d.nom)}
-                  </p>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {d.groupeAbrege ?? d.groupeLibelle ?? "Sans groupe"}
-                  {d.circoDepartement
-                    ? ` · ${d.circoDepartement}`
-                    : ""}
-                </p>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </PageShell>
+    <EluListe
+      chambre="SENAT"
+      rows={visibles}
+      q={q}
+      groupe={groupe}
+      groupes={[...groupes]
+        .sort((a, b) => b.effectif - a.effectif)
+        .map((g) => ({
+          uid: g.uid,
+          label: g.libelleAbrege ?? g.libelle,
+        }))}
+      totalDeputes={deputes.length}
+      totalSenateurs={tous.length}
+    />
   );
 }

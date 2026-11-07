@@ -1,3 +1,5 @@
+import { formatNumber } from "@/lib/format";
+
 type VoteCounts = {
   pour: number;
   contre: number;
@@ -12,102 +14,94 @@ type VoteComparisonProps = {
   citoyensLabel?: string;
 };
 
-function stackedBar(
-  counts: VoteCounts,
-  totalOverride?: number,
-): React.ReactElement {
-  const total =
-    totalOverride ??
-    counts.pour +
-      counts.contre +
-      counts.abstention +
-      (counts.pasAvis ?? 0);
-  const safe = Math.max(total, 1);
-  const pPour = (100 * counts.pour) / safe;
-  const pContre = (100 * counts.contre) / safe;
-  const pAbs = (100 * counts.abstention) / safe;
-  const pAvis = (100 * (counts.pasAvis ?? 0)) / safe;
+const SEGMENTS: {
+  key: keyof VoteCounts;
+  label: string;
+  className: string;
+}[] = [
+  { key: "pour", label: "Pour", className: "bg-[var(--vote-pour)]" },
+  { key: "contre", label: "Contre", className: "bg-[var(--vote-contre)]" },
+  {
+    key: "abstention",
+    label: "Abst.",
+    className: "bg-[var(--vote-abstention)]",
+  },
+  {
+    key: "pasAvis",
+    label: "Pas d'avis",
+    className:
+      "bg-[var(--vote-neutre)] shadow-[inset_0_0_0_1px_var(--input)]",
+  },
+];
+
+function Row({
+  label,
+  counts,
+}: {
+  label: string;
+  counts: VoteCounts;
+}): React.ReactElement {
+  const segments = SEGMENTS.filter(
+    (s) => s.key !== "pasAvis" || counts.pasAvis !== undefined,
+  );
+  const total = segments.reduce((acc, s) => acc + (counts[s.key] ?? 0), 0);
+  const aria = segments
+    .map((s) => `${counts[s.key] ?? 0} ${s.label.toLowerCase()}`)
+    .join(", ");
 
   return (
-    <div className="flex h-4 w-full overflow-hidden bg-muted">
-      <div
-        className="bg-[var(--vote-pour)]"
-        style={{ width: `${pPour}%` }}
-        title={`Pour ${counts.pour}`}
-      />
-      <div
-        className="bg-[var(--vote-contre)]"
-        style={{ width: `${pContre}%` }}
-        title={`Contre ${counts.contre}`}
-      />
-      <div
-        className="bg-[var(--vote-abstention)]"
-        style={{ width: `${pAbs}%` }}
-        title={`Abstention ${counts.abstention}`}
-      />
-      {(counts.pasAvis ?? 0) > 0 ? (
+    <div className="border-t border-border py-3.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[15px] font-medium">{label}</p>
+        <p className="num text-[13px] text-muted-foreground">
+          {formatNumber(total)}
+        </p>
+      </div>
+      {total > 0 ? (
         <div
-          className="bg-[var(--vote-neutre)]"
-          style={{ width: `${pAvis}%` }}
-          title={`Pas d'avis ${counts.pasAvis}`}
-        />
-      ) : null}
+          role="img"
+          aria-label={`${label} : ${aria}`}
+          className="grow-x mt-2.5 flex h-2 w-full gap-0.5"
+        >
+          {segments.map((s) => {
+            const n = counts[s.key] ?? 0;
+            if (n <= 0) return null;
+            return (
+              <div
+                key={s.key}
+                className={s.className}
+                style={{ width: `${(100 * n) / total}%` }}
+                title={`${s.label} ${n}`}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-2.5 h-2 w-full bg-muted" />
+      )}
+      <p className="num mt-2 text-[13px] text-[#404040] dark:text-muted-foreground">
+        {segments
+          .map(
+            (s) =>
+              `${s.label} ${total > 0 ? Math.round((100 * (counts[s.key] ?? 0)) / total) : 0} %`,
+          )
+          .join(" · ")}
+      </p>
     </div>
   );
 }
 
-function legend(counts: VoteCounts): React.ReactElement {
-  return (
-    <dl className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
-      <div>
-        <dt className="text-muted-foreground">Pour</dt>
-        <dd className="num text-sm">{counts.pour}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">Contre</dt>
-        <dd className="num text-sm">{counts.contre}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">Abst.</dt>
-        <dd className="num text-sm">{counts.abstention}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">
-          {(counts.pasAvis ?? 0) > 0 ? "N/A" : "Total"}
-        </dt>
-        <dd className="num text-sm">
-          {(counts.pasAvis ?? 0) > 0
-            ? counts.pasAvis
-            : counts.pour + counts.contre + counts.abstention}
-        </dd>
-      </div>
-    </dl>
-  );
-}
-
-/** Comparaison visuelle députés (officiel) vs citoyens Phronesis. */
+/** Comparaison députés (scrutin officiel) / citoyens Phronesis (sondage). */
 export function VoteComparison({
   deputes,
   citoyens,
-  deputesLabel = "Députés (scrutin public)",
+  deputesLabel = "Parlementaires (scrutin public)",
   citoyensLabel = "Citoyens Phronesis (sondage)",
 }: VoteComparisonProps): React.ReactElement {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="border border-border bg-card p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {deputesLabel}
-        </p>
-        {stackedBar(deputes)}
-        {legend(deputes)}
-      </div>
-      <div className="border border-border bg-card p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {citoyensLabel}
-        </p>
-        {stackedBar(citoyens)}
-        {legend(citoyens)}
-      </div>
+    <div className="border-b border-border">
+      <Row label={deputesLabel} counts={deputes} />
+      <Row label={citoyensLabel} counts={citoyens} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   buildArcs,
   type GroupeHemicycleInput,
 } from "@/lib/hemicycle";
+import { cn } from "@/lib/utils";
 
 type HemicycleProps = {
   groups: GroupeHemicycleInput[];
@@ -17,12 +18,17 @@ type HemicycleProps = {
   className?: string;
 };
 
+/**
+ * Hémicycle schématique par groupe. Volontairement neutre : tous les
+ * groupes en gris, le groupe sélectionné ou survolé en jaune.
+ * Les couleurs de partis ne servent pas d'encodage.
+ */
 export function Hemicycle({
   groups,
   chambre,
   selectedUid = null,
   compact = false,
-  className = "",
+  className,
 }: HemicycleProps): React.ReactElement {
   const router = useRouter();
   const [hover, setHover] = useState<string | null>(null);
@@ -30,13 +36,14 @@ export function Hemicycle({
     () => buildArcs(groups, chambre),
     [groups, chambre],
   );
+  const total = arcs.reduce((s, a) => s + a.effectif, 0);
 
   const w = compact ? 360 : 520;
-  const h = compact ? 210 : 300;
+  const h = compact ? 196 : 280;
   const cx = w / 2;
-  const cy = h - 12;
-  const rOuter = compact ? 155 : 230;
-  const rInner = compact ? 70 : 105;
+  const cy = h - 6;
+  const rOuter = compact ? 170 : 254;
+  const rInner = compact ? 78 : 116;
 
   const active = hover ?? selectedUid;
   const activeArc = arcs.find((a) => a.uid === active) ?? null;
@@ -49,19 +56,18 @@ export function Hemicycle({
     );
   }
 
+  const go = (uid: string): void => router.push(`/groupes/${uid}`);
+
   return (
     <div className={className}>
       <svg
         viewBox={`0 0 ${w} ${h}`}
-        className="mx-auto w-full max-w-xl"
-        role="img"
-        aria-label={
-          `Hémicycle schématique ${chambre === "AN" ? "Assemblée nationale" : "Sénat"}`
-        }
+        className="mx-auto block w-full max-w-xl"
+        role="group"
+        aria-label={`Hémicycle schématique ${chambre === "AN" ? "Assemblée nationale" : "Sénat"}`}
       >
         {arcs.map((arc) => {
-          const isActive = active === arc.uid;
-          const dimmed = active != null && !isActive;
+          const isOn = arc.uid === hover || arc.uid === selectedUid;
           return (
             <path
               key={arc.uid}
@@ -73,23 +79,25 @@ export function Hemicycle({
                 arc.startAngle,
                 arc.endAngle,
               )}
-              fill={arc.couleur}
-              opacity={dimmed ? 0.35 : isActive ? 1 : 0.92}
-              stroke={isActive ? "var(--foreground)" : "white"}
-              strokeWidth={isActive ? 2 : 1}
-              className="cursor-pointer transition-opacity"
+              style={{
+                fill: isOn ? "var(--accent)" : "var(--vote-abstention)",
+              }}
+              stroke="var(--background)"
+              strokeWidth={2}
+              className="cursor-pointer outline-none transition-[fill] duration-300 focus-visible:stroke-[var(--foreground)]"
               tabIndex={0}
               role="link"
               aria-label={`${arc.libelle}, ${arc.effectif} membres`}
+              aria-current={arc.uid === selectedUid ? "true" : undefined}
               onMouseEnter={() => setHover(arc.uid)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(arc.uid)}
               onBlur={() => setHover(null)}
-              onClick={() => router.push(`/groupes/${arc.uid}`)}
+              onClick={() => go(arc.uid)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  router.push(`/groupes/${arc.uid}`);
+                  go(arc.uid);
                 }
               }}
             />
@@ -97,17 +105,23 @@ export function Hemicycle({
         })}
       </svg>
 
-      <div className="mt-2 min-h-10 text-center text-sm">
+      <div
+        className="mt-3 min-h-11 text-center text-[15px]"
+        aria-live="polite"
+      >
         {activeArc ? (
-          <p>
-            <span
-              className="mr-1.5 inline-block h-2.5 w-2.5"
-              style={{ background: activeArc.couleur }}
-            />
-            <span className="font-medium">{activeArc.abrege}</span>
+          <p key={activeArc.uid} className="reveal">
+            <span className="font-semibold">{activeArc.abrege}</span>
             <span className="text-muted-foreground">
               {" "}
-              · {activeArc.libelle} · {activeArc.effectif}
+              · {activeArc.libelle} ·{" "}
+            </span>
+            <span className="num">
+              {activeArc.effectif} siège
+              {activeArc.effectif > 1 ? "s" : ""}
+              {total > 0
+                ? ` (${((100 * activeArc.effectif) / total).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %)`
+                : ""}
             </span>
           </p>
         ) : (
@@ -117,40 +131,41 @@ export function Hemicycle({
         )}
       </div>
 
-      <p className="mt-1 text-center text-xs text-muted-foreground">
+      <p className="mt-1 text-center text-[13px] text-muted-foreground">
         ← gauche · centre · droite → · représentation schématique
         (pas le plan de salle)
       </p>
 
       {!compact ? (
-        <ul className="mt-4 flex flex-wrap justify-center gap-2">
-          {arcs.map((arc) => (
-            <li key={arc.uid}>
-              <button
-                type="button"
-                onClick={() => router.push(`/groupes/${arc.uid}`)}
-                onMouseEnter={() => setHover(arc.uid)}
-                onMouseLeave={() => setHover(null)}
-                className={
-                  `inline-flex min-h-11 items-center gap-1.5 ` +
-                  ` border border-border ` +
-                  `bg-card px-2.5 text-xs ` +
-                  (selectedUid === arc.uid
-                    ? "ring-2 ring-[var(--accent)]"
-                    : "")
-                }
-              >
-                <span
-                  className="h-2.5 w-2.5"
-                  style={{ background: arc.couleur }}
-                />
-                {arc.abrege}
-                <span className="text-muted-foreground">
-                  {arc.effectif}
-                </span>
-              </button>
-            </li>
-          ))}
+        <ul className="mt-5 flex flex-wrap justify-center gap-2">
+          {arcs.map((arc) => {
+            const sel = selectedUid === arc.uid;
+            return (
+              <li key={arc.uid}>
+                <button
+                  type="button"
+                  onClick={() => go(arc.uid)}
+                  onMouseEnter={() => setHover(arc.uid)}
+                  onMouseLeave={() => setHover(null)}
+                  onFocus={() => setHover(arc.uid)}
+                  onBlur={() => setHover(null)}
+                  aria-current={sel ? "true" : undefined}
+                  className={cn(
+                    "inline-flex min-h-11 items-center gap-2 border border-border px-3 text-[13px] font-medium",
+                    "transition-[background-color,box-shadow] duration-300",
+                    sel || hover === arc.uid
+                      ? "bg-[var(--highlight)] shadow-[inset_0_3px_0_0_var(--accent)]"
+                      : "bg-background hover:bg-[var(--hover)]",
+                  )}
+                >
+                  {arc.abrege}
+                  <span className="num text-muted-foreground">
+                    {arc.effectif}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
     </div>

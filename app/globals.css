@@ -5,133 +5,123 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: hsl(0 100% 43%);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0 0 0);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.9696 0 0);
-  --muted-foreground: oklch(0.5103 0 0);
-  --accent: oklch(0.8408 0.1725 84.2008);
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.5308 0.2178 29.2339);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0 0 0);
-  --input: oklch(1 0 0);
-  --ring: oklch(0.5799 0.238 29.2339);
-  --chart-1: oklch(0 0 0);
-  --chart-2: oklch(0.5799 0.238 29.2339);
-  --chart-3: oklch(0.8408 0.1725 84.2008);
-  --chart-4: oklch(0.4907 0.0695 144.426);
-  --chart-5: oklch(0.5166 0.0826 46.9154);
-  --sidebar: oklch(0.9848 0 0);
-  --sidebar-foreground: oklch(0 0 0);
-  --sidebar-primary: oklch(0.5799 0.238 29.2339);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.9234 0 0);
-  --sidebar-accent-foreground: oklch(0 0 0);
-  --sidebar-border: oklch(0 0 0);
-  --sidebar-ring: oklch(0.5799 0.238 29.2339);
-  --font-serif: "Georgia", serif;
+  /*
+   * Carnet : noir, blanc, jaune Phronesis.
+   * Le jaune (#FFBF00, le logo historique) ne sert jamais de couleur de
+   * texte sur fond blanc : uniquement en fond sous du texte noir, en
+   * trait (soulignement, filet) ou sur fond noir.
+   */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f5f2;
+  --muted-foreground: #5c5c5c;
+  --accent: #ffbf00;
+  --accent-foreground: #0a0a0a;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: #dadada;
+  --input: #cfcfcf;
+  --ring: #ffbf00;
+  --chart-1: #0a0a0a;
+  --chart-2: #8a8a8a;
+  --chart-3: #ffbf00;
+  --chart-4: #cfcfcf;
+  --chart-5: #5c5c5c;
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffbf00;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1f1f1f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #262626;
+  --sidebar-ring: #ffbf00;
   --radius: 0px;
-  --shadow-x: 3px;
-  --shadow-y: 3px;
-  --shadow-blur: 0px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 1;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-2xs: 3px 3px 0px 0px hsl(0 0% 0% / 0.5);
-  --shadow-xs: 3px 3px 0px 0px hsl(0 0% 0% / 0.5);
-  --shadow-sm:
-    3px 3px 0px 0px hsl(0 0% 0% / 1), 3px 1px 2px -1px hsl(0 0% 0% / 1);
-  --shadow:
-    3px 3px 0px 0px hsl(0 0% 0% / 1), 3px 1px 2px -1px hsl(0 0% 0% / 1);
-  --shadow-md:
-    3px 3px 0px 0px hsl(0 0% 0% / 1), 3px 2px 4px -1px hsl(0 0% 0% / 1);
-  --shadow-lg:
-    3px 3px 0px 0px hsl(0 0% 0% / 1), 3px 4px 6px -1px hsl(0 0% 0% / 1);
-  --shadow-xl:
-    3px 3px 0px 0px hsl(0 0% 0% / 1), 3px 8px 10px -1px hsl(0 0% 0% / 1);
-  --shadow-2xl: 3px 3px 0px 0px hsl(0 0% 0% / 2.5);
-  --tracking-normal: -0.02em;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: 0 18px 36px -24px rgb(0 0 0 / 0.35);
+  --shadow-xl: 0 24px 48px -28px rgb(0 0 0 / 0.4);
+  --shadow-2xl: 0 24px 48px -28px rgb(0 0 0 / 0.4);
+  --tracking-normal: 0em;
   --spacing: 0.25rem;
 
   /* Phronesis métier */
-  --logo: oklch(0.8408 0.1725 84.2008);
-  --sidebar-width: 14rem;
-  --vote-pour: #059669;
-  --vote-contre: #e11d48;
-  --vote-abstention: #d97706;
-  --vote-neutre: #6b7280;
+  --logo: #ffbf00;
+  /* Surlignage doux (sélection, ligne active). */
+  --highlight: #fff6d9;
+  --hover: #fafaf7;
+  /* Votes : monochrome, jamais rouge/vert. */
+  --vote-pour: #0a0a0a;
+  --vote-contre: #8a8a8a;
+  --vote-abstention: #cfcfcf;
+  --vote-neutre: #ececec;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* Ressort doux, quasi sans rebond (équivalent Framer stiffness ~260, damping ~30). */
+    --spring: linear(
+      0, 0.0039, 0.0157, 0.0352, 0.0625 3.1%, 0.1407, 0.25 6.6%, 0.5 10.4%,
+      0.7 14.4%, 0.84 18.5%, 0.93 22.8%, 0.98 27.5%, 1.005 33%, 1.008 39%,
+      1.004 47%, 1
+    );
+  }
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0.1457 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.1457 0 0);
-  --popover-foreground: oklch(1 0 0);
-  --primary: oklch(0.628 0.2577 29.2339);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(1 0 0);
-  --secondary-foreground: oklch(0 0 0);
-  --muted: oklch(0.2376 0 0);
-  --muted-foreground: oklch(0.7652 0 0);
-  --accent: oklch(0.8533 0.1706 86.7515);
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.6489 0.237 26.9728);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(1 0 0);
-  --input: oklch(0 0 0);
-  --ring: oklch(0.628 0.2577 29.2339);
-  --chart-1: oklch(1 0 0);
-  --chart-2: oklch(0.628 0.2577 29.2339);
-  --chart-3: oklch(0.8533 0.1706 86.7515);
-  --chart-4: oklch(0.5773 0.065 144.6756);
-  --chart-5: oklch(0.6009 0.0747 47.4204);
-  --sidebar: oklch(0.1157 0 0);
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.628 0.2577 29.2339);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.2697 0 0);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(1 0 0);
-  --sidebar-ring: oklch(0.628 0.2577 29.2339);
-  --font-serif: "Georgia", serif;
-  --radius: 0px;
-  --shadow-x: 3px;
-  --shadow-y: 3px;
-  --shadow-blur: 0px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 1;
-  --shadow-color: hsl(0 0% 100%);
-  --shadow-2xs: 3px 3px 0px 0px hsl(0 0% 100% / 0.5);
-  --shadow-xs: 3px 3px 0px 0px hsl(0 0% 100% / 0.5);
-  --shadow-sm:
-    3px 3px 0px 0px hsl(0 0% 100% / 1), 3px 1px 2px -1px hsl(0 0% 100% / 1);
-  --shadow:
-    3px 3px 0px 0px hsl(0 0% 100% / 1), 3px 1px 2px -1px hsl(0 0% 100% / 1);
-  --shadow-md:
-    3px 3px 0px 0px hsl(0 0% 100% / 1), 3px 2px 4px -1px hsl(0 0% 100% / 1);
-  --shadow-lg:
-    3px 3px 0px 0px hsl(0 0% 100% / 1), 3px 4px 6px -1px hsl(0 0% 100% / 1);
-  --shadow-xl:
-    3px 3px 0px 0px hsl(0 0% 100% / 1), 3px 8px 10px -1px hsl(0 0% 100% / 1);
-  --shadow-2xl: 3px 3px 0px 0px hsl(0 0% 100% / 2.5);
-  --tracking-normal: -0.02em;
+  --background: #0a0a0a;
+  --foreground: #f2f2f2;
+  --card: #121212;
+  --card-foreground: #f2f2f2;
+  --popover: #121212;
+  --popover-foreground: #f2f2f2;
+  --primary: #f2f2f2;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #f2f2f2;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: #ffbf00;
+  --accent-foreground: #0a0a0a;
+  --destructive: #f97066;
+  --destructive-foreground: #0a0a0a;
+  --border: #2e2e2e;
+  --input: #3a3a3a;
+  --ring: #ffbf00;
+  --chart-1: #f2f2f2;
+  --chart-2: #8a8a8a;
+  --chart-3: #ffbf00;
+  --chart-4: #4a4a4a;
+  --chart-5: #a3a3a3;
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffbf00;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1f1f1f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #262626;
+  --sidebar-ring: #ffbf00;
 
-  --logo: oklch(0.8533 0.1706 86.7515);
-  --sidebar-width: 14rem;
-  --vote-pour: #34d399;
-  --vote-contre: #fb7185;
-  --vote-abstention: #fbbf24;
-  --vote-neutre: #9ca3af;
+  --logo: #ffbf00;
+  --highlight: #2b2512;
+  --hover: #151515;
+  --vote-pour: #f2f2f2;
+  --vote-contre: #8a8a8a;
+  --vote-abstention: #4a4a4a;
+  --vote-neutre: #262626;
 }
 
 @theme inline {
@@ -170,7 +160,7 @@
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
+  --font-serif: var(--font-sans);
   --font-logo: var(--font-logo);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -200,9 +190,20 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    letter-spacing: -0.02em;
   }
 
   a {
@@ -210,14 +211,19 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--accent) 35%, transparent);
+    background: #ffe08a;
+    color: #0a0a0a;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
 }
 
+/* Chiffres : Archivo en chiffres tabulaires (plus de police mono). */
 .num {
-  font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
 }
 
 .card-sharp,
@@ -225,4 +231,247 @@
   border-radius: 0;
   border: 1px solid var(--border);
   background: var(--card);
+}
+
+@layer components {
+/* ---------- Carnet : primitives ---------- */
+
+/* Surtitre en petites capitales. */
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Champ de saisie / select. */
+.field {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--input);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 15px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.3s var(--ease-out);
+}
+.field:hover {
+  border-color: var(--muted-foreground);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 3px #ffe08a;
+}
+
+/* Boutons rectangulaires. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease-out),
+    color 0.25s,
+    border-color 0.25s;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.btn-accent {
+  background: var(--accent);
+  color: #0a0a0a;
+}
+.btn-accent:hover {
+  background: #ffcd38;
+}
+.btn-dark {
+  background: var(--foreground);
+  color: var(--background);
+}
+.btn-dark:hover {
+  background: color-mix(in srgb, var(--foreground) 85%, var(--background));
+}
+.btn-outline {
+  background: var(--background);
+  color: var(--foreground);
+  border-color: var(--foreground);
+}
+.btn-outline:hover {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* ---------- Carnet : micro-interactions ---------- */
+
+/* Entrée de bloc : léger glissé vers le haut. */
+.rise {
+  animation: rise 0.9s var(--spring) both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Apparition après interaction (panneau, justification…). */
+.reveal {
+  animation: reveal 0.5s var(--spring) both;
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Barres qui se dessinent depuis la gauche. */
+.grow-x {
+  transform-origin: left;
+  animation: grow-x 1s var(--spring) both;
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Texte qui « roule » au survol (double libellé empilé). */
+.roll {
+  display: inline-block;
+  overflow: hidden;
+  height: 1.3em;
+  line-height: 1.3em;
+  vertical-align: top;
+}
+.roll > span {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.6s var(--spring);
+}
+.roll > span > span {
+  height: 1.3em;
+}
+a:hover .roll > span,
+button:hover .roll > span {
+  transform: translateY(-50%);
+}
+
+/* Lien souligné : le filet passe au jaune au survol. */
+.ln {
+  border-bottom: 1px solid currentColor;
+  transition: border-color 0.2s;
+}
+.ln:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* Ligne de liste : fond doux + filet jaune qui se trace au survol. */
+.row-link {
+  position: relative;
+  transition: background-color 0.25s var(--ease-out);
+}
+.row-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s var(--spring);
+}
+.row-link:hover {
+  background: var(--hover);
+}
+.row-link:hover::before {
+  transform: scaleX(1);
+}
+
+/* Flèche qui glisse au survol d'un parent .group. */
+.nudge {
+  transition:
+    transform 0.6s var(--spring),
+    color 0.2s;
+}
+.group:hover .nudge {
+  transform: translateX(4px);
+}
+
+/* Surlignage marqueur, tracé au défilement quand c'est possible. */
+.mk {
+  background: linear-gradient(#ffe08a, #ffe08a) no-repeat 0 92% / 100% 32%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.dark .mk {
+  background-image: linear-gradient(#5c4a10, #5c4a10);
+}
+@supports (animation-timeline: view()) {
+  .mk {
+    background-size: 0% 32%;
+    animation: mk linear both;
+    animation-timeline: view();
+    animation-range: entry 30% cover 45%;
+  }
+  @keyframes mk {
+    to {
+      background-size: 100% 32%;
+    }
+  }
+}
+
+/* Siège d'hémicycle : apparaît siège par siège. */
+.hemi-seat {
+  transform: translate(-50%, -50%) scale(0);
+  animation: hemi-seat 0.7s var(--spring) both;
+  transition:
+    background-color 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    opacity 0.35s var(--ease-out);
+}
+@keyframes hemi-seat {
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .hemi-seat {
+    transform: translate(-50%, -50%);
+  }
+  .mk {
+    background-size: 100% 32%;
+  }
 }

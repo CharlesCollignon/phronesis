@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { VoteComparison } from "@/components/vote-comparison";
+import { cn } from "@/lib/utils";
 
 type Counts = {
   pour: number;
@@ -16,54 +17,11 @@ type Counts = {
 
 type Position = "pour" | "contre" | "abstention" | "pas_avis";
 
-const LABELS: {
-  id: Position;
-  label: string;
-  selectedClass: string;
-  idleClass: string;
-}[] = [
-  {
-    id: "pour",
-    label: "Pour",
-    selectedClass:
-      "border-[var(--vote-pour)] bg-[var(--vote-pour)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-pour)]/50 bg-[var(--vote-pour)]/10 " +
-      "text-[var(--vote-pour)] hover:bg-[var(--vote-pour)]/20",
-  },
-  {
-    id: "contre",
-    label: "Contre",
-    selectedClass:
-      "border-[var(--vote-contre)] bg-[var(--vote-contre)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-contre)]/50 bg-[var(--vote-contre)]/10 " +
-      "text-[var(--vote-contre)] hover:bg-[var(--vote-contre)]/20",
-  },
-  {
-    id: "abstention",
-    label: "Abstention",
-    selectedClass:
-      "border-[var(--vote-abstention)] " +
-      "bg-[var(--vote-abstention)] text-white",
-    idleClass:
-      "border-[var(--vote-abstention)]/50 " +
-      "bg-[var(--vote-abstention)]/10 " +
-      "text-[var(--vote-abstention)] " +
-      "hover:bg-[var(--vote-abstention)]/20",
-  },
-  {
-    id: "pas_avis",
-    label: "Pas d'avis",
-    selectedClass:
-      "border-[var(--vote-neutre)] bg-[var(--vote-neutre)] " +
-      "text-white",
-    idleClass:
-      "border-[var(--vote-neutre)]/50 bg-[var(--vote-neutre)]/10 " +
-      "text-[var(--vote-neutre)] hover:bg-[var(--vote-neutre)]/20",
-  },
+const LABELS: { id: Position; label: string }[] = [
+  { id: "pour", label: "Pour" },
+  { id: "contre", label: "Contre" },
+  { id: "abstention", label: "Abstention" },
+  { id: "pas_avis", label: "Pas d'avis" },
 ];
 
 type SondageScrutinProps = {
@@ -165,78 +123,89 @@ function SondageInner({
   const loading = counts === null && error === null;
 
   return (
-    <section className="space-y-4">
-      <div className="border border-border bg-card p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Comparer députés et citoyens
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Sondage d&apos;opinion —{" "}
-          <strong className="text-foreground">
-            pas un vote parlementaire
-          </strong>
-          .
-        </p>
+    <section aria-labelledby="sondage-titre">
+      <p className="eyebrow">Et vous ?</p>
+      <h2
+        id="sondage-titre"
+        className="mt-2.5 text-[17px] font-medium leading-snug"
+      >
+        Qu&apos;auriez-vous voté ?
+      </h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+        Sondage d&apos;opinion,{" "}
+        <strong className="font-medium text-foreground">
+          pas un vote parlementaire
+        </strong>
+        .
+      </p>
 
-        {loading ? (
-          <p className="mt-4 text-sm text-muted-foreground">Chargement…</p>
-        ) : (
-          <div className="mt-4">
-            <VoteComparison
-              deputes={{
-                pour: deputesPour,
-                contre: deputesContre,
-                abstention: deputesAbstention,
-              }}
-              citoyens={{
-                pour: display.pour,
-                contre: display.contre,
-                abstention: display.abstention,
-                pasAvis: display.pasAvis,
-              }}
-            />
-          </div>
-        )}
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {LABELS.map((opt) => {
-            const selected = mine === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                disabled={saving || loading}
-                aria-pressed={selected}
-                title={selected ? "Retirer mon avis" : undefined}
-                onClick={() => void vote(opt.id)}
-                className={
-                  `min-h-10 flex-1 border px-2 text-xs font-medium ` +
-                  `transition sm:text-sm ${
-                    selected ? opt.selectedClass : opt.idleClass
-                  }`
-                }
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {!isSignedIn ? (
-          <p className="mt-3 text-xs text-muted-foreground">
-            <Link
-              href="/sign-in"
-              className="text-primary hover:underline"
+      <div
+        role="group"
+        aria-label="Votre position"
+        className="mt-4 grid grid-cols-2 gap-1.5"
+      >
+        {LABELS.map((opt) => {
+          const selected = mine === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={saving || loading}
+              aria-pressed={selected}
+              title={selected ? "Retirer mon avis" : undefined}
+              onClick={() => void vote(opt.id)}
+              className={cn(
+                "h-12 border px-2 text-[15px] font-medium transition-[background-color,border-color,box-shadow] duration-300 ease-[var(--spring)] disabled:cursor-not-allowed disabled:opacity-50",
+                selected
+                  ? "border-foreground bg-[var(--highlight)] shadow-[inset_0_-3px_0_0_var(--accent)]"
+                  : "border-input bg-background hover:border-foreground",
+              )}
             >
-              Se connecter
-            </Link>{" "}
-            pour voter (re-clic pour retirer).
-          </p>
-        ) : null}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {error ? (
-          <p className="mt-2 text-xs text-rose-900">{error}</p>
-        ) : null}
+      {mine ? (
+        <p key={mine} className="reveal mt-3 text-sm text-[#404040] dark:text-muted-foreground">
+          Avis enregistré. Cliquez à nouveau pour le retirer.
+        </p>
+      ) : null}
+
+      {!isSignedIn ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          <Link href="/sign-in" className="ln text-foreground">
+            Se connecter
+          </Link>{" "}
+          pour donner votre avis (nouveau clic pour le retirer).
+        </p>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="mt-3 text-sm font-medium text-foreground">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-6">
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Chargement…</p>
+        ) : (
+          <VoteComparison
+            deputes={{
+              pour: deputesPour,
+              contre: deputesContre,
+              abstention: deputesAbstention,
+            }}
+            citoyens={{
+              pour: display.pour,
+              contre: display.contre,
+              abstention: display.abstention,
+              pasAvis: display.pasAvis,
+            }}
+          />
+        )}
       </div>
     </section>
   );
@@ -248,9 +217,10 @@ function SondageWithClerk(
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
-      <div className="border border-border p-4 text-sm text-muted-foreground">
-        Chargement…
-      </div>
+      <section>
+        <p className="eyebrow">Et vous ?</p>
+        <p className="mt-2.5 text-sm text-muted-foreground">Chargement…</p>
+      </section>
     );
   }
   return (

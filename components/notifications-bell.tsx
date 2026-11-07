@@ -94,10 +94,10 @@ function NotificationsBellInner(): React.ReactElement | null {
           type="button"
           variant="ghost"
           size="icon"
-          className="relative rounded-none"
+          className="relative size-9 rounded-none text-[#d4d4d4] hover:bg-white/10 hover:text-white aria-expanded:bg-white/10 aria-expanded:text-white"
           aria-label="Notifications"
         >
-          <Bell className="size-5" />
+          <Bell className="size-4" />
           {unread > 0 ? (
             <span
               className={

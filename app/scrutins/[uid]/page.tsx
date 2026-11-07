@@ -3,34 +3,23 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Badge } from "@/components/badge";
-import { PageShell } from "@/components/breadcrumbs";
+import { PageHeader, PageShell, SectionHeading } from "@/components/breadcrumbs";
 import { ScrutinCharts } from "@/components/charts/scrutin-charts";
 import { ExternalLink } from "@/components/external-link";
+import { HemicyclePositions } from "@/components/hemicycle-positions";
 import { SondageScrutin } from "@/components/sondage-scrutin";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { VoteBar } from "@/components/vote-bar";
 import { VoteFilters } from "@/components/vote-filters";
 import {
+  capitalizeTitre,
   formatDate,
   formatNumber,
   formatPosition,
   formatSort,
-  capitalizeTitre,
   nomComplet,
 } from "@/lib/format";
 import { getScrutin, getScrutinVotes } from "@/lib/queries";
-import {
-  couleurGroupe,
-  sortGroupesSpectre,
-} from "@/lib/spectre-groupes";
 import { urlScrutinAn, urlScrutinSenat } from "@/lib/urls";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +27,23 @@ type PageProps = {
   params: Promise<{ uid: string }>;
   searchParams: Promise<{ position?: string; groupe?: string }>;
 };
+
+/** Libellé de majorité d'un groupe (positions exprimées). */
+function majorite(pour: number, contre: number, abst: number): string {
+  if (pour + contre + abst === 0) return "Aucune position exprimée";
+  if (pour >= contre && pour >= abst) {
+    return pour === contre ? "Partagé" : "Majorité pour";
+  }
+  if (contre >= abst) return "Majorité contre";
+  return "Majorité abst.";
+}
+
+const POSITION_TONE: Record<string, "pour" | "contre" | "abstention" | "neutral"> =
+  {
+    pour: "pour",
+    contre: "contre",
+    abstention: "abstention",
+  };
 
 export default async function ScrutinPage({
   params,
@@ -49,14 +55,14 @@ export default async function ScrutinPage({
   if (!data) notFound();
 
   const { scrutin, dossier, parGroupe } = data;
-  const chambre: "AN" | "SENAT" =
-    scrutin.chambre === "SENAT" ? "SENAT" : "AN";
-  const groupesOrdonnes = sortGroupesSpectre(
-    parGroupe.map((g) => ({
-      ...g,
-      libelleAbrege: g.libelleAbrege,
-    })),
-    chambre,
+  const senat = scrutin.chambre === "SENAT";
+  const groupesOrdonnes = [...parGroupe].sort(
+    (a, b) =>
+      b.pour +
+      b.contre +
+      b.abstention +
+      b.nonVotant -
+      (a.pour + a.contre + a.abstention + a.nonVotant),
   );
   const voteRows = await getScrutinVotes(
     uid,
@@ -71,160 +77,256 @@ export default async function ScrutinPage({
     nonVotant: scrutin.nonVotants ?? 0,
   };
 
-  const chambreLabel =
-    scrutin.chambre === "SENAT" ? "Sénat" : "Assemblée";
+  const chambreLabel = senat ? "Sénat" : "Assemblée nationale";
+  const adopte = scrutin.sortCode.toLowerCase().includes("adopt");
+  const sourceHref = senat
+    ? urlScrutinSenat(scrutin.legislature, scrutin.numero)
+    : urlScrutinAn(scrutin.legislature, scrutin.numero);
+  const filtreActif = Boolean(filters.position || filters.groupe);
+
+  const meta: [string, React.ReactNode][] = [
+    ["Pour", formatNumber(scrutin.pour)],
+    ["Contre", formatNumber(scrutin.contre)],
+    ["Abstentions", formatNumber(scrutin.abstentions)],
+    ["Non-votants", formatNumber(scrutin.nonVotants)],
+  ];
+  if (scrutin.suffragesRequis != null) {
+    meta.push(["Majorité requise", formatNumber(scrutin.suffragesRequis)]);
+  }
+  if (scrutin.demandeur) {
+    meta.push(["Demandé par", scrutin.demandeur]);
+  }
 
   return (
     <PageShell
       breadcrumbs={[
         { label: "Accueil", href: "/" },
         { label: "Votes", href: "/scrutins" },
-        { label: `Scrutin n° ${scrutin.numero}` },
+        { label: `Scrutin n° ${formatNumber(scrutin.numero)}` },
       ]}
     >
-      <p className="text-sm text-muted-foreground">
-        {chambreLabel} · {formatDate(scrutin.dateScrutin)}
-      </p>
-      <h1 className="mt-1 max-w-4xl font-serif text-2xl leading-tight tracking-tight sm:text-3xl">
-        {capitalizeTitre(scrutin.titre)}
-      </h1>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Badge tone="neutral">{chambreLabel}</Badge>
-        <Badge
-          tone={
-            scrutin.sortCode.toLowerCase().includes("adopt")
-              ? "adopte"
-              : "rejete"
-          }
-        >
-          {formatSort(scrutin.sortCode)}
-        </Badge>
-        {scrutin.typeVoteLibelle ? (
-          <span className="text-sm text-muted-foreground">
-            {scrutin.typeVoteLibelle}
-          </span>
-        ) : null}
-        {scrutin.chambre === "SENAT" ? (
-          <ExternalLink
-            href={urlScrutinSenat(
-              scrutin.legislature,
-              scrutin.numero,
-            )}
-          >
-            Source Sénat
-          </ExternalLink>
-        ) : (
-          <ExternalLink
-            href={urlScrutinAn(scrutin.legislature, scrutin.numero)}
-          >
-            Source AN
-          </ExternalLink>
-        )}
-      </div>
-
-      {dossier ? (
-        <p className="mt-3 text-sm">
-          Dossier :{" "}
-          <Link
-            href={`/dossiers/${dossier.uid}`}
-            className="text-primary hover:underline"
-          >
-            {dossier.titre}
-          </Link>
-        </p>
-      ) : null}
-
-      <div className="mt-6 grid grid-cols-2 divide-x divide-y divide-border border border-border bg-card sm:grid-cols-4 sm:divide-y-0">
-        {(
-          [
-            ["Pour", scrutin.pour],
-            ["Contre", scrutin.contre],
-            ["Abstentions", scrutin.abstentions],
-            ["Non-votants", scrutin.nonVotants],
-          ] as const
-        ).map(([label, value]) => (
-          <div
-            key={label}
-            className="flex items-baseline justify-between gap-2 px-3 py-2 sm:justify-start sm:gap-3"
-          >
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">
-              {label}
-            </span>
-            <span className="num text-lg font-medium tabular-nums">
-              {formatNumber(value)}
-            </span>
+      <PageHeader
+        size="long"
+        eyebrow={
+          <>
+            Scrutin public n° {formatNumber(scrutin.numero)} · {chambreLabel}{" "}
+            · {formatDate(scrutin.dateScrutin)}
+          </>
+        }
+        title={capitalizeTitre(scrutin.titre)}
+        description={
+          scrutin.typeVoteLibelle ? (
+            <p className="text-base">
+              {capitalizeTitre(scrutin.typeVoteLibelle)}
+            </p>
+          ) : undefined
+        }
+        aside={
+          <div className="sm:text-right">
+            <Badge
+              tone={adopte ? "adopte" : "rejete"}
+              className="gap-2.5 text-[22px] font-semibold [&>span:first-child]:size-3"
+            >
+              {formatSort(scrutin.sortCode)}
+            </Badge>
+            <p className="num mt-1.5 text-[15px] text-[#404040] dark:text-muted-foreground">
+              {scrutin.nombreVotants != null
+                ? `${formatNumber(scrutin.nombreVotants)} votants`
+                : null}
+              {scrutin.nombreVotants != null &&
+              scrutin.suffragesExprimes != null
+                ? " · "
+                : null}
+              {scrutin.suffragesExprimes != null
+                ? `${formatNumber(scrutin.suffragesExprimes)} suffrages exprimés`
+                : null}
+            </p>
           </div>
-        ))}
-      </div>
+        }
+      />
 
-      <div className="mt-3">
-        <VoteBar
+      <section
+        aria-label="Répartition des positions"
+        className="mt-12 border-t border-foreground pt-8"
+      >
+        <HemicyclePositions
           pour={scrutin.pour ?? 0}
           contre={scrutin.contre ?? 0}
           abstentions={scrutin.abstentions ?? 0}
+          sieges={senat ? 348 : 577}
         />
-      </div>
-
-      <div className="mt-8">
-        <SondageScrutin
-          scrutinUid={scrutin.uid}
-          deputesPour={scrutin.pour ?? 0}
-          deputesContre={scrutin.contre ?? 0}
-          deputesAbstention={scrutin.abstentions ?? 0}
-        />
-      </div>
-
-      <section className="mt-10">
-        <ScrutinCharts parGroupe={groupesOrdonnes} />
       </section>
 
-      <section className="mt-10">
-        <h2 className="font-serif text-xl">
-          Répartition par groupe
-        </h2>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-          {groupesOrdonnes.map((g) => (
-            <li
-              key={g.groupeUid ?? "sans-groupe"}
-              className="border border-border bg-card p-3"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="inline-flex h-6 min-w-6 items-center justify-center text-[10px] font-semibold text-white"
-                  style={{
-                    background: couleurGroupe(
-                      g.libelleAbrege,
-                      g.couleur,
-                    ),
-                  }}
+      <div className="mt-[clamp(56px,7vw,80px)] flex flex-wrap items-start gap-14">
+        <div className="min-w-0 flex-[2_1_600px]">
+          <section aria-labelledby="par-groupe">
+            <SectionHeading
+              id="par-groupe"
+              rule
+              title="Par groupe"
+              aside="Positions exprimées, ordre par effectif"
+            />
+            <ul className="border-b border-border">
+              {groupesOrdonnes.map((g, i) => {
+                const exprimes = g.pour + g.contre + g.abstention;
+                const parts = [
+                  g.pour ? `${g.pour} pour` : null,
+                  g.contre ? `${g.contre} contre` : null,
+                  g.abstention ? `${g.abstention} abst.` : null,
+                  g.nonVotant ? `${g.nonVotant} n.-v.` : null,
+                ].filter(Boolean);
+                const nom = g.libelleAbrege ?? g.libelle ?? "Sans groupe";
+                const content = (
+                  <>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[15px] font-semibold">
+                        {nom}
+                      </span>
+                      <span className="num mt-0.5 block text-[13px] text-muted-foreground md:hidden">
+                        {parts.join(" · ")}
+                      </span>
+                    </span>
+                    <span
+                      role="img"
+                      aria-label={`${g.libelle ?? nom} : ${parts.join(", ") || "aucune position"}`}
+                      className="flex h-2 gap-0.5"
+                    >
+                      {exprimes > 0 ? (
+                        (
+                          [
+                            [g.pour, "bg-[var(--vote-pour)]"],
+                            [g.contre, "bg-[var(--vote-contre)]"],
+                            [g.abstention, "bg-[var(--vote-abstention)]"],
+                          ] as const
+                        ).map(([n, cls], k) =>
+                          n > 0 ? (
+                            <span
+                              key={k}
+                              className={cn("grow-x", cls)}
+                              style={{
+                                width: `${(100 * n) / exprimes}%`,
+                                animationDelay: `${300 + i * 50}ms`,
+                              }}
+                            />
+                          ) : null,
+                        )
+                      ) : (
+                        <span className="w-full bg-muted" />
+                      )}
+                    </span>
+                    <span className="hidden text-sm font-medium md:block">
+                      {majorite(g.pour, g.contre, g.abstention)}
+                    </span>
+                    <span className="num hidden text-right text-[13px] text-[#404040] md:block dark:text-muted-foreground">
+                      {parts.join(" · ") || "—"}
+                    </span>
+                  </>
+                );
+                const rowCls =
+                  "grid grid-cols-[minmax(0,110px)_minmax(0,1fr)] items-center gap-5 border-t border-border px-2 py-3.5 md:grid-cols-[96px_minmax(0,1fr)_128px_170px]";
+                return (
+                  <li key={g.groupeUid ?? "sans-groupe"}>
+                    {g.groupeUid ? (
+                      <Link
+                        href={`/groupes/${g.groupeUid}`}
+                        className={cn("row-link", rowCls)}
+                        title={g.libelle ?? undefined}
+                      >
+                        {content}
+                      </Link>
+                    ) : (
+                      <div className={rowCls}>{content}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3.5 text-[13px] text-muted-foreground">
+              Noir : pour · gris : contre · clair : abstention. Les
+              non-votants (n.-v.) sont indiqués en détail.
+            </p>
+          </section>
+
+          <section aria-labelledby="effectifs" className="pt-16">
+            <SectionHeading
+              id="effectifs"
+              rule
+              title="Effectifs par groupe"
+              aside="Nombre de voix, douze premiers groupes"
+            />
+            <div className="pt-4">
+              <ScrutinCharts parGroupe={groupesOrdonnes} />
+            </div>
+          </section>
+        </div>
+
+        <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-10">
+          <section>
+            <p className="eyebrow">Dossier</p>
+            {dossier ? (
+              <Link
+                href={`/dossiers/${dossier.uid}`}
+                className="mt-2.5 block text-[17px] font-medium leading-snug"
+              >
+                <span className="ln">{capitalizeTitre(dossier.titre)}</span>
+              </Link>
+            ) : (
+              <p className="mt-2.5 text-[15px] text-muted-foreground">
+                Ce scrutin n&apos;est rattaché à aucun dossier législatif
+                dans les données ouvertes.
+              </p>
+            )}
+            <p className="mt-4">
+              <ExternalLink href={sourceHref}>
+                {senat
+                  ? "Scrutin sur senat.fr"
+                  : "Scrutin sur assemblee-nationale.fr"}
+              </ExternalLink>
+            </p>
+          </section>
+
+          <section>
+            <p className="eyebrow">Décompte officiel</p>
+            <dl className="mt-3 border-b border-border text-[15px]">
+              {meta.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-baseline justify-between gap-4 border-t border-border py-2.5"
                 >
-                  {(g.libelleAbrege ?? "?").slice(0, 4)}
-                </span>
-                <span className="text-sm font-medium">
-                  {g.libelle ?? "Groupe inconnu"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {g.pour} pour · {g.contre} contre ·{" "}
-                  {g.abstention} abs.
-                </span>
-              </div>
-              <div className="mt-2">
-                <VoteBar
-                  pour={g.pour}
-                  contre={g.contre}
-                  abstentions={g.abstention}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="num text-right font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-      <section className="mt-10">
-        <h2 className="font-serif text-xl">
-          Positions nominatives
-        </h2>
-        <div className="mt-3">
+          <SondageScrutin
+            scrutinUid={scrutin.uid}
+            deputesPour={scrutin.pour ?? 0}
+            deputesContre={scrutin.contre ?? 0}
+            deputesAbstention={scrutin.abstentions ?? 0}
+          />
+        </aside>
+      </div>
+
+      <section
+        id="positions"
+        aria-labelledby="positions-titre"
+        className="scroll-mt-24 pt-[clamp(56px,7vw,80px)]"
+      >
+        <SectionHeading
+          id="positions-titre"
+          rule
+          title="Positions nominatives"
+          aside={
+            <span className="num">
+              {formatNumber(voteRows.length)}{" "}
+              {senat ? "sénateurs" : "députés"}
+              {filtreActif ? " (filtré)" : ""}
+            </span>
+          }
+        />
+        <div className="pt-5">
           <Suspense fallback={null}>
             <VoteFilters
               positions={[
@@ -249,60 +351,64 @@ export default async function ScrutinPage({
                   count: positionCounts.nonVotant,
                 },
               ]}
-              groupes={parGroupe.map((g) => ({
+              groupes={groupesOrdonnes.map((g) => ({
                 uid: g.groupeUid,
                 label: g.libelleAbrege ?? g.libelle ?? "?",
               }))}
             />
           </Suspense>
         </div>
-        <div className="mt-3 border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="px-4">Député</TableHead>
-                <TableHead className="px-4">Groupe</TableHead>
-                <TableHead className="px-4">Position</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+
+        {voteRows.length > 0 ? (
+          <>
+            <div className="mt-6 hidden grid-cols-[minmax(0,1fr)_160px_120px] gap-5 px-2 pb-2.5 text-[13px] text-muted-foreground sm:grid">
+              <span>{senat ? "Sénateur" : "Député"}</span>
+              <span>Groupe</span>
+              <span>Position</span>
+            </div>
+            <ul className="mt-4 border-b border-border sm:mt-0">
               {voteRows.map((v) => (
-                <TableRow key={v.acteurUid}>
-                  <TableCell className="px-4">
-                    <Link
-                      href={
-                        scrutin.chambre === "SENAT"
-                          ? `/senateurs/${v.acteurUid}`
-                          : `/deputes/${v.acteurUid}`
-                      }
-                      className="hover:text-primary"
-                    >
-                      {nomComplet(v.prenom, v.nom)}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="px-4 text-muted-foreground">
-                    {v.groupeLibelle ?? "—"}
-                  </TableCell>
-                  <TableCell className="px-4">
-                    <Badge
-                      tone={
-                        v.position === "pour"
-                          ? "pour"
-                          : v.position === "contre"
-                            ? "contre"
-                            : v.position === "abstention"
-                              ? "abstention"
-                              : "neutral"
-                      }
-                    >
-                      {formatPosition(v.position)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                <li key={v.acteurUid}>
+                  <Link
+                    href={
+                      senat
+                        ? `/senateurs/${v.acteurUid}`
+                        : `/deputes/${v.acteurUid}`
+                    }
+                    className="row-link grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-1 border-t border-border px-2 py-3 sm:grid-cols-[minmax(0,1fr)_160px_120px]"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-[15px] font-medium">
+                        {nomComplet(v.prenom, v.nom)}
+                      </span>
+                      <span className="block text-[13px] text-muted-foreground sm:hidden">
+                        {v.groupeLibelle ?? "Sans groupe"}
+                        {v.parDelegation ? " · par délégation" : null}
+                      </span>
+                      {v.parDelegation ? (
+                        <span className="hidden text-[13px] text-muted-foreground sm:block">
+                          Par délégation
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="hidden truncate text-sm text-muted-foreground sm:block">
+                      {v.groupeLibelle ?? "—"}
+                    </span>
+                    <span>
+                      <Badge tone={POSITION_TONE[v.position] ?? "neutral"}>
+                        {formatPosition(v.position)}
+                      </Badge>
+                    </span>
+                  </Link>
+                </li>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+            </ul>
+          </>
+        ) : (
+          <p className="mt-6 text-[15px] text-[#404040] dark:text-muted-foreground">
+            Aucune position ne correspond à ces filtres.
+          </p>
+        )}
       </section>
     </PageShell>
   );

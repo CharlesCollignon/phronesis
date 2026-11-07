@@ -72,9 +72,12 @@ export function arcPath(
   startAngle: number,
   endAngle: number,
 ): string {
+  // Arrondi : les derniers chiffres de Math.cos/sin peuvent différer
+  // entre Node et le navigateur (écart d'hydratation sur l'attribut d).
+  const round = (n: number): number => Math.round(n * 100) / 100;
   const polar = (r: number, a: number): [number, number] => [
-    cx + r * Math.cos(a),
-    cy - r * Math.sin(a),
+    round(cx + r * Math.cos(a)),
+    round(cy - r * Math.sin(a)),
   ];
   const [x0, y0] = polar(rOuter, startAngle);
   const [x1, y1] = polar(rOuter, endAngle);
