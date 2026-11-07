@@ -18,7 +18,8 @@ import {
   AXE_BOUSSOLE_LABELS,
   DILEMMES,
   axesPrincipauxDuDilemme,
-  computeProfil,
+  computeProfilDetaille,
+  profilDepuisDetail,
 } from "@/lib/dilemmes";
 import { rankPhilosophies } from "@/lib/philosophies";
 import { cn } from "@/lib/utils";
@@ -135,9 +136,13 @@ function BoussoleQuizInner({
   const answeredCount = DILEMMES.filter((d) => reponses[d.id]).length;
   const complete = answeredCount === DILEMMES.length;
 
-  const profil = useMemo(
-    () => (complete ? computeProfil(reponses) : null),
+  const detail = useMemo(
+    () => (complete ? computeProfilDetaille(reponses) : null),
     [complete, reponses],
+  );
+  const profil = useMemo(
+    () => (detail ? profilDepuisDetail(detail) : null),
+    [detail],
   );
   const ranking = useMemo(
     () => (profil ? rankPhilosophies(profil) : []),
@@ -231,7 +236,7 @@ function BoussoleQuizInner({
         <div className="mt-10 flex flex-wrap gap-14">
           <div className="min-w-0 flex-[1.3_1_480px]">
             <p className="eyebrow pb-3">Lecture des axes</p>
-            <AxesBars profil={profil} />
+            <AxesBars profil={profil} detail={detail ?? undefined} />
           </div>
 
           <div className="min-w-0 flex-[1_1_340px]">

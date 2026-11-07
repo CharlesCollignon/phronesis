@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { AxesBars } from "@/components/profil-axes";
-import { loadBoussoleProfil } from "@/lib/boussole-storage";
+import {
+  loadBoussoleProfil,
+  nombreDilemmesRepondus,
+} from "@/lib/boussole-storage";
 import { DILEMMES, type ProfilBoussole } from "@/lib/dilemmes";
 import {
   computeResonance,
@@ -57,11 +60,14 @@ function ResonanceInner({
   const [loaded, setLoaded] = useState<{
     canUseProfil: boolean;
     profil: ProfilBoussole | null;
+    /** Dilemmes déjà répondus (Boussole entamée mais incomplète). */
+    repondus: number;
   } | null>(null);
 
   const ready =
     loaded !== null && loaded.canUseProfil === canUseProfil;
   const profil = ready ? loaded.profil : null;
+  const repondus = ready ? loaded.repondus : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +75,7 @@ function ResonanceInner({
     async function boot(): Promise<void> {
       if (!canUseProfil) {
         if (!cancelled) {
-          setLoaded({ canUseProfil: false, profil: null });
+          setLoaded({ canUseProfil: false, profil: null, repondus: 0 });
         }
         return;
       }
@@ -77,7 +83,11 @@ function ResonanceInner({
         syncCloud: HAS_CLERK,
       });
       if (!cancelled) {
-        setLoaded({ canUseProfil: true, profil: p });
+        setLoaded({
+          canUseProfil: true,
+          profil: p,
+          repondus: nombreDilemmesRepondus(),
+        });
       }
     }
 
@@ -124,11 +134,23 @@ function ResonanceInner({
     return (
       <ResonanceShell title={title}>
         <p className="text-base leading-relaxed text-[#e5e5e5]">
-          Faites la Boussole ({DILEMMES.length} dilemmes) pour activer la
-          résonance avec cette projection.
+          {repondus > 0 ? (
+            <>
+              Votre Boussole n&apos;est pas terminée : il vous reste{" "}
+              {DILEMMES.length - repondus} dilemme
+              {DILEMMES.length - repondus > 1 ? "s" : ""} sur{" "}
+              {DILEMMES.length} pour activer la résonance avec cette
+              projection.
+            </>
+          ) : (
+            <>
+              Faites la Boussole ({DILEMMES.length} dilemmes) pour activer
+              la résonance avec cette projection.
+            </>
+          )}
         </p>
         <Link href="/boussole" className="btn btn-accent mt-5">
-          Faire ma Boussole
+          {repondus > 0 ? "Reprendre ma Boussole" : "Faire ma Boussole"}
         </Link>
       </ResonanceShell>
     );

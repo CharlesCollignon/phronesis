@@ -308,9 +308,22 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
               des axes de valeurs.
             </p>
             <p className={P}>
-              Le profil est normalisé puis comparé par similarité cosinus à
-              des conceptions philosophiques de référence. Compte optionnel
-              (Clerk) pour synchroniser ; sinon localStorage.
+              Pour chaque axe, la somme des poids de vos choix est replacée
+              dans l&apos;étendue que les dilemmes permettaient
+              d&apos;atteindre sur cet axe : −1 correspond aux réponses qui le
+              minorent le plus, +1 à celles qui le valorisent le plus, 0 au
+              milieu. Un choix qui ne mentionne pas l&apos;axe compte pour
+              zéro. Ainsi, une seule réponse ne suffit pas à saturer un axe, et
+              un axe que les dilemmes valorisent plus souvent qu&apos;ils ne le
+              minorent ne penche pas d&apos;office d&apos;un côté.
+            </p>
+            <p className={P}>
+              Chaque axe affiche une <strong>fiabilité</strong> selon le
+              nombre de dilemmes qui le mesurent : bonne à partir de 5,
+              moyenne de 3 à 4, faible en dessous. Le profil est ensuite
+              comparé par similarité cosinus à des conceptions philosophiques
+              de référence. Compte optionnel (Clerk) pour synchroniser ; sinon
+              localStorage.
             </p>
           </Section>
 

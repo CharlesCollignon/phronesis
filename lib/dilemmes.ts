@@ -1012,7 +1012,280 @@ export const DILEMMES: Dilemme[] = [
       },
     ],
   },
-
+  /*
+   * Dilemmes 16 à 19 : renforcent les axes que le questionnaire
+   * mesurait mal (écologie et vie privée : 2 dilemmes chacun,
+   * décentralisation : 3). Sur chaque axe visé, la somme des poids
+   * des quatre choix est nulle : répondre au hasard ne pousse
+   * l'axe ni d'un côté ni de l'autre.
+   */
+  {
+    id: "transition_quotidien",
+    question:
+      "Pour réduire les émissions liées à la vie quotidienne " +
+      "(voiture, chauffage, alimentation), quelle logique suivre ?",
+    contexte:
+      "Transports, logement et alimentation pèsent lourd dans " +
+      "les émissions. Les changer touche directement le budget " +
+      "et les habitudes des ménages, inégalement selon les " +
+      "revenus et les territoires.",
+    enjeu:
+      "Quatre logiques : fixer des règles, donner un prix au " +
+      "carbone, protéger d'abord le pouvoir d'achat, ou laisser " +
+      "chacun choisir son mode de vie.",
+    choix: [
+      {
+        id: "normes_calendrier",
+        label: "Fixer des normes et un calendrier pour tous",
+        nuance:
+          "Interdire progressivement les pratiques les plus " +
+          "émettrices ; la règle s'applique à tous.",
+        poids: {
+          ecologie: 2,
+          intervention_etat: 2,
+          autorite: 1,
+          liberte: -1,
+        },
+      },
+      {
+        id: "prix_carbone",
+        label: "Donner un prix au carbone, chacun s'adapte",
+        nuance:
+          "Le signal prix oriente les choix ; ménages et " +
+          "entreprises arbitrent eux-mêmes.",
+        poids: {
+          ecologie: 1,
+          marche: 2,
+          responsabilite: 1,
+          intervention_etat: -1,
+        },
+      },
+      {
+        id: "pouvoir_achat",
+        label: "Protéger d'abord le pouvoir d'achat",
+        nuance:
+          "Ralentir le rythme tant que les ménages modestes " +
+          "n'ont pas d'alternative abordable.",
+        poids: {
+          solidarite: 2,
+          egalite: 1,
+          intervention_etat: 1,
+          ecologie: -1,
+        },
+      },
+      {
+        id: "libre_mode_vie",
+        label: "Ne pas imposer de changement de mode de vie",
+        nuance:
+          "Informer, mais laisser chacun libre de ses " +
+          "déplacements, de son logement et de son assiette.",
+        poids: {
+          liberte: 2,
+          responsabilite: 1,
+          intervention_etat: -1,
+          ecologie: -2,
+        },
+      },
+    ],
+  },
+  {
+    id: "amenagement_nature",
+    question:
+      "Quand un projet d'aménagement (usine, route, retenue " +
+      "d'eau…) menace un milieu naturel, qui tranche et comment ?",
+    contexte:
+      "Un projet peut créer des emplois ou répondre à un besoin " +
+      "local tout en détruisant des terres, des zones humides ou " +
+      "des espèces. Habitants, élus locaux et État n'ont pas " +
+      "toujours le même avis.",
+    enjeu:
+      "Quatre logiques : protéger le milieu, laisser décider les " +
+      "habitants, réaliser en compensant, ou faire primer " +
+      "l'intérêt national.",
+    choix: [
+      {
+        id: "proteger_milieu",
+        label: "Protéger le milieu, quitte à renoncer au projet",
+        nuance:
+          "Un milieu détruit ne se remplace pas ; le projet " +
+          "doit trouver une autre forme ou un autre lieu.",
+        poids: {
+          ecologie: 2,
+          intervention_etat: 1,
+          marche: -1,
+        },
+      },
+      {
+        id: "habitants_decident",
+        label: "Laisser les habitants concernés décider",
+        nuance:
+          "Consultation locale décisive : ceux qui vivent sur " +
+          "place arbitrent entre emploi et environnement.",
+        poids: {
+          decentralisation: 2,
+          liberte: 1,
+          autorite: -1,
+        },
+      },
+      {
+        id: "compenser",
+        label: "Réaliser le projet en compensant ailleurs",
+        nuance:
+          "Le porteur du projet finance la restauration d'un " +
+          "milieu équivalent.",
+        poids: {
+          marche: 1,
+          responsabilite: 1,
+          ecologie: -1,
+        },
+      },
+      {
+        id: "interet_national",
+        label: "L'État tranche selon l'intérêt national",
+        nuance:
+          "Les projets jugés stratégiques ne doivent pas être " +
+          "bloqués localement.",
+        poids: {
+          autorite: 2,
+          intervention_etat: 1,
+          decentralisation: -2,
+          ecologie: -1,
+        },
+      },
+    ],
+  },
+  {
+    id: "donnees_numeriques",
+    question:
+      "Que peut-on faire des données personnelles collectées " +
+      "par les services numériques ?",
+    contexte:
+      "Applications, réseaux sociaux, objets connectés et " +
+      "services de santé collectent beaucoup de données. Elles " +
+      "financent des services gratuits, peuvent servir la " +
+      "recherche, et exposent aussi la vie privée.",
+    enjeu:
+      "Quatre logiques : encadrer strictement, outiller chacun, " +
+      "mutualiser pour l'intérêt général, ou laisser l'échange " +
+      "se faire librement.",
+    choix: [
+      {
+        id: "consentement_strict",
+        label: "Consentement explicite et collecte minimale",
+        nuance:
+          "Interdire par défaut le ciblage et la revente ; " +
+          "une autorité publique contrôle.",
+        poids: {
+          vie_privee: 2,
+          intervention_etat: 1,
+          marche: -1,
+        },
+      },
+      {
+        id: "outiller_individus",
+        label: "Outiller chacun pour qu'il décide lui-même",
+        nuance:
+          "Transparence, portabilité et réglages simples ; à " +
+          "chacun de choisir ce qu'il partage.",
+        poids: {
+          responsabilite: 2,
+          liberte: 1,
+          vie_privee: 1,
+          intervention_etat: -1,
+        },
+      },
+      {
+        id: "donnees_communes",
+        label: "Mutualiser les données pour l'intérêt général",
+        nuance:
+          "Santé, transport, recherche : des données partagées " +
+          "par défaut, avec un droit de retrait.",
+        poids: {
+          solidarite: 2,
+          intervention_etat: 1,
+          vie_privee: -1,
+        },
+      },
+      {
+        id: "echange_libre",
+        label: "Laisser échanger ses données contre des services",
+        nuance:
+          "Un service gratuit financé par les données est un " +
+          "contrat que chacun peut accepter.",
+        poids: {
+          marche: 2,
+          liberte: 1,
+          vie_privee: -2,
+        },
+      },
+    ],
+  },
+  {
+    id: "verification_age",
+    question:
+      "Pour protéger les mineurs en ligne (réseaux sociaux, " +
+      "contenus pour adultes), faut-il vérifier l'âge ou " +
+      "l'identité des utilisateurs ?",
+    contexte:
+      "Les mineurs accèdent tôt aux réseaux sociaux et à des " +
+      "contenus inadaptés. Vérifier l'âge peut les protéger, mais " +
+      "suppose de contrôler aussi les adultes et de lever une " +
+      "part d'anonymat.",
+    enjeu:
+      "Quatre logiques : préserver l'anonymat, s'en remettre aux " +
+      "familles, vérifier l'âge sans révéler l'identité, ou " +
+      "exiger une identité vérifiée.",
+    choix: [
+      {
+        id: "anonymat_preserve",
+        label: "Préserver l'anonymat, éduquer plutôt que contrôler",
+        nuance:
+          "Aucune vérification généralisée ; miser sur " +
+          "l'éducation et la modération des plateformes.",
+        poids: {
+          vie_privee: 2,
+          liberte: 2,
+          autorite: -1,
+        },
+      },
+      {
+        id: "familles_decident",
+        label: "S'en remettre aux familles",
+        nuance:
+          "Outils de contrôle parental efficaces ; les parents " +
+          "fixent les règles, pas l'État.",
+        poids: {
+          responsabilite: 2,
+          liberte: 1,
+          intervention_etat: -1,
+        },
+      },
+      {
+        id: "tiers_confiance",
+        label: "Vérifier l'âge sans révéler l'identité",
+        nuance:
+          "Un tiers de confiance atteste l'âge ; la plateforme " +
+          "ne sait pas qui vous êtes.",
+        poids: {
+          autorite: 1,
+          intervention_etat: 1,
+        },
+      },
+      {
+        id: "identite_verifiee",
+        label: "Exiger une identité vérifiée",
+        nuance:
+          "Lever l'anonymat sur les grandes plateformes pour " +
+          "protéger les mineurs et responsabiliser les usages.",
+        poids: {
+          autorite: 2,
+          responsabilite: 1,
+          liberte: -1,
+          vie_privee: -2,
+        },
+      },
+    ],
+  },
 ];
 
 export type ProfilBoussole = Record<AxeBoussole, number>;
@@ -1040,48 +1313,95 @@ export function axesPrincipauxDuDilemme(
     .map(([axe]) => axe);
 }
 
+export type FiabiliteAxe = "faible" | "moyenne" | "bonne";
+
+export type DetailAxe = {
+  /** Position sur l'axe, −1 … +1 (0 = milieu de l'étendue possible). */
+  valeur: number;
+  /** Dilemmes répondus dont au moins un choix touche cet axe. */
+  dilemmes: number;
+  fiabilite: FiabiliteAxe;
+};
+
+export type ProfilDetaille = Record<AxeBoussole, DetailAxe>;
+
+/**
+ * Poids minimal et maximal qu'un dilemme peut donner à un axe
+ * (un choix qui ne mentionne pas l'axe compte pour 0), ou null si
+ * aucun choix du dilemme ne touche l'axe.
+ */
+function etendueAxe(
+  dilemme: Dilemme,
+  axe: AxeBoussole,
+): { min: number; max: number } | null {
+  if (!dilemme.choix.some((c) => c.poids[axe])) return null;
+  const poids = dilemme.choix.map((c) => c.poids[axe] ?? 0);
+  return { min: Math.min(...poids), max: Math.max(...poids) };
+}
+
+function fiabiliteDe(dilemmes: number): FiabiliteAxe {
+  if (dilemmes >= 5) return "bonne";
+  if (dilemmes >= 3) return "moyenne";
+  return "faible";
+}
+
+/**
+ * Profil détaillé : pour chaque axe, la somme des poids choisis est
+ * replacée dans l'étendue que les dilemmes répondus permettaient
+ * d'atteindre sur cet axe (−1 = le minimum possible, +1 = le maximum,
+ * 0 = le milieu).
+ *
+ * Deux biais de l'ancienne moyenne sont ainsi corrigés :
+ * - ne pas choisir une réponse qui touche l'axe compte (pour 0), au
+ *   lieu d'être ignoré : un seul choix ne suffit plus à saturer l'axe ;
+ * - un axe que les dilemmes valorisent bien plus souvent qu'ils ne le
+ *   minorent (ex. responsabilité) n'est plus positif pour presque tout
+ *   le monde : son 0 est le milieu de ce que le questionnaire permet.
+ */
+export function computeProfilDetaille(
+  reponses: Record<string, string>,
+): ProfilDetaille {
+  const detail = {} as ProfilDetaille;
+  for (const axe of AXES_BOUSSOLE) {
+    let score = 0;
+    let min = 0;
+    let max = 0;
+    let dilemmes = 0;
+    for (const dilemme of DILEMMES) {
+      const choix = dilemme.choix.find(
+        (c) => c.id === reponses[dilemme.id],
+      );
+      if (!choix) continue;
+      const etendue = etendueAxe(dilemme, axe);
+      if (!etendue) continue;
+      score += choix.poids[axe] ?? 0;
+      min += etendue.min;
+      max += etendue.max;
+      dilemmes += 1;
+    }
+    const valeur =
+      max > min
+        ? Math.max(-1, Math.min(1, (2 * (score - min)) / (max - min) - 1))
+        : 0;
+    detail[axe] = { valeur, dilemmes, fiabilite: fiabiliteDe(dilemmes) };
+  }
+  return detail;
+}
+
+/** Ne garde que la position de chaque axe d'un profil détaillé. */
+export function profilDepuisDetail(
+  detail: ProfilDetaille,
+): ProfilBoussole {
+  const profil = {} as ProfilBoussole;
+  for (const axe of AXES_BOUSSOLE) profil[axe] = detail[axe].valeur;
+  return profil;
+}
+
 /** Agrège les choix en profil normalisé (−1 … +1). */
 export function computeProfil(
   reponses: Record<string, string>,
 ): ProfilBoussole {
-  const scores: Record<AxeBoussole, number> = {
-    liberte: 0,
-    egalite: 0,
-    solidarite: 0,
-    responsabilite: 0,
-    autorite: 0,
-    vie_privee: 0,
-    ecologie: 0,
-    intervention_etat: 0,
-    marche: 0,
-    decentralisation: 0,
-  };
-  const counts: Record<AxeBoussole, number> = { ...scores };
-
-  for (const dilemme of DILEMMES) {
-    const choixId = reponses[dilemme.id];
-    if (!choixId) continue;
-    const choix = dilemme.choix.find((c) => c.id === choixId);
-    if (!choix) continue;
-    for (const [axe, poids] of Object.entries(choix.poids)) {
-      const a = axe as AxeBoussole;
-      scores[a] += poids ?? 0;
-      counts[a] += 1;
-    }
-  }
-
-  const profil = {} as ProfilBoussole;
-  for (const axe of AXES_BOUSSOLE) {
-    if (counts[axe] === 0) {
-      profil[axe] = 0;
-    } else {
-      profil[axe] = Math.max(
-        -1,
-        Math.min(1, scores[axe] / (counts[axe] * 2)),
-      );
-    }
-  }
-  return profil;
+  return profilDepuisDetail(computeProfilDetaille(reponses));
 }
 
 /** Similarité cosinus entre deux profils. */
