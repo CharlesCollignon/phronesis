@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { FilterTabs } from "@/components/filter-tabs";
+import { GroupeSigle, couleurDe } from "@/components/groupe-couleur";
 import { Hemicycle } from "@/components/hemicycle";
 import { formatNumber } from "@/lib/format";
 import { listGroupesEffectifs } from "@/lib/queries";
@@ -43,7 +44,7 @@ export default async function GroupesPage({
     >
       <PageHeader
         title="Groupes"
-        description="Les groupes parlementaires en exercice, leur effectif, leurs membres et leur profil de vote. Présentés par ordre d'effectif, sans classement sur un axe politique. Pas de logos ni de couleurs de partis."
+        description="Les groupes parlementaires en exercice, leur effectif, leurs membres et leur profil de vote. Présentés par ordre d'effectif, chacun avec sa couleur officielle."
         aside={
           <FilterTabs
             variant="segmented"
@@ -76,9 +77,12 @@ export default async function GroupesPage({
                 href={`/groupes/${g.uid}`}
                 className="row-link group grid grid-cols-[72px_minmax(0,1fr)_48px] items-center gap-x-4 gap-y-2 border-t border-border px-2 py-5 md:grid-cols-[110px_minmax(0,1fr)_minmax(0,300px)_64px_20px] md:gap-x-6"
               >
-                <span className="truncate text-[17px] font-semibold">
-                  {g.libelleAbrege ?? "—"}
-                </span>
+                <GroupeSigle
+                  abrege={g.libelleAbrege}
+                  couleur={g.couleur}
+                  size={12}
+                  className="text-[17px] font-semibold"
+                />
                 <span className="text-base leading-snug">{g.libelle}</span>
                 <span
                   className="hidden h-1.5 bg-[var(--vote-neutre)] md:block"
@@ -86,8 +90,9 @@ export default async function GroupesPage({
                   aria-label={`${((100 * g.effectif) / sieges).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % des sièges`}
                 >
                   <span
-                    className="grow-x block h-full bg-foreground"
+                    className="grow-x block h-full"
                     style={{
+                      backgroundColor: couleurDe(g.libelleAbrege, g.couleur),
                       width: `${(100 * g.effectif) / sieges}%`,
                       animationDelay: `${200 + i * 50}ms`,
                     }}

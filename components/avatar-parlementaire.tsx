@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
+import { texteSur } from "@/components/groupe-couleur";
 import { cn } from "@/lib/utils";
 
 type AvatarParlementaireProps = {
@@ -10,6 +11,8 @@ type AvatarParlementaireProps = {
   prenom: string;
   nom: string;
   size?: number;
+  /** Couleur du groupe : fond du monogramme quand il n'y a pas de photo. */
+  couleur?: string | null;
   className?: string;
 };
 
@@ -23,12 +26,13 @@ function initials(prenom: string, nom: string): string {
   return `${a}${b}`.toUpperCase() || "?";
 }
 
-/** Photo officielle, avec repli sur un monogramme carré noir. */
+/** Photo officielle, avec repli sur un monogramme aux couleurs du groupe. */
 export function AvatarParlementaire({
   src,
   prenom,
   nom,
   size = 48,
+  couleur,
   className,
 }: AvatarParlementaireProps): React.ReactElement {
   const [failed, setFailed] = useState(false);
@@ -38,12 +42,16 @@ export function AvatarParlementaire({
     return (
       <span
         className={cn(
-          "inline-flex shrink-0 items-center justify-center bg-foreground font-semibold tracking-[0.02em] text-background",
+          "inline-flex shrink-0 items-center justify-center font-semibold tracking-[0.02em]",
+          !couleur && "bg-foreground text-background",
           className,
         )}
         style={{
           width: size,
           height: size,
+          ...(couleur
+            ? { backgroundColor: couleur, color: texteSur(couleur) }
+            : {}),
           fontSize: Math.round(size * 0.34),
         }}
         aria-hidden
@@ -53,7 +61,7 @@ export function AvatarParlementaire({
     );
   }
 
-  return (
+  const image = (
     <Image
       src={src!}
       alt=""
@@ -61,11 +69,29 @@ export function AvatarParlementaire({
       height={size}
       className={cn(
         "shrink-0 bg-muted object-cover object-top",
-        className,
+        !couleur && className,
       )}
       style={{ width: size, height: size }}
       onError={() => setFailed(true)}
       unoptimized
     />
+  );
+  if (!couleur) return image;
+  // Bandeau à la couleur du groupe sous la photo.
+  return (
+    <span
+      className={cn("relative inline-block shrink-0", className)}
+      style={{ width: size, height: size }}
+    >
+      {image}
+      <span
+        aria-hidden
+        className="absolute inset-x-0 bottom-0"
+        style={{
+          height: Math.max(3, Math.round(size * 0.06)),
+          backgroundColor: couleur,
+        }}
+      />
+    </span>
   );
 }

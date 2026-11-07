@@ -8,6 +8,7 @@ import {
   buildArcs,
   type GroupeHemicycleInput,
 } from "@/lib/hemicycle";
+import { GroupeCouleur } from "@/components/groupe-couleur";
 import { cn } from "@/lib/utils";
 
 type HemicycleProps = {
@@ -19,9 +20,9 @@ type HemicycleProps = {
 };
 
 /**
- * Hémicycle schématique par groupe. Volontairement neutre : tous les
- * groupes en gris, le groupe sélectionné ou survolé en jaune.
- * Les couleurs de partis ne servent pas d'encodage.
+ * Hémicycle schématique par groupe, aux couleurs officielles des
+ * groupes. Au survol ou sur une fiche, le groupe concerné reste en
+ * couleur et les autres s'estompent.
  */
 export function Hemicycle({
   groups,
@@ -67,7 +68,8 @@ export function Hemicycle({
         aria-label={`Hémicycle schématique ${chambre === "AN" ? "Assemblée nationale" : "Sénat"}`}
       >
         {arcs.map((arc) => {
-          const isOn = arc.uid === hover || arc.uid === selectedUid;
+          const isOn = arc.uid === active;
+          const dimmed = active !== null && !isOn;
           return (
             <path
               key={arc.uid}
@@ -80,11 +82,12 @@ export function Hemicycle({
                 arc.endAngle,
               )}
               style={{
-                fill: isOn ? "var(--accent)" : "var(--vote-abstention)",
+                fill: arc.couleur,
+                opacity: dimmed ? 0.25 : 1,
               }}
-              stroke="var(--background)"
-              strokeWidth={2}
-              className="cursor-pointer outline-none transition-[fill] duration-300 focus-visible:stroke-[var(--foreground)]"
+              stroke={isOn ? "var(--foreground)" : "var(--background)"}
+              strokeWidth={isOn ? 2.5 : 2}
+              className="cursor-pointer outline-none transition-[opacity,stroke] duration-300 focus-visible:stroke-[var(--foreground)]"
               tabIndex={0}
               role="link"
               aria-label={`${arc.libelle}, ${arc.effectif} membres`}
@@ -111,6 +114,11 @@ export function Hemicycle({
       >
         {activeArc ? (
           <p key={activeArc.uid} className="reveal">
+            <GroupeCouleur
+              abrege={activeArc.abrege}
+              couleur={activeArc.couleur}
+              className="mr-2 align-[-1px]"
+            />
             <span className="font-semibold">{activeArc.abrege}</span>
             <span className="text-muted-foreground">
               {" "}
@@ -158,6 +166,7 @@ export function Hemicycle({
                       : "bg-background hover:bg-[var(--hover)]",
                   )}
                 >
+                  <GroupeCouleur abrege={arc.abrege} couleur={arc.couleur} />
                   {arc.abrege}
                   <span className="num text-muted-foreground">
                     {arc.effectif}

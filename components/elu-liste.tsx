@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AvatarParlementaire } from "@/components/avatar-parlementaire";
+import { GroupeCouleur, couleurDe } from "@/components/groupe-couleur";
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { EluFiltres } from "@/components/elu-filtres";
 import { FilterTabs } from "@/components/filter-tabs";
@@ -153,12 +154,25 @@ export function EluListe({
                     prenom={d.prenom}
                     nom={d.nom}
                     size={44}
+                    couleur={
+                      d.groupeAbrege || d.groupeCouleur
+                        ? couleurDe(d.groupeAbrege, d.groupeCouleur)
+                        : null
+                    }
                   />
                   <span className="min-w-0">
                     <span className="block truncate text-[17px] font-medium">
                       {d.prenom} {d.nom}
                     </span>
                     <span className="mt-1 block truncate text-sm text-muted-foreground">
+                      {d.groupeAbrege || d.groupeCouleur ? (
+                        <GroupeCouleur
+                          abrege={d.groupeAbrege}
+                          couleur={d.groupeCouleur}
+                          size={9}
+                          className="mr-1.5"
+                        />
+                      ) : null}
                       <strong className="font-semibold text-foreground">
                         {d.groupeAbrege ?? d.groupeLibelle ?? "Sans groupe"}
                       </strong>
