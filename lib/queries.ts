@@ -344,12 +344,52 @@ async function getScrutinUncached(uid: string) {
     .limit(1);
   if (!scrutin) return null;
 
+  // Amendement mis aux voix (scrutins AN sur amendement).
+  let amendement: {
+    uid: string;
+    numeroLong: string | null;
+    articleDesignation: string | null;
+    exposeSommaire: string | null;
+    dispositif: string | null;
+    dossierUid: string | null;
+    auteurUid: string | null;
+    auteurPrenom: string | null;
+    auteurNom: string | null;
+    groupeLibelle: string | null;
+    groupeCouleur: string | null;
+  } | null = null;
+  if (scrutin.amendementUid) {
+    const [a] = await db
+      .select({
+        uid: amendements.uid,
+        numeroLong: amendements.numeroLong,
+        articleDesignation: amendements.articleDesignation,
+        exposeSommaire: amendements.exposeSommaire,
+        dispositif: amendements.dispositif,
+        dossierUid: amendements.dossierUid,
+        auteurUid: acteurs.uid,
+        auteurPrenom: acteurs.prenom,
+        auteurNom: acteurs.nom,
+        groupeLibelle: organes.libelleAbrege,
+        groupeCouleur: organes.couleur,
+      })
+      .from(amendements)
+      .leftJoin(acteurs, eq(acteurs.uid, amendements.auteurActeurUid))
+      .leftJoin(organes, eq(organes.uid, amendements.auteurGroupeUid))
+      .where(eq(amendements.uid, scrutin.amendementUid))
+      .limit(1);
+    amendement = a ?? null;
+  }
+
+  // Un scrutin sur amendement n'est pas rattaché au dossier par les
+  // actes : on passe alors par l'amendement.
   let dossier: { uid: string; titre: string } | null = null;
-  if (scrutin.dossierUid) {
+  const dossierUid = scrutin.dossierUid ?? amendement?.dossierUid;
+  if (dossierUid) {
     const [d] = await db
       .select({ uid: dossiers.uid, titre: dossiers.titre })
       .from(dossiers)
-      .where(eq(dossiers.uid, scrutin.dossierUid))
+      .where(eq(dossiers.uid, dossierUid))
       .limit(1);
     dossier = d ?? null;
   }
@@ -376,7 +416,7 @@ async function getScrutinUncached(uid: string) {
     )
     .orderBy(organes.libelle);
 
-  return { scrutin, dossier, parGroupe };
+  return { scrutin, dossier, amendement, parGroupe };
 }
 
 async function getScrutinVotesUncached(

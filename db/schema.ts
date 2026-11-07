@@ -180,6 +180,12 @@ export const scrutins = pgTable(
     demandeur: text("demandeur"),
     seanceRef: text("seance_ref"),
     dossierUid: text("dossier_uid").references(() => dossiers.uid),
+    /**
+     * Amendement mis aux voix (AN), retrouvé à partir de l'intitulé du
+     * scrutin par l'ingestion. Sans clé étrangère : les scrutins sont
+     * importés avant les amendements.
+     */
+    amendementUid: text("amendement_uid"),
     nombreVotants: integer("nombre_votants"),
     suffragesExprimes: integer("suffrages_exprimes"),
     suffragesRequis: integer("suffrages_requis"),
@@ -198,6 +204,7 @@ export const scrutins = pgTable(
   (t) => [
     index("scrutins_date_idx").on(t.dateScrutin),
     index("scrutins_dossier_idx").on(t.dossierUid),
+    index("scrutins_amendement_idx").on(t.amendementUid),
     index("scrutins_chambre_idx").on(t.chambre),
     index("scrutins_search_idx").using("gin", t.searchVector),
     uniqueIndex("scrutins_chambre_leg_num_idx").on(

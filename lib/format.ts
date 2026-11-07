@@ -76,3 +76,18 @@ export function capitalizeTitre(text: string | null | undefined): string {
   const t = text.trim();
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
+
+/** Décode les entités HTML laissées dans les textes open data (&#x2013; …). */
+export function decoderEntites(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .replace(/&#x([0-9a-f]+);/gi, (_, h: string) =>
+      String.fromCodePoint(parseInt(h, 16)),
+    )
+    .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d)))
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}

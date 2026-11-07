@@ -21,6 +21,7 @@
     "ingest:dossiers": "tsx --env-file=.env scripts/ingest/dossiers.ts",
     "ingest:scrutins": "tsx --env-file=.env scripts/ingest/scrutins.ts",
     "ingest:amendements": "tsx --env-file=.env scripts/ingest/amendements.ts",
+    "ingest:lier-amendements": "tsx --env-file=.env scripts/ingest/lier-amendements.ts",
     "ingest:senat": "tsx --env-file=.env scripts/ingest/senat.ts",
     "ingest:hatvp": "tsx --env-file=.env scripts/ingest/hatvp.ts",
     "ingest:faits": "tsx --env-file=.env scripts/ingest/faits-judiciaires.ts",
