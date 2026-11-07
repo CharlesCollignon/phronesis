@@ -9,6 +9,7 @@ import {
 } from "@/components/breadcrumbs";
 import { libelleCirco } from "@/components/elu-liste";
 import { GroupeCohesion } from "@/components/groupe-cohesion";
+import { GroupeSigle, couleurDe } from "@/components/groupe-couleur";
 import { Hemicycle } from "@/components/hemicycle";
 import { AxesBars, RadarProfil } from "@/components/profil-axes";
 import { ResonancePanel } from "@/components/resonance-panel";
@@ -86,7 +87,12 @@ export default async function GroupePage({
             <div>
               <dt className="text-sm text-muted-foreground">Sigle</dt>
               <dd className="mt-1 text-[28px] font-medium leading-tight">
-                {groupe.libelleAbrege ?? "—"}
+                <GroupeSigle
+                  abrege={groupe.libelleAbrege}
+                  couleur={groupe.couleur}
+                  size={18}
+                  className="gap-2.5"
+                />
               </dd>
             </div>
             <div>
@@ -296,6 +302,7 @@ export default async function GroupePage({
                       prenom={m.prenom}
                       nom={m.nom}
                       size={40}
+                      couleur={couleurDe(groupe.libelleAbrege, groupe.couleur)}
                     />
                     <span className="min-w-0">
                       <span className="block truncate text-base font-medium">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AvatarParlementaire } from "@/components/avatar-parlementaire";
+import { GroupeCouleur, couleurDe } from "@/components/groupe-couleur";
 import { PageShell, SectionHeading } from "@/components/breadcrumbs";
 import { StatsGauges } from "@/components/charts/stats-gauges";
 import { libelleCirco } from "@/components/elu-liste";
@@ -30,6 +31,7 @@ type EluFicheProps = {
     uid: string;
     libelle: string;
     libelleAbrege: string | null;
+    couleur?: string | null;
   } | null;
   stats: {
     totalVotes: number;
@@ -99,6 +101,9 @@ export function EluFiche({
             prenom={acteur.prenom}
             nom={acteur.nom}
             size={96}
+            couleur={
+              groupe ? couleurDe(groupe.libelleAbrege, groupe.couleur) : null
+            }
             className="rise"
           />
           <div className="min-w-0">
@@ -125,11 +130,21 @@ export function EluFiche({
               <dt className="text-muted-foreground">Groupe</dt>
               <dd>
                 {groupe ? (
-                  <Link href={`/groupes/${groupe.uid}`} className="ln">
+                  <Link
+                    href={`/groupes/${groupe.uid}`}
+                    className="inline-flex items-baseline gap-2"
+                  >
+                    <GroupeCouleur
+                      abrege={groupe.libelleAbrege}
+                      couleur={groupe.couleur}
+                      className="self-center"
+                    />
+                    <span className="ln">
                     {groupe.libelle}
                     {groupe.libelleAbrege
                       ? ` (${groupe.libelleAbrege})`
                       : ""}
+                    </span>
                   </Link>
                 ) : (
                   "Sans groupe"

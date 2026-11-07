@@ -6,6 +6,7 @@ import { Badge } from "@/components/badge";
 import { PageHeader, PageShell, SectionHeading } from "@/components/breadcrumbs";
 import { ScrutinCharts } from "@/components/charts/scrutin-charts";
 import { ExternalLink } from "@/components/external-link";
+import { GroupeSigle } from "@/components/groupe-couleur";
 import { HemicyclePositions } from "@/components/hemicycle-positions";
 import { SondageScrutin } from "@/components/sondage-scrutin";
 import { VoteFilters } from "@/components/vote-filters";
@@ -179,9 +180,13 @@ export default async function ScrutinPage({
                 const content = (
                   <>
                     <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-semibold">
+                      <GroupeSigle
+                        abrege={g.libelleAbrege}
+                        couleur={g.couleur}
+                        className="flex text-[15px] font-semibold"
+                      >
                         {nom}
-                      </span>
+                      </GroupeSigle>
                       <span className="num mt-0.5 block text-[13px] text-muted-foreground md:hidden">
                         {parts.join(" · ")}
                       </span>
