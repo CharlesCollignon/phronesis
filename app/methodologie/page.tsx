@@ -165,8 +165,25 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
           <Section id="elus" title="Calcul des statistiques députés">
             <h3 className={H3}>Participation</h3>
             <p className={P}>
-              (nombre de positions hors « non-votant ») / (nombre de scrutins
-              publics où le député apparaît dans le décompte nominatif).
+              Un député absent n&apos;apparaît pas dans le décompte nominatif
+              d&apos;un scrutin. La participation rapporte donc ses votes
+              (pour, contre, abstention, ou non-votant quand il préside la
+              séance ou siège au gouvernement) au nombre de scrutins publics
+              tenus pendant son mandat. Deux mesures : tous les scrutins
+              publics, et les seuls votes solennels, qui portent sur les
+              grands textes et où tous les députés sont attendus. Les
+              scrutins ordinaires, sur amendements, se tiennent souvent en
+              soirée avec peu d&apos;élus présents ; le travail en commission
+              n&apos;est pas compté.
+            </p>
+            <h3 className={H3}>Comparaison avec l&apos;Assemblée</h3>
+            <p className={P}>
+              Chaque indicateur est affiché avec la médiane des députés et la
+              part des députés dont la valeur est inférieure. Les députés au
+              mandat trop court (moins de 100 scrutins tenus) sont exclus de
+              la comparaison, et les taux sur les amendements demandent au
+              moins 10 amendements. Pour un groupe, on affiche la médiane de
+              ses membres. Aucune note globale n&apos;est calculée.
             </p>
             <h3 className={H3}>Fidélité au groupe</h3>
             <p className={P}>
@@ -177,8 +194,12 @@ export default async function MethodologiePage(): Promise<React.ReactElement> {
             </p>
             <h3 className={H3}>Amendements</h3>
             <p className={P}>
-              Comptage des amendements où le député est auteur principal, et
-              de ceux dont le sort contient « adopt ».
+              Amendements dont le député est l&apos;auteur principal :
+              déposés, adoptés (part des déposés), et non défendus (sort «
+              non soutenu » : l&apos;amendement est arrivé en discussion mais
+              son auteur n&apos;était pas là pour le soutenir), rapportés aux
+              amendements examinés. Un député d&apos;opposition fait
+              mécaniquement adopter moins d&apos;amendements.
             </p>
           </Section>
 

@@ -9,6 +9,10 @@ import {
   getDeputeVotes,
   listGroupesEffectifs,
 } from "@/lib/queries";
+import {
+  listIndicateursDeputes,
+  mesuresDepute,
+} from "@/lib/travail-parlementaire";
 import { urlDeputeAn, urlPhotoDepute } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -37,13 +41,16 @@ export default async function DeputePage({
   if (!data) notFound();
 
   const { acteur, mandat, groupe } = data;
-  const [stats, historique, transparence, groupesAn] =
+  const [stats, historique, transparence, groupesAn, indicateurs] =
     await Promise.all([
       getDeputeStats(uid),
       getDeputeVotes(uid, 40),
       getActeurTransparence(uid),
       listGroupesEffectifs("AN"),
+      listIndicateursDeputes(),
     ]);
+  const brut = indicateurs.find((d) => d.acteurUid === uid);
+  const mesures = mesuresDepute(indicateurs, uid);
 
   return (
     <EluFiche
@@ -56,6 +63,7 @@ export default async function DeputePage({
       historique={historique}
       transparence={transparence}
       groupes={groupesAn}
+      travail={brut && mesures ? { mesures, brut } : null}
       ficheOfficielle={{
         href: urlDeputeAn(uid),
         label: "Fiche Assemblée nationale",

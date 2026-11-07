@@ -14,6 +14,7 @@ import { Hemicycle } from "@/components/hemicycle";
 import { AxesBars, RadarProfil } from "@/components/profil-axes";
 import { ResonancePanel } from "@/components/resonance-panel";
 import { Stat } from "@/components/stat";
+import { TravailParlementaire } from "@/components/travail-parlementaire";
 import { getEmpreinteGroupe } from "@/lib/empreinte-groupe";
 import { formatNumber } from "@/lib/format";
 import {
@@ -22,6 +23,10 @@ import {
   listGroupesEffectifs,
   listSenateurs,
 } from "@/lib/queries";
+import {
+  listIndicateursDeputes,
+  mesuresGroupe,
+} from "@/lib/travail-parlementaire";
 import { urlPhotoDepute, urlPhotoSenateur } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -56,11 +61,14 @@ export default async function GroupePage({
     groupe.codeType === "GROUPESENAT" ? "SENAT" : "AN";
   const isAN = chambre === "AN";
   const compareType = isAN ? "groupes" : "groupes_senat";
-  const [effectifs, parlementaires, positionsRecentes] = await Promise.all([
-    listGroupesEffectifs(chambre),
-    isAN ? listDeputes("") : listSenateurs(""),
-    getGroupePositionsRecentes(groupe.uid),
-  ]);
+  const [effectifs, parlementaires, positionsRecentes, indicateurs] =
+    await Promise.all([
+      listGroupesEffectifs(chambre),
+      isAN ? listDeputes("") : listSenateurs(""),
+      getGroupePositionsRecentes(groupe.uid),
+      isAN ? listIndicateursDeputes() : Promise.resolve([]),
+    ]);
+  const travail = isAN ? mesuresGroupe(indicateurs, groupe.uid) : null;
   const membres = parlementaires.filter((p) => p.groupeUid === groupe.uid);
   const effectif =
     effectifs.find((e) => e.uid === groupe.uid)?.effectif ?? membres.length;
@@ -137,6 +145,26 @@ export default async function GroupePage({
 
       <div className="flex flex-wrap items-start gap-x-14 gap-y-16 pt-16">
         <div className="min-w-0 flex-[2_1_600px]">
+          {travail && travail.membres > 0 ? (
+            <section className="pb-16">
+              <SectionHeading title="Travail parlementaire" rule />
+              <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[#404040] dark:text-muted-foreground">
+                Médiane des {formatNumber(travail.membres)} députés dont
+                c&apos;est le groupe actuel (ou le dernier groupe), comparée
+                à la médiane de l&apos;Assemblée. Votes solennels : médiane{" "}
+                {Math.round((travail.mesures.solennels.valeur ?? 0) * 100)} %
+                (Assemblée :{" "}
+                {Math.round((travail.mesures.solennels.mediane ?? 0) * 100)}{" "}
+                %). Un groupe d&apos;opposition fait mécaniquement adopter
+                moins d&apos;amendements ; le travail en commission n&apos;est
+                pas compté.
+              </p>
+              <div className="mt-8">
+                <TravailParlementaire mesures={travail.mesures} />
+              </div>
+            </section>
+          ) : null}
+
           <section>
             <SectionHeading title="Empreinte agrégée" rule />
             <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[#404040] dark:text-muted-foreground">

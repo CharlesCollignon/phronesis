@@ -241,19 +241,8 @@ async function getDeputeStatsUncached(uid: string) {
     FROM maj
   `);
 
-  const [amd] = await db
-    .select({
-      deposes: sql<number>`count(*)::int`,
-      adoptes: sql<number>`count(*) FILTER (
-        WHERE lower(coalesce(${amendements.sort}, '')) LIKE '%adopt%'
-      )::int`,
-    })
-    .from(amendements)
-    .where(eq(amendements.auteurActeurUid, uid));
-
   const total = totals?.total ?? 0;
   const nonVotant = totals?.nonVotant ?? 0;
-  const participation = total > 0 ? total - nonVotant : 0;
   const compares = Number(fidelite?.compares ?? 0);
   const accords = Number(fidelite?.accords ?? 0);
 
@@ -263,12 +252,8 @@ async function getDeputeStatsUncached(uid: string) {
     contre: totals?.contre ?? 0,
     abstention: totals?.abstention ?? 0,
     nonVotant,
-    participation,
-    tauxParticipation: total > 0 ? participation / total : null,
     fideliteGroupe: compares > 0 ? accords / compares : null,
     fideliteCompares: compares,
-    amendementsDeposes: amd?.deposes ?? 0,
-    amendementsAdoptes: amd?.adoptes ?? 0,
   };
 }
 
