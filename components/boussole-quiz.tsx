@@ -554,7 +554,10 @@ function ConsentementCompte({
         Vos réponses peuvent révéler des opinions politiques. Elles ne sont
         enregistrées sur votre compte qu&apos;avec votre accord, ne sont
         jamais publiées ni partagées, et vous pouvez les effacer à tout
-        moment. Sans accord, elles restent uniquement sur cet appareil.
+        moment. Sans accord, elles restent uniquement sur cet appareil.{" "}
+        <Link href="/confidentialite" className="ln text-foreground">
+          En savoir plus
+        </Link>
       </p>
       <button
         type="button"
