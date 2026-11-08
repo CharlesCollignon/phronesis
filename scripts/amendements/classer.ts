@@ -31,7 +31,11 @@ import {
   isTheme,
 } from "../../lib/amendements-classement";
 import { decoderEntites } from "../../lib/format";
-import { genererAvecAttente, getModel } from "../lib/ia";
+import {
+  BudgetEpuiseError,
+  genererAvecAttente,
+  getModel,
+} from "../lib/ia";
 
 // La version du prompt ne change pas : seul le format de sortie est
 // contraint, les classements déjà faits restent valides.
@@ -254,6 +258,9 @@ async function main(): Promise<void> {
   const essai = process.argv.includes("--essai");
   const limit = Number(option("limit") ?? (essai ? 100 : 100_000));
   const raisonnement = option("raisonnement") === "high" ? "high" : "none";
+  // Durée maximale en minutes : arrêt propre avant la limite d'un job
+  // GitHub Actions (6 h) ; la suite reprend au lancement suivant.
+  const dureeMax = Number(option("duree-max") ?? Infinity);
 
   const amendements = await chargerAmendements(limit, essai);
   const { model, modelId } = getModel();
@@ -298,6 +305,7 @@ async function main(): Promise<void> {
     try {
       return { reponses: await appeler(lot), perdus: 0 };
     } catch (e) {
+      if (e instanceof BudgetEpuiseError) throw e;
       if (lot.length === 1) {
         console.warn(`  ${lot[0]!.uid} en échec : ${(e as Error).message}`);
         return { reponses: [], perdus: 1 };
@@ -312,9 +320,22 @@ async function main(): Promise<void> {
     }
   };
 
+  let arret: string | null = null;
   for (let i = 0; i < amendements.length; i += PAR_APPEL) {
+    if ((Date.now() - debut) / 60_000 > dureeMax) {
+      arret = `durée maximale de ${dureeMax} min atteinte`;
+      break;
+    }
     const lot = amendements.slice(i, i + PAR_APPEL);
-    const { reponses, perdus } = await classerLot(lot);
+    let resultatLot: Awaited<ReturnType<typeof classerLot>>;
+    try {
+      resultatLot = await classerLot(lot);
+    } catch (e) {
+      if (!(e instanceof BudgetEpuiseError)) throw e;
+      arret = "budget mensuel de l'API épuisé";
+      break;
+    }
+    const { reponses, perdus } = resultatLot;
     if (perdus === lot.length) {
       echecs += 1;
       if (echecs >= ECHECS_CONSECUTIFS_MAX) {
@@ -392,7 +413,14 @@ async function main(): Promise<void> {
     );
     console.log(`Écrit dans ${sortie}`);
   }
-  console.log(`Terminé : ${classes} classés, ${rejetes} rejetés.`);
+  if (arret) {
+    console.log(
+      `Arrêt (${arret}) : ${classes} classés, ${rejetes} rejetés, ` +
+        `${amendements.length - classes - rejetes} restants pour le prochain lancement.`,
+    );
+  } else {
+    console.log(`Terminé : ${classes} classés, ${rejetes} rejetés.`);
+  }
   process.exit(0);
 }
 

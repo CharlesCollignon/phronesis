@@ -48,6 +48,24 @@ export function extractJson(text: string): unknown {
 }
 
 /**
+ * Budget mensuel du compte d'IA épuisé : inutile de réessayer avant sa
+ * remise à zéro. Les scripts s'arrêtent proprement et reprennent au
+ * lancement suivant.
+ */
+export class BudgetEpuiseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BudgetEpuiseError";
+  }
+}
+
+function estBudgetEpuise(e: unknown): boolean {
+  if (!APICallError.isInstance(e)) return false;
+  const texte = `${e.message} ${e.responseBody ?? ""}`.toLowerCase();
+  return texte.includes("budget exhausted");
+}
+
+/**
  * Appel au modèle qui attend la fin de la fenêtre d'une minute quand
  * le quota de tokens par minute est atteint (offres Mistral limitées).
  */
@@ -58,6 +76,9 @@ export async function genererAvecAttente(
     try {
       return await generateText({ ...options, maxRetries: 0 });
     } catch (e) {
+      if (estBudgetEpuise(e)) {
+        throw new BudgetEpuiseError((e as Error).message);
+      }
       const limite =
         APICallError.isInstance(e) && e.statusCode === 429 && essai < 4;
       if (!limite) throw e;
