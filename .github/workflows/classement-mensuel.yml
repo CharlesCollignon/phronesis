@@ -1,0 +1,79 @@
+# Classement mensuel des amendements par l'IA (Mistral), calé sur la
+# remise à zéro du budget de l'API le 1er du mois. Reprend les
+# amendements votés pas encore classés (retard et nouveaux scrutins) ;
+# s'arrête proprement si le budget est épuisé ou avant la limite de 6 h
+# d'un job, la suite au mois suivant.
+# Secrets requis : DATABASE_URL (URL Neon directe), MISTRAL_API_KEY,
+# REVALIDATE_SECRET.
+name: Classement des amendements (mensuel)
+
+on:
+  schedule:
+    # Le 1er du mois, 06:00 UTC.
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+# Même groupe que l'ingestion : jamais les deux en même temps.
+concurrency:
+  group: ingest-open-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  classer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+    steps:
+      - name: Check secrets
+        run: |
+          for nom in DATABASE_URL MISTRAL_API_KEY; do
+            if [ -z "${!nom}" ]; then
+              echo "::error::Secret $nom manquant (gh secret set $nom)."
+              exit 1
+            fi
+          done
+
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Write .env
+        run: |
+          umask 077
+          printf 'DATABASE_URL=%s\nMISTRAL_API_KEY=%s\n' \
+            "$DATABASE_URL" "$MISTRAL_API_KEY" > .env
+
+      - name: Migrate
+        run: pnpm db:migrate
+
+      # Arrêt volontaire à 320 min pour laisser le temps d'écrire le
+      # dernier lot et de vider le cache avant la limite du job.
+      - name: Classer
+        run: pnpm amendements:classer --duree-max=320
+
+      - name: Refresh site cache
+        if: always()
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SITE_URL: https://phronesis-seven-neon.vercel.app
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::error::Secret REVALIDATE_SECRET manquant."
+            exit 1
+          fi
+          curl --fail-with-body -sS --retry 3 -X POST \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            "$SITE_URL/api/revalidate"
