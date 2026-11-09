@@ -1,6 +1,7 @@
 # Ingestion hebdomadaire des dumps open data (AN + Sénat) vers Neon.
 # Secrets requis : DATABASE_URL = URL Neon DIRECTE (sans -pooler),
 # REVALIDATE_SECRET = même valeur que la variable Vercel du même nom.
+# MISTRAL_API_KEY (facultatif) : résumés IA des nouveaux dossiers.
 name: Ingest open data (weekly)
 
 on:
@@ -26,6 +27,7 @@ jobs:
       # dosleg.sql ~126 Mo) : au-delà du cap heap par défaut (~4 Go).
       NODE_OPTIONS: --max-old-space-size=8192
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
     steps:
       - name: Check DATABASE_URL
         run: |
@@ -56,13 +58,23 @@ jobs:
       - name: Write .env
         run: |
           umask 077
-          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env
+          printf 'DATABASE_URL=%s\nMISTRAL_API_KEY=%s\n' \
+            "$DATABASE_URL" "$MISTRAL_API_KEY" > .env
 
       - name: Migrate
         run: pnpm db:migrate
 
       - name: Ingest
         run: pnpm ingest
+
+      # Résumés des dossiers nouveaux ou sans résumé, à partir des textes
+      # officiels tout juste ingérés. Priorité sur le classement des
+      # amendements pour le budget IA. Un échec (budget épuisé, API
+      # indisponible) ne bloque pas le vidage du cache.
+      - name: Résumés IA
+        if: env.MISTRAL_API_KEY != ''
+        continue-on-error: true
+        run: pnpm resumes:generate --limit=100000 --duree-max=120
 
       # Les pages lisent la base via un cache sans expiration courte :
       # on le vide une fois les nouvelles données en base.

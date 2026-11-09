@@ -45,7 +45,7 @@ export type SourceDocument = {
 type DocRow = { uid: string; typeCode: string | null; dateDepot: string | null };
 
 /** HTML Assemblée (.raw) → texte brut. */
-function htmlVersTexte(html: string): string {
+export function htmlVersTexte(html: string): string {
   return html
     .replace(/<(script|style|head)[^>]*>[\s\S]*?<\/\1>/gi, " ")
     .replace(/<\/(p|div|h\d|li|tr|br)>/gi, "\n")
@@ -80,13 +80,13 @@ async function telecharger(
 }
 
 /** Texte d'un document AN publié en HTML (textes de loi). */
-async function texteHtml(uid: string): Promise<string | null> {
+export async function texteHtml(uid: string): Promise<string | null> {
   const buf = await telecharger(`${AN}/dyn/docs/${uid}.raw`, `${uid}.raw`);
   return buf ? htmlVersTexte(buf.toString("utf8")) : null;
 }
 
 /** Texte d'un document AN publié en PDF (avis CE, étude d'impact). */
-async function textePdf(uid: string): Promise<string | null> {
+export async function textePdf(uid: string): Promise<string | null> {
   const buf = await telecharger(
     `${AN}/dyn/opendata/${uid}.pdf`,
     `${uid}.pdf`,
@@ -97,7 +97,7 @@ async function textePdf(uid: string): Promise<string | null> {
   return text.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
-function couper(
+export function couper(
   texte: string,
   max: number,
 ): { texte: string; tronque: boolean } {
@@ -106,7 +106,7 @@ function couper(
 }
 
 /** Numéro d'un texte adopté AN (…BTA0337 → 337), pour garder le dernier. */
-function numeroTexteAdopte(uid: string): number {
+export function numeroTexteAdopte(uid: string): number {
   return parseInt(uid.match(/BTA(\d+)$/)?.[1] ?? "0", 10);
 }
 

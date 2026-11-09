@@ -95,7 +95,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 | `pnpm ingest:scrutins` | Scrutins et votes nominatifs |
 | `pnpm ingest:amendements` | Amendements |
 | `pnpm ingest:senat` | Matricules ODSEN + scrutins/votes Dosleg |
-| `pnpm resumes:generate -- --limit=10` | Batch de résumés IA |
+| `pnpm resumes:generate -- --limit=10` | Résumés IA rédigés à partir des textes officiels (`--dry-run --dossiers=…` pour un essai) |
 | `pnpm empreintes:generate -- --limit=5` | Batch d'empreintes qualitatives |
 | `pnpm db:prune-soft` | Nettoyage soft stockage (orphelins, colonnes sparses) |
 | `pnpm db:studio` | Drizzle Studio |

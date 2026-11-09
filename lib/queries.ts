@@ -960,28 +960,6 @@ async function listGroupesEffectifsUncached(
 }
 
 
-export async function listDossiersSansResume(limit = 20) {
-  return db
-    .select({
-      uid: dossiers.uid,
-      titre: dossiers.titre,
-      procedureLibelle: dossiers.procedureLibelle,
-    })
-    .from(dossiers)
-    .leftJoin(
-      resumesIa,
-      and(
-        eq(resumesIa.sujetType, "dossier"),
-        eq(resumesIa.sujetUid, dossiers.uid),
-      ),
-    )
-    .where(
-      and(eq(dossiers.legislature, 17), isNull(resumesIa.id)),
-    )
-    .orderBy(desc(dossiers.uid))
-    .limit(limit);
-}
-
 /** Dossiers sans aucune ligne d'empreinte. */
 export async function listDossiersSansEmpreinte(limit = 20) {
   return db
@@ -1054,8 +1032,8 @@ async function getGroupePositionsRecentesUncached(
 
 // Lectures exposées aux pages : mises en cache jusqu'à la prochaine
 // ingestion (voir lib/cache.ts).
-// listDossiersSansResume / listDossiersSansEmpreinte restent hors cache :
-// les scripts batch les appellent hors runtime Next.
+// listDossiersSansEmpreinte reste hors cache :
+// le script des empreintes l'appelle hors runtime Next.
 export const listDeputes = cachedQuery("listDeputes", listDeputesUncached);
 export const listSenateurs = cachedQuery(
   "listSenateurs",

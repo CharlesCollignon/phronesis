@@ -1,11 +1,15 @@
-# Classement mensuel des amendements par l'IA (Mistral), calé sur la
-# remise à zéro du budget de l'API le 1er du mois. Reprend les
-# amendements votés pas encore classés (retard et nouveaux scrutins) ;
-# s'arrête proprement si le budget est épuisé ou avant la limite de 6 h
-# d'un job, la suite au mois suivant.
+# Travaux IA mensuels (Mistral), calés sur la remise à zéro du budget de
+# l'API le 1er du mois, dans l'ordre de priorité :
+#   1. résumés des dossiers (textes officiels) : contenu principal des
+#      pages, rattrape le retard que l'ingestion hebdomadaire n'a pas
+#      fini ;
+#   2. classement des amendements votés pas encore classés, avec le
+#      budget restant.
+# Chaque job s'arrête proprement si le budget est épuisé ou avant la
+# limite de 6 h d'un job ; la suite reprend au lancement suivant.
 # Secrets requis : DATABASE_URL (URL Neon directe), MISTRAL_API_KEY,
 # REVALIDATE_SECRET.
-name: Classement des amendements (mensuel)
+name: IA mensuelle (résumés puis amendements)
 
 on:
   schedule:
@@ -21,17 +25,20 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+  REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+  SITE_URL: https://www.phronesis-france.com
+
 jobs:
-  classer:
+  resumes:
     runs-on: ubuntu-latest
     timeout-minutes: 350
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
     steps:
       - name: Check secrets
         run: |
-          for nom in DATABASE_URL MISTRAL_API_KEY; do
+          for nom in DATABASE_URL MISTRAL_API_KEY REVALIDATE_SECRET; do
             if [ -z "${!nom}" ]; then
               echo "::error::Secret $nom manquant (gh secret set $nom)."
               exit 1
@@ -60,20 +67,50 @@ jobs:
         run: pnpm db:migrate
 
       # Arrêt volontaire à 320 min pour laisser le temps d'écrire le
+      # dernier résumé et de vider le cache avant la limite du job.
+      - name: Résumés IA
+        run: pnpm resumes:generate --limit=100000 --duree-max=320
+
+      - name: Refresh site cache
+        if: always()
+        run: |
+          curl --fail-with-body -sS --retry 3 -X POST \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            "$SITE_URL/api/revalidate"
+
+  classer:
+    needs: resumes
+    # Le classement passe même si les résumés ont échoué.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Write .env
+        run: |
+          umask 077
+          printf 'DATABASE_URL=%s\nMISTRAL_API_KEY=%s\n' \
+            "$DATABASE_URL" "$MISTRAL_API_KEY" > .env
+
+      # Arrêt volontaire à 320 min pour laisser le temps d'écrire le
       # dernier lot et de vider le cache avant la limite du job.
       - name: Classer
         run: pnpm amendements:classer --duree-max=320
 
       - name: Refresh site cache
         if: always()
-        env:
-          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
-          SITE_URL: https://www.phronesis-france.com
         run: |
-          if [ -z "$REVALIDATE_SECRET" ]; then
-            echo "::error::Secret REVALIDATE_SECRET manquant."
-            exit 1
-          fi
           curl --fail-with-body -sS --retry 3 -X POST \
             -H "Authorization: Bearer $REVALIDATE_SECRET" \
             "$SITE_URL/api/revalidate"

@@ -16,6 +16,11 @@ manuelle : onglet Actions → *Ingest open data (weekly)* →
 
 Secret GitHub : `DATABASE_URL` = URL Neon **directe** (sans `-pooler`).
 
+Les résumés IA des dossiers sont générés automatiquement à partir des
+textes officiels : chaque lundi après l'ingestion (2 h maximum), puis le
+1er du mois (*IA mensuelle*), avant le classement des amendements qui
+utilise le budget Mistral restant.
+
 Les pages lisent la base à travers un cache (`lib/cache.ts`) qui dure
 jusqu'à la prochaine ingestion, pour ne pas réveiller Neon à chaque
 visite. Le cache survit aux déploiements. Le workflow le vide à la fin
