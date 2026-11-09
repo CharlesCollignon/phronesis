@@ -14,12 +14,16 @@ import {
 } from "@/lib/comparateur";
 import { nomComplet } from "@/lib/format";
 import { listDeputes, listSenateurs } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Comparateur",
-};
+export const metadata = pageMetadata({
+  title: "Comparateur de votes entre parlementaires",
+  description:
+    "Comparez les votes de deux députés ou sénateurs, scrutin par scrutin, et mesurez leur taux d'accord.",
+  path: "/comparateur",
+});
 
 type PageProps = {
   searchParams: Promise<{

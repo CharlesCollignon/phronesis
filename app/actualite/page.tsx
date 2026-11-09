@@ -11,12 +11,16 @@ import {
   formatSort,
 } from "@/lib/format";
 import { getActualiteAssemblee, getImportHistory } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "À l'Assemblée",
-};
+export const metadata = pageMetadata({
+  title: "Cette semaine à l'Assemblée nationale et au Sénat",
+  description:
+    "Les derniers scrutins publics et dossiers législatifs au Parlement, tirés directement des données officielles, sans commentaire.",
+  path: "/actualite",
+});
 
 type Filtre = "tous" | "scrutins" | "dossiers";
 

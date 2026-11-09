@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { EluFiche } from "@/components/elu-fiche";
-import { nomComplet } from "@/lib/format";
+import { JsonLd } from "@/components/json-ld";
 import {
   getActeurTransparence,
   getDepute,
@@ -9,6 +10,7 @@ import {
   getDeputeVotes,
   listGroupesEffectifs,
 } from "@/lib/queries";
+import { jsonLdElu, metadataElu } from "@/lib/seo-elus";
 import {
   listIndicateursDeputes,
   mesuresDepute,
@@ -24,14 +26,18 @@ type PageProps = {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<{ title: string }> {
+}: PageProps): Promise<Metadata> {
   const { uid } = await params;
   const data = await getDepute(uid);
-  return {
-    title: data
-      ? `${nomComplet(data.acteur.prenom, data.acteur.nom)} — Député`
-      : "Député",
-  };
+  if (!data) return { title: "Député introuvable", robots: { index: false } };
+  return metadataElu({
+    chambre: "AN",
+    acteur: data.acteur,
+    mandat: data.mandat,
+    groupe: data.groupe,
+    photo: null,
+    ficheOfficielle: null,
+  });
 }
 
 export default async function DeputePage({
@@ -60,7 +66,19 @@ export default async function DeputePage({
   const brut = indicateurs.find((d) => d.acteurUid === uid);
   const mesures = mesuresDepute(indicateurs, uid);
 
+  const jsonLd = jsonLdElu({
+    chambre: "AN",
+    acteur,
+    mandat,
+    groupe,
+    photo: urlPhotoDepute(uid),
+    ficheOfficielle: urlDeputeAn(uid),
+    hatvpUrl: transparence.hatvp?.hatvpUrl ?? null,
+  });
+
   return (
+    <>
+    <JsonLd data={jsonLd} />
     <EluFiche
       chambre="AN"
       photo={urlPhotoDepute(uid)}
@@ -78,5 +96,6 @@ export default async function DeputePage({
         label: "Fiche Assemblée nationale",
       }}
     />
+    </>
   );
 }

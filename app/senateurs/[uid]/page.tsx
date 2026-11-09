@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { EluFiche } from "@/components/elu-fiche";
-import { nomComplet } from "@/lib/format";
+import { JsonLd } from "@/components/json-ld";
 import {
   getActeurTransparence,
   getDeputeStats,
@@ -9,6 +10,7 @@ import {
   getSenateur,
   listGroupesEffectifs,
 } from "@/lib/queries";
+import { jsonLdElu, metadataElu } from "@/lib/seo-elus";
 import { urlPhotoSenateur, urlSenateurSenat } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +21,18 @@ type PageProps = {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<{ title: string }> {
+}: PageProps): Promise<Metadata> {
   const { uid } = await params;
   const data = await getSenateur(uid);
-  return {
-    title: data
-      ? `${nomComplet(data.acteur.prenom, data.acteur.nom)} — Sénateur`
-      : "Sénateur",
-  };
+  if (!data) return { title: "Sénateur introuvable", robots: { index: false } };
+  return metadataElu({
+    chambre: "SENAT",
+    acteur: data.acteur,
+    mandat: data.mandat,
+    groupe: data.groupe,
+    photo: null,
+    ficheOfficielle: null,
+  });
 }
 
 export default async function SenateurPage({
@@ -46,7 +52,19 @@ export default async function SenateurPage({
     ]);
   const ficheOfficielle = urlSenateurSenat(acteur.senatMatricule);
 
+  const jsonLd = jsonLdElu({
+    chambre: "SENAT",
+    acteur,
+    mandat,
+    groupe,
+    photo: urlPhotoSenateur(acteur.senatMatricule, acteur.prenom, acteur.nom),
+    ficheOfficielle: ficheOfficielle,
+    hatvpUrl: transparence.hatvp?.hatvpUrl ?? null,
+  });
+
   return (
+    <>
+    <JsonLd data={jsonLd} />
     <EluFiche
       chambre="SENAT"
       photo={urlPhotoSenateur(
@@ -67,5 +85,6 @@ export default async function SenateurPage({
           : null
       }
     />
+    </>
   );
 }

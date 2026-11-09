@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -11,6 +12,7 @@ import {
   type TypeDossierFiltre,
 } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,28 @@ const LIMIT = 40;
 type PageProps = {
   searchParams: Promise<{ q?: string; page?: string; type?: string }>;
 };
+
+/**
+ * Chaque page de la liste est canonique (pagination) ; les filtres
+ * pointent vers la liste sans filtre pour ne pas multiplier les
+ * variantes indexées d'un même contenu.
+ */
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const filtre = Object.entries(params).some(
+    ([k, v]) => k !== "page" && Boolean(v),
+  );
+  const suffixe = page > 1 && !filtre ? ` — page ${page}` : "";
+  return pageMetadata({
+    title: `Lois et dossiers législatifs de la 17e législature${suffixe}`,
+    description:
+      "Tous les projets et propositions de loi de la 17e législature : résumé en clair, étapes de la procédure, scrutins et amendements, avec le texte officiel.",
+    path: page > 1 && !filtre ? `/dossiers?page=${page}` : "/dossiers",
+  });
+}
 
 const TYPES: [TypeDossierFiltre, string][] = [
   ["all", "Tous"],

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Badge } from "@/components/badge";
@@ -12,6 +13,7 @@ import {
   formatSort,
 } from "@/lib/format";
 import { listScrutins } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,28 @@ type PageProps = {
     type?: string;
   }>;
 };
+
+/**
+ * Chaque page de la liste est canonique (pagination) ; les filtres
+ * pointent vers la liste sans filtre pour ne pas multiplier les
+ * variantes indexées d'un même contenu.
+ */
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const filtre = Object.entries(params).some(
+    ([k, v]) => k !== "page" && Boolean(v),
+  );
+  const suffixe = page > 1 && !filtre ? ` — page ${page}` : "";
+  return pageMetadata({
+    title: `Votes des députés et sénateurs : scrutins publics${suffixe}`,
+    description:
+      "Tous les scrutins publics nominatifs de l'Assemblée nationale et du Sénat : résultat, vote de chaque groupe et de chaque parlementaire.",
+    path: page > 1 && !filtre ? `/scrutins?page=${page}` : "/scrutins",
+  });
+}
 
 const RESULTATS = [
   ["all", "Tous"],

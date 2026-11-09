@@ -4,12 +4,16 @@ import {
   listGroupesEffectifs,
   listSenateurs,
 } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Députés",
-};
+export const metadata = pageMetadata({
+  title: "Députés de la 17e législature : liste, groupes et votes",
+  description:
+    "Les députés de la 17e législature, par groupe et circonscription : votes nominatifs, participation, amendements et déclarations HATVP.",
+  path: "/deputes",
+});
 
 type PageProps = {
   searchParams: Promise<{ q?: string; groupe?: string }>;

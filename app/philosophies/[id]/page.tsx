@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -11,6 +12,7 @@ import {
   profilPhilosophieNormalise,
 } from "@/lib/philosophies";
 import { cn } from "@/lib/utils";
+import { descriptionCourte, pageMetadata } from "@/lib/seo";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -22,14 +24,16 @@ export function generateStaticParams(): { id: string }[] {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<{ title: string }> {
+}: PageProps): Promise<Metadata> {
   const { id } = await params;
   const philo = getPhilosophie(id);
-  return {
-    title: philo
-      ? `${philo.label} — Conceptions`
-      : "Conception philosophique",
-  };
+  if (!philo) return { title: "Conception introuvable", robots: { index: false } };
+  return pageMetadata({
+    title: `${philo.label} : définition et valeurs`,
+    description: descriptionCourte(`${philo.description} ${philo.presentation}`),
+    path: `/philosophies/${id}`,
+    type: "article",
+  });
 }
 
 export default async function PhilosophiePage({

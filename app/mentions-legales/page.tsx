@@ -1,10 +1,14 @@
 import Link from "next/link";
 
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Mentions légales",
-};
+  description:
+    "Éditeur, hébergeur et sources de données de Phronesis.",
+  path: "/mentions-legales",
+});
 
 const CONTACT = "collignoncharles@gmail.com";
 

@@ -4,12 +4,16 @@ import {
   listGroupesEffectifs,
   listSenateurs,
 } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Sénateurs",
-};
+export const metadata = pageMetadata({
+  title: "Sénateurs : liste, groupes et votes",
+  description:
+    "Tous les sénateurs en exercice, par groupe politique et département, avec leurs votes aux scrutins publics du Sénat.",
+  path: "/senateurs",
+});
 
 type PageProps = {
   searchParams: Promise<{ q?: string; groupe?: string }>;

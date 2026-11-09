@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { SITE_URL, absoluteUrl } from "@/lib/seo";
+
 /**
  * Les fiches (scrutins, dossiers, parlementaires) restent indexables,
  * ainsi que la pagination (`page`, `chambre`) qui permet de les
@@ -25,5 +27,13 @@ export default function robots(): MetadataRoute.Robots {
         "/*&groupe=",
       ],
     },
+    host: SITE_URL,
+    sitemap: [
+      "/sitemap.xml",
+      "/dossiers/sitemap.xml",
+      "/scrutins/sitemap.xml",
+      "/deputes/sitemap.xml",
+      "/senateurs/sitemap.xml",
+    ].map(absoluteUrl),
   };
 }

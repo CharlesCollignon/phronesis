@@ -1,10 +1,14 @@
 import { BoussoleQuiz } from "@/components/boussole-quiz";
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
 import { DILEMMES } from "@/lib/dilemmes";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Boussole Phronesis",
-};
+export const metadata = pageMetadata({
+  title: "Boussole : test de valeurs politiques sans étiquette",
+  description:
+    "Un test de valeurs en dilemmes concrets, sans gauche ni droite : situez-vous sur dix axes (liberté, égalité, écologie…) et comparez-vous aux lois votées.",
+  path: "/boussole",
+});
 
 export default function BoussolePage(): React.ReactElement {
   return (

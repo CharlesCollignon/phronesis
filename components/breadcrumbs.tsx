@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export type BreadcrumbItem = {
@@ -16,6 +18,18 @@ export function Breadcrumbs({
 }: BreadcrumbsProps): React.ReactElement {
   return (
     <nav aria-label="Fil d'Ariane" className="text-sm">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: items.map((item, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: item.label,
+            ...(item.href ? { item: absoluteUrl(item.href) } : {}),
+          })),
+        }}
+      />
       <ol className="flex flex-wrap items-center gap-2 text-muted-foreground">
         {items.map((item, i) => {
           const last = i === items.length - 1;

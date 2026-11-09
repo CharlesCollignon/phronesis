@@ -6,12 +6,16 @@ import { formatDate, formatNumber } from "@/lib/format";
 import { getImportHistory } from "@/lib/queries";
 import { urlOpenDataAn, urlOpenDataSenat } from "@/lib/urls";
 import { cn } from "@/lib/utils";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Méthodologie",
-};
+export const metadata = pageMetadata({
+  title: "Méthodologie : sources, IA et limites",
+  description:
+    "Comment Phronesis traite les données open data du Parlement : sources officielles, résumés et empreintes générés par IA, Score Phronesis, résonance et limites.",
+  path: "/methodologie",
+});
 
 const TOC: [string, string][] = [
   ["sources", "Sources"],

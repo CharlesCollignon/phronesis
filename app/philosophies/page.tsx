@@ -12,10 +12,14 @@ import {
   AXES_BOUSSOLE,
 } from "@/lib/dilemmes";
 import { PHILOSOPHIES } from "@/lib/philosophies";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Conceptions philosophiques",
-};
+export const metadata = pageMetadata({
+  title: "Conceptions philosophiques et politiques",
+  description:
+    "Libéralisme, républicanisme, socialisme, écologie politique… Les grandes conceptions politiques présentées sur dix axes de valeurs, pour s'y comparer.",
+  path: "/philosophies",
+});
 
 export default function PhilosophiesPage(): React.ReactElement {
   return (

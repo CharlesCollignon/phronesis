@@ -7,6 +7,7 @@ import { GroupeSigle, couleurDe } from "@/components/groupe-couleur";
 import { Hemicycle } from "@/components/hemicycle";
 import { formatNumber } from "@/lib/format";
 import { listGroupesEffectifs } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +15,12 @@ type PageProps = {
   searchParams: Promise<{ chambre?: string }>;
 };
 
-export const metadata = {
-  title: "Groupes parlementaires",
-};
+export const metadata = pageMetadata({
+  title: "Groupes parlementaires : Assemblée nationale et Sénat",
+  description:
+    "Composition, cohésion de vote et travail parlementaire de chaque groupe politique à l'Assemblée nationale et au Sénat.",
+  path: "/groupes",
+});
 
 /** Sièges de chaque chambre (part des sièges). */
 const SIEGES = { AN: 577, SENAT: 348 } as const;

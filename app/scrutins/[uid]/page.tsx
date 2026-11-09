@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -21,6 +22,16 @@ import {
 } from "@/lib/format";
 import { getScrutin, getScrutinVotes } from "@/lib/queries";
 import { urlScrutinAn, urlScrutinSenat } from "@/lib/urls";
+import { JsonLd } from "@/components/json-ld";
+import {
+  ASSEMBLEE_NATIONALE,
+  SENAT,
+  WEBSITE_ID,
+  absoluteUrl,
+  descriptionCourte,
+  pageMetadata,
+  titreCourt,
+} from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +40,38 @@ type PageProps = {
   params: Promise<{ uid: string }>;
   searchParams: Promise<{ position?: string; groupe?: string }>;
 };
+
+function pluriel(n: number | null, mot: string): string {
+  const v = n ?? 0;
+  return `${formatNumber(v)} ${mot}${v > 1 ? "s" : ""}`;
+}
+
+export async function generateMetadata({
+  params,
+}: Pick<PageProps, "params">): Promise<Metadata> {
+  const { uid } = await params;
+  const data = await getScrutin(uid);
+  if (!data) return { title: "Scrutin introuvable", robots: { index: false } };
+  const { scrutin } = data;
+  const senat = scrutin.chambre === "SENAT";
+  const objet = capitalizeTitre(decoderEntites(scrutin.titre));
+  const resultat = formatSort(scrutin.sortCode).toLowerCase();
+  const description = descriptionCourte(
+    `${senat ? "Sénat" : "Assemblée nationale"}, ${formatDate(scrutin.dateScrutin)} : ` +
+      `${resultat} par ${formatNumber(scrutin.pour ?? 0)} voix pour, ` +
+      `${formatNumber(scrutin.contre ?? 0)} contre, ` +
+      `${pluriel(scrutin.abstentions, "abstention")}. ` +
+      `Le vote de chaque ${senat ? "sénateur" : "député"}, groupe par groupe. ` +
+      objet,
+    180,
+  );
+  return pageMetadata({
+    title: titreCourt(`Scrutin n° ${scrutin.numero} : ${objet}`),
+    description,
+    path: `/scrutins/${uid}`,
+    type: "article",
+  });
+}
 
 /** Libellé de majorité d'un groupe (positions exprimées). */
 function majorite(pour: number, contre: number, abst: number): string {
@@ -99,6 +142,23 @@ export default async function ScrutinPage({
     meta.push(["Demandé par", scrutin.demandeur]);
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": absoluteUrl(`/scrutins/${scrutin.uid}`),
+    url: absoluteUrl(`/scrutins/${scrutin.uid}`),
+    name: `Scrutin public n° ${scrutin.numero} — ${chambreLabel}`,
+    description: capitalizeTitre(decoderEntites(scrutin.titre)),
+    datePublished: String(scrutin.dateScrutin).slice(0, 10),
+    inLanguage: "fr-FR",
+    isPartOf: { "@id": WEBSITE_ID },
+    isBasedOn: sourceHref,
+    sourceOrganization: senat ? SENAT : ASSEMBLEE_NATIONALE,
+    ...(dossier
+      ? { about: { "@id": absoluteUrl(`/dossiers/${dossier.uid}#legislation`) } }
+      : {}),
+  };
+
   return (
     <PageShell
       breadcrumbs={[
@@ -107,6 +167,7 @@ export default async function ScrutinPage({
         { label: `Scrutin n° ${formatNumber(scrutin.numero)}` },
       ]}
     >
+      <JsonLd data={jsonLd} />
       <PageHeader
         size="long"
         eyebrow={

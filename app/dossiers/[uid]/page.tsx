@@ -20,7 +20,17 @@ import {
 import { getDossier } from "@/lib/queries";
 import { computeScorePhronesis } from "@/lib/score-phronesis";
 import { urlDossierAn } from "@/lib/urls";
+import {
+  ASSEMBLEE_NATIONALE,
+  WEBSITE_ID,
+  absoluteUrl,
+  descriptionCourte,
+  pageMetadata,
+  titreCourt,
+} from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +40,32 @@ const AMENDEMENTS_VISIBLES = 10;
 type PageProps = {
   params: Promise<{ uid: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { uid } = await params;
+  const data = await getDossier(uid);
+  if (!data) return { title: "Dossier introuvable", robots: { index: false } };
+  const { dossier, resume, scrutins, amendementsCount } = data;
+  const titre = capitalizeTitre(dossier.titre);
+  const description =
+    descriptionCourte(resume?.contenu) ||
+    descriptionCourte(
+      `${capitalizeTitre(dossier.procedureLibelle) || "Dossier législatif"} ` +
+        `expliqué sans parti pris : étapes de la procédure, ` +
+        `${scrutins.length} scrutin${scrutins.length > 1 ? "s" : ""} public` +
+        `${scrutins.length > 1 ? "s" : ""}, ${amendementsCount} ` +
+        `amendement${amendementsCount > 1 ? "s" : ""} et texte officiel. ` +
+        titre,
+    );
+  return pageMetadata({
+    title: titreCourt(titre),
+    description,
+    path: `/dossiers/${uid}`,
+    type: "article",
+  });
+}
 
 function toneSortAmendement(
   sort: string,
@@ -130,6 +166,24 @@ export default async function DossierPage({
   const amendementsVisibles = amendements.slice(0, AMENDEMENTS_VISIBLES);
   const amendementsReplies = amendements.slice(AMENDEMENTS_VISIBLES);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Legislation",
+    "@id": absoluteUrl(`/dossiers/${dossier.uid}#legislation`),
+    name: capitalizeTitre(dossier.titre),
+    legislationIdentifier: dossier.uid,
+    legislationType: dossier.procedureLibelle ?? undefined,
+    legislationJurisdiction: { "@type": "Country", name: "France" },
+    inLanguage: "fr-FR",
+    url: absoluteUrl(`/dossiers/${dossier.uid}`),
+    ...(officialHref ? { sameAs: officialHref } : {}),
+    ...(depot?.date ? { legislationDate: String(depot.date).slice(0, 10) } : {}),
+    ...(resume ? { abstract: descriptionCourte(resume.contenu, 500) } : {}),
+    spatialCoverage: { "@type": "Country", name: "France" },
+    sourceOrganization: ASSEMBLEE_NATIONALE,
+    isPartOf: { "@id": WEBSITE_ID },
+  };
+
   return (
     <PageShell
       breadcrumbs={[
@@ -138,6 +192,7 @@ export default async function DossierPage({
         { label: dossierLabel },
       ]}
     >
+      <JsonLd data={jsonLd} />
       <PageHeader
         eyebrow={eyebrow || undefined}
         title={dossier.titre}

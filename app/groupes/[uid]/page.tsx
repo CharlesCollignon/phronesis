@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -30,6 +31,7 @@ import {
 } from "@/lib/travail-parlementaire";
 import { urlPhotoDepute, urlPhotoSenateur } from "@/lib/urls";
 import { getVotesParThemeGroupe } from "@/lib/votes-par-theme";
+import { descriptionCourte, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -41,14 +43,22 @@ type PageProps = {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<{ title: string }> {
+}: PageProps): Promise<Metadata> {
   const { uid } = await params;
   const data = await getEmpreinteGroupe(uid);
-  return {
-    title: data
-      ? `${data.groupe.libelle} — Groupe`
-      : "Groupe parlementaire",
-  };
+  if (!data) return { title: "Groupe introuvable", robots: { index: false } };
+  const { groupe } = data;
+  const senat = groupe.codeType === "GROUPESENAT";
+  const sigle = groupe.libelleAbrege ? ` (${groupe.libelleAbrege})` : "";
+  return pageMetadata({
+    title: `${groupe.libelle}${sigle} : membres et votes`,
+    description: descriptionCourte(
+      `Groupe ${groupe.libelle}${sigle} ${senat ? "au Sénat" : "à l'Assemblée nationale"} : ` +
+        `liste des membres, cohésion et positions de vote, ` +
+        `${senat ? "" : "travail parlementaire, "}empreinte agrégée des textes soutenus.`,
+    ),
+    path: `/groupes/${uid}`,
+  });
 }
 
 export default async function GroupePage({

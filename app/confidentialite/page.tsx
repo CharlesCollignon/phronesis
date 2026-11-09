@@ -1,10 +1,14 @@
 import Link from "next/link";
 
 import { PageHeader, PageShell } from "@/components/breadcrumbs";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Politique de confidentialité",
-};
+  description:
+    "Quelles données Phronesis conserve, pourquoi et pour combien de temps : la Boussole reste sur votre appareil sauf accord explicite.",
+  path: "/confidentialite",
+});
 
 const CONTACT = "collignoncharles@gmail.com";
 
