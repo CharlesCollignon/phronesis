@@ -1,6 +1,6 @@
 # Déploiement production
 
-**URL production :** https://phronesis-seven-neon.vercel.app  
+**URL production :** https://www.phronesis-france.com  
 **GitHub :** https://github.com/CharlesCollignon/phronesis  
 **Vercel :** projet `phronesis` (`prj_772r6unhHd4dcHuhNAmvLf6WiUxN`)
 
@@ -26,7 +26,7 @@ cache à la main :
 
 ```bash
 curl -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" \
-  https://phronesis-seven-neon.vercel.app/api/revalidate
+  https://www.phronesis-france.com/api/revalidate
 ```
 
 Si un changement de code modifie le format renvoyé par une requête en

@@ -68,7 +68,7 @@ jobs:
         if: always()
         env:
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
-          SITE_URL: https://phronesis-seven-neon.vercel.app
+          SITE_URL: https://www.phronesis-france.com
         run: |
           if [ -z "$REVALIDATE_SECRET" ]; then
             echo "::error::Secret REVALIDATE_SECRET manquant."
