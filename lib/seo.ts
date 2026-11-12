@@ -135,7 +135,7 @@ export function jsonLdSite(): Record<string, unknown> {
         "@id": ORGANISATION_ID,
         name: SITE_NAME,
         url: SITE_URL,
-        logo: absoluteUrl("/icon"),
+        logo: absoluteUrl("/icon-512.png"),
         description: SITE_DESCRIPTION,
         sameAs: ["https://github.com/CharlesCollignon/phronesis"],
       },
