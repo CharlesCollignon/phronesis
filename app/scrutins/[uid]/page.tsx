@@ -21,6 +21,7 @@ import {
   nomComplet,
 } from "@/lib/format";
 import { getScrutin, getScrutinVotes } from "@/lib/queries";
+import { getSondageScrutin } from "@/lib/sondages";
 import { urlScrutinAn, urlScrutinSenat } from "@/lib/urls";
 import { JsonLd } from "@/components/json-ld";
 import {
@@ -109,11 +110,10 @@ export default async function ScrutinPage({
       b.nonVotant -
       (a.pour + a.contre + a.abstention + a.nonVotant),
   );
-  const voteRows = await getScrutinVotes(
-    uid,
-    filters.position,
-    filters.groupe,
-  );
+  const [voteRows, totauxSondage] = await Promise.all([
+    getScrutinVotes(uid, filters.position, filters.groupe),
+    getSondageScrutin(uid),
+  ]);
 
   const positionCounts = {
     pour: scrutin.pour ?? 0,
@@ -433,7 +433,9 @@ export default async function ScrutinPage({
           </section>
 
           <SondageScrutin
+            key={scrutin.uid}
             scrutinUid={scrutin.uid}
+            totaux={totauxSondage}
             deputesPour={scrutin.pour ?? 0}
             deputesContre={scrutin.contre ?? 0}
             deputesAbstention={scrutin.abstentions ?? 0}

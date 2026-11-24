@@ -98,6 +98,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 | `pnpm resumes:generate -- --limit=10` | Résumés IA rédigés à partir des textes officiels (`--dry-run --dossiers=…` pour un essai) |
 | `pnpm empreintes:generate -- --limit=5` | Batch d'empreintes qualitatives |
 | `pnpm db:prune-soft` | Nettoyage soft stockage (orphelins, colonnes sparses) |
+| `pnpm cache:rafraichir` | Invalide le cache du site pour ce que les batchs ont modifié, puis relit ces pages (`--tout` : toutes les fiches) |
 | `pnpm db:studio` | Drizzle Studio |
 
 Pour les résumés / empreintes IA, renseigner `MISTRAL_API_KEY` ou

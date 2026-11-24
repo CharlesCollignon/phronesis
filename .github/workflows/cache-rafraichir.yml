@@ -1,0 +1,56 @@
+# Rafraîchit le cache du site à la demande : invalide ce que les batchs
+# ont noté (invalidations_cache) puis relit les pages concernées.
+# Cocher « tout » après un changement de CACHE_VERSION (lib/cache.ts) ou
+# de logique d'ingestion : toutes les fiches sont alors relues d'un
+# trait (une heure environ) au lieu d'une par une au fil des visites,
+# ce qui tiendrait Neon éveillé en continu.
+# Secrets requis : DATABASE_URL (URL Neon directe), REVALIDATE_SECRET.
+name: Cache du site (rafraîchir)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tout:
+        description: Relire aussi toutes les fiches dossier et scrutin
+        type: boolean
+        default: false
+
+# Même groupe que l'ingestion : jamais les deux en même temps.
+concurrency:
+  group: ingest-open-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rafraichir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+      SITE_URL: https://www.phronesis-france.com
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Write .env
+        run: |
+          umask 077
+          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env
+
+      - name: Migrate
+        run: pnpm db:migrate
+
+      - name: Refresh site cache
+        run: pnpm cache:rafraichir ${{ inputs.tout && '--tout --concurrence=12' || '' }}

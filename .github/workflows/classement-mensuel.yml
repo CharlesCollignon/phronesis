@@ -71,12 +71,10 @@ jobs:
       - name: Résumés IA
         run: pnpm resumes:generate --limit=100000 --duree-max=320
 
+      # Invalide ce qui a changé puis le relit aussitôt (lib/cache.ts).
       - name: Refresh site cache
         if: always()
-        run: |
-          curl --fail-with-body -sS --retry 3 -X POST \
-            -H "Authorization: Bearer $REVALIDATE_SECRET" \
-            "$SITE_URL/api/revalidate"
+        run: pnpm cache:rafraichir
 
   classer:
     needs: resumes
@@ -108,9 +106,7 @@ jobs:
       - name: Classer
         run: pnpm amendements:classer --duree-max=320
 
+      # Invalide ce qui a changé puis le relit aussitôt (lib/cache.ts).
       - name: Refresh site cache
         if: always()
-        run: |
-          curl --fail-with-body -sS --retry 3 -X POST \
-            -H "Authorization: Bearer $REVALIDATE_SECRET" \
-            "$SITE_URL/api/revalidate"
+        run: pnpm cache:rafraichir

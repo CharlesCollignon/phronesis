@@ -20,7 +20,10 @@ permissions:
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # Ingestion (~15 min), résumés (2 h au plus), puis relecture du
+    # cache : quelques minutes, une heure environ les rares semaines où
+    # toutes les fiches sont à relire.
+    timeout-minutes: 240
     env:
       INGEST_FORCE: "1"
       # Les dumps AN/Sénat sont volumineux (votes AN en mémoire,
@@ -76,17 +79,12 @@ jobs:
         continue-on-error: true
         run: pnpm resumes:generate --limit=100000 --duree-max=120
 
-      # Les pages lisent la base via un cache sans expiration courte :
-      # on le vide une fois les nouvelles données en base.
+      # Les pages lisent la base via un cache. On n'invalide que ce que
+      # l'ingestion a modifié (listes, élus, groupes, et les fiches notées
+      # dans invalidations_cache), puis on relit aussitôt ces pages
+      # pendant que Neon est éveillé : voir lib/cache.ts.
       - name: Refresh site cache
         env:
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
           SITE_URL: https://www.phronesis-france.com
-        run: |
-          if [ -z "$REVALIDATE_SECRET" ]; then
-            echo "::error::Secret REVALIDATE_SECRET manquant : le site garde les anciennes données."
-            exit 1
-          fi
-          curl --fail-with-body -sS --retry 3 -X POST \
-            -H "Authorization: Bearer $REVALIDATE_SECRET" \
-            "$SITE_URL/api/revalidate"
+        run: pnpm cache:rafraichir

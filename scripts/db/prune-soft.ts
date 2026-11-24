@@ -13,6 +13,7 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "../../db";
+import { noterToutesLesFiches } from "../lib/invalidations";
 
 const KEEP_IMPORTS = Number(process.env.KEEP_IMPORTS ?? "50");
 
@@ -135,6 +136,11 @@ async function main(): Promise<void> {
     `→ imports au-delà des ${keep} plus récents : ` +
       `${Number(importRow?.n ?? 0)} supprimés`,
   );
+
+  // Un amendement supprimé pouvait s'afficher sur la fiche d'un
+  // scrutin : toutes les fiches seront relues au prochain
+  // `pnpm cache:rafraichir`.
+  if (orphanCount > 0) await noterToutesLesFiches(db);
 
   const after = await measureSizes();
   logSizes("après", after);

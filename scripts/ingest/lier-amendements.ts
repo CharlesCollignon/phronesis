@@ -15,6 +15,7 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "../../db";
+import { noterFiches } from "../lib/invalidations";
 
 /** Minuscules sans accents, pour comparer les noms. */
 function plier(colonne: string): string {
@@ -25,8 +26,11 @@ function plier(colonne: string): string {
 }
 
 async function lierScrutinsAmendements(): Promise<number> {
-  const result = await db.execute(
-    sql.raw(`
+  // Les fiches des scrutins reliés sont à relire : elles affichent
+  // désormais l'amendement (noté dans la même transaction).
+  return db.transaction(async (tx) => {
+    const relies = await tx.execute<{ uid: string }>(
+      sql.raw(`
     WITH s AS (
       SELECT uid, date_scrutin,
         (regexp_match(titre, '^l[’'']amendement n° *([0-9]+)'))[1] AS num,
@@ -63,9 +67,12 @@ async function lierScrutinsAmendements(): Promise<number> {
     WHERE c.rang = 1
       AND sc.uid = c.scrutin_uid
       AND sc.amendement_uid IS DISTINCT FROM c.amendement_uid
+    RETURNING sc.uid
   `),
-  );
-  return result.count ?? 0;
+    );
+    await noterFiches(tx, { scrutins: relies.map((s) => s.uid) });
+    return relies.length;
+  });
 }
 
 async function main(): Promise<void> {

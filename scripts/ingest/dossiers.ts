@@ -1,5 +1,14 @@
+import { eq, inArray, sql } from "drizzle-orm";
+
 import { db } from "../../db";
-import { actes, documents, dossiers } from "../../db/schema";
+import {
+  actes,
+  amendements,
+  documents,
+  dossiers,
+  scrutins,
+} from "../../db/schema";
+import { noterFiches } from "../lib/invalidations";
 import {
   DATASETS,
   asArray,
@@ -192,61 +201,104 @@ async function main(): Promise<void> {
   }
   const uniqueActes = [...actesByUid.values()];
 
+  // Le titre d'un dossier s'affiche aussi sur les fiches de ses
+  // scrutins (rattachés directement ou par leur amendement) : s'il
+  // change, elles sont à relire. Noté avant l'écriture, pour qu'un arrêt
+  // en route ne laisse pas d'ancien titre affiché.
+  const titresAvant = new Map(
+    (
+      await db.select({ uid: dossiers.uid, titre: dossiers.titre }).from(dossiers)
+    ).map((d) => [d.uid, d.titre]),
+  );
+  const titresChanges = dossierRows
+    .filter((d) => {
+      const avant = titresAvant.get(d.uid);
+      return avant !== undefined && avant !== d.titre;
+    })
+    .map((d) => d.uid);
+  if (titresChanges.length > 0) {
+    const lies = await db
+      .select({ uid: scrutins.uid })
+      .from(scrutins)
+      .leftJoin(amendements, eq(amendements.uid, scrutins.amendementUid))
+      .where(
+        inArray(
+          sql`coalesce(${scrutins.dossierUid}, ${amendements.dossierUid})`,
+          titresChanges,
+        ),
+      );
+    await noterFiches(db, { scrutins: lies.map((s) => s.uid) });
+  }
+
+  // Chaque lot note, dans la même transaction, les dossiers dont une
+  // ligne a réellement été écrite : leurs fiches seront relues.
   await inBatches(dossierRows, 500, async (batch) => {
-    await db
-      .insert(dossiers)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: dossiers.uid,
-        ...upsertSiChange(dossiers, [
-          "titre",
-          "titreChemin",
-          "senatChemin",
-          "procedureCode",
-          "procedureLibelle",
-          "typeDossier",
-          "initiateurActeurUid",
-        ]),
-      });
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(dossiers)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: dossiers.uid,
+          ...upsertSiChange(dossiers, [
+            "titre",
+            "titreChemin",
+            "senatChemin",
+            "procedureCode",
+            "procedureLibelle",
+            "typeDossier",
+            "initiateurActeurUid",
+          ]),
+        })
+        .returning({ uid: dossiers.uid });
+      await noterFiches(tx, { dossiers: ecrits.map((d) => d.uid) });
+    });
   });
 
   // Les actes sont entièrement re-synchronisés dossier par dossier.
   await inBatches(uniqueActes, 1000, async (batch) => {
-    await db
-      .insert(actes)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: actes.uid,
-        ...upsertSiChange(actes, [
-          "libelle",
-          "date",
-          "ordre",
-          "profondeur",
-          "parentUid",
-          "organeRef",
-          "texteAssocieRef",
-          "statut",
-          "voteRefs",
-        ]),
-      });
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(actes)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: actes.uid,
+          ...upsertSiChange(actes, [
+            "libelle",
+            "date",
+            "ordre",
+            "profondeur",
+            "parentUid",
+            "organeRef",
+            "texteAssocieRef",
+            "statut",
+            "voteRefs",
+          ]),
+        })
+        .returning({ dossierUid: actes.dossierUid });
+      await noterFiches(tx, { dossiers: ecrits.map((a) => a.dossierUid) });
+    });
   });
 
   await inBatches(documentRows, 500, async (batch) => {
-    await db
-      .insert(documents)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: documents.uid,
-        ...upsertSiChange(documents, [
-          "dossierUid",
-          "classeCode",
-          "typeCode",
-          "sousTypeCode",
-          "titre",
-          "dateDepot",
-          "legislature",
-        ]),
-      });
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(documents)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: documents.uid,
+          ...upsertSiChange(documents, [
+            "dossierUid",
+            "classeCode",
+            "typeCode",
+            "sousTypeCode",
+            "titre",
+            "dateDepot",
+            "legislature",
+          ]),
+        })
+        .returning({ dossierUid: documents.dossierUid });
+      await noterFiches(tx, { dossiers: ecrits.map((d) => d.dossierUid) });
+    });
   });
 
   const duration = Date.now() - start;

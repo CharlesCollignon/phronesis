@@ -1,5 +1,13 @@
+import { inArray } from "drizzle-orm";
+
 import { db } from "../../db";
-import { amendements, documents, dossiers } from "../../db/schema";
+import {
+  amendements,
+  documents,
+  dossiers,
+  scrutins,
+} from "../../db/schema";
+import { noterFiches } from "../lib/invalidations";
 import {
   DATASETS,
   asDate,
@@ -109,26 +117,48 @@ async function main(): Promise<void> {
     if (buffer.length === 0) return;
     const batch = buffer;
     buffer = [];
-    await db
-      .insert(amendements)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: amendements.uid,
-        ...upsertSiChange(amendements, [
-          "numeroLong",
-          "dossierUid",
-          "texteRef",
-          "auteurType",
-          "auteurActeurUid",
-          "auteurGroupeUid",
-          "articleDesignation",
-          "dispositif",
-          "exposeSommaire",
-          "sort",
-          "etat",
-          "dateDepot",
-        ]),
+    // Un amendement écrit change la fiche de son dossier, et celle du
+    // scrutin où il a été mis aux voix : notées dans la même transaction.
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(amendements)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: amendements.uid,
+          ...upsertSiChange(amendements, [
+            "numeroLong",
+            "dossierUid",
+            "texteRef",
+            "auteurType",
+            "auteurActeurUid",
+            "auteurGroupeUid",
+            "articleDesignation",
+            "dispositif",
+            "exposeSommaire",
+            "sort",
+            "etat",
+            "dateDepot",
+          ]),
+        })
+        .returning({
+          uid: amendements.uid,
+          dossierUid: amendements.dossierUid,
+        });
+      if (ecrits.length === 0) return;
+      const scrutinsLies = await tx
+        .select({ uid: scrutins.uid })
+        .from(scrutins)
+        .where(
+          inArray(
+            scrutins.amendementUid,
+            ecrits.map((a) => a.uid),
+          ),
+        );
+      await noterFiches(tx, {
+        dossiers: ecrits.map((a) => a.dossierUid),
+        scrutins: scrutinsLies.map((s) => s.uid),
       });
+    });
   };
 
   await forEachZipEntry(

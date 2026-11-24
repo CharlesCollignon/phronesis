@@ -16,6 +16,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:prune-soft": "tsx --env-file=.env scripts/db/prune-soft.ts",
+    "cache:rafraichir": "tsx --env-file=.env scripts/cache/rafraichir.ts",
     "ingest": "tsx --env-file=.env scripts/ingest/index.ts",
     "ingest:acteurs": "tsx --env-file=.env scripts/ingest/acteurs.ts",
     "ingest:dossiers": "tsx --env-file=.env scripts/ingest/dossiers.ts",

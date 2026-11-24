@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { dossiers, sondagesDossiers } from "@/db/schema";
 import { SONDAGES_TAG } from "@/lib/cache";
+import { getSondageDossier } from "@/lib/sondages";
 
 export const dynamic = "force-dynamic";
 
@@ -55,22 +56,18 @@ async function countsForDossier(dossierUid: string): Promise<{
   };
 }
 
+/**
+ * Totaux lus en cache : seul l'avis d'un utilisateur connecté
+ * interroge la base. La fiche affiche déjà les totaux, le composant
+ * n'appelle cette route que pour retrouver cet avis.
+ */
 export async function GET(
   _req: Request,
   ctx: RouteContext,
 ): Promise<NextResponse> {
   const { uid } = await ctx.params;
 
-  const [dossier] = await db
-    .select({ uid: dossiers.uid })
-    .from(dossiers)
-    .where(eq(dossiers.uid, uid))
-    .limit(1);
-  if (!dossier) {
-    return NextResponse.json({ error: "Dossier inconnu" }, { status: 404 });
-  }
-
-  const counts = await countsForDossier(uid);
+  const counts = await getSondageDossier(uid);
 
   let mine: Position | null = null;
   const secret = process.env.CLERK_SECRET_KEY;
