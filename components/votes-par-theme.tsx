@@ -89,7 +89,7 @@ export function VotesParThemeSection({
         classés par une IA qui ne connaît ni leur auteur ni son groupe ;{" "}
         {formatNumber(data.amendementsClasses)} amendements votés sont classés
         à ce jour.{" "}
-        <Link href="/methodologie#amendements" className="ln text-foreground">
+        <Link prefetch={false} href="/methodologie#amendements" className="ln text-foreground">
           Méthode
         </Link>
       </p>

@@ -13,7 +13,15 @@ import {
 import { jsonLdElu, metadataElu } from "@/lib/seo-elus";
 import { urlPhotoSenateur, urlSenateurSenat } from "@/lib/urls";
 
-export const dynamic = "force-dynamic";
+/**
+ * Page statique : générée à la première visite, puis servie depuis le
+ * cache jusqu'à l'invalidation de ses lectures (lib/cache.ts). La rendre
+ * à chaque requête coûtait une fonction par passage de robot. La liste
+ * vide dit de ne rien générer au build.
+ */
+export function generateStaticParams(): { uid: string }[] {
+  return [];
+}
 
 type PageProps = {
   params: Promise<{ uid: string }>;

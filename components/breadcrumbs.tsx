@@ -38,6 +38,7 @@ export function Breadcrumbs({
               {i > 0 ? <span aria-hidden>/</span> : null}
               {item.href && !last ? (
                 <Link
+                  prefetch={false}
                   href={item.href}
                   className="transition-colors hover:text-foreground"
                 >

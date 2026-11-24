@@ -25,6 +25,10 @@ export default function robots(): MetadataRoute.Robots {
         "/*&position=",
         "/*?groupe=",
         "/*&groupe=",
+        // Charges utiles du routeur Next (préchargement des liens) : un
+        // robot qui exécute le JavaScript les demandait une à une.
+        "/*?_rsc=",
+        "/*&_rsc=",
       ],
     },
     host: SITE_URL,

@@ -109,6 +109,7 @@ export function EluVotes({
               style={{ animationDelay: `${Math.min(i, 10) * 25}ms` }}
             >
               <Link
+                prefetch={false}
                 href={`/scrutins/${v.scrutinUid}`}
                 className="row-link grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-5 gap-y-1 border-t border-border px-2 py-4 md:grid-cols-[96px_100px_minmax(0,1fr)_110px_88px]"
               >

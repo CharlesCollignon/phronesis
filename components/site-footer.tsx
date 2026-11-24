@@ -18,19 +18,19 @@ export function SiteFooter(): React.ReactElement {
           aria-label="Pied de page"
           className="flex flex-wrap gap-6 text-sm text-[#d4d4d4]"
         >
-          <Link href="/methodologie" className="hover:text-white">
+          <Link prefetch={false} href="/methodologie" className="hover:text-white">
             Méthodologie
           </Link>
-          <Link href="/philosophies" className="hover:text-white">
+          <Link prefetch={false} href="/philosophies" className="hover:text-white">
             Philosophies
           </Link>
-          <Link href="/recherche" className="hover:text-white">
+          <Link prefetch={false} href="/recherche" className="hover:text-white">
             Recherche
           </Link>
-          <Link href="/mentions-legales" className="hover:text-white">
+          <Link prefetch={false} href="/mentions-legales" className="hover:text-white">
             Mentions légales
           </Link>
-          <Link href="/confidentialite" className="hover:text-white">
+          <Link prefetch={false} href="/confidentialite" className="hover:text-white">
             Confidentialité
           </Link>
         </nav>

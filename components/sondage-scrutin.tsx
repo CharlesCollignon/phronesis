@@ -175,7 +175,7 @@ function SondageInner({
 
       {!isSignedIn ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          <Link href="/sign-in" className="ln text-foreground">
+          <Link prefetch={false} href="/sign-in" className="ln text-foreground">
             Se connecter
           </Link>{" "}
           pour donner votre avis (nouveau clic pour le retirer).

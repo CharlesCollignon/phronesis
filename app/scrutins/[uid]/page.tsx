@@ -34,12 +34,27 @@ import {
   titreCourt,
 } from "@/lib/seo";
 import { cn } from "@/lib/utils";
+import {
+  VoteCount,
+  VoteListFilter,
+  type ComptesVotes,
+} from "@/components/vote-list-filter";
 
-export const dynamic = "force-dynamic";
+/** La liste nominative, que `VoteListFilter` filtre dans le navigateur. */
+const LISTE_VOTES_ID = "positions-liste";
+
+/**
+ * Page statique : générée à la première visite, puis servie depuis le
+ * cache jusqu'à l'invalidation de ses lectures (lib/cache.ts). La rendre
+ * à chaque requête coûtait une fonction par passage de robot. La liste
+ * vide dit de ne rien générer au build.
+ */
+export function generateStaticParams(): { uid: string }[] {
+  return [];
+}
 
 type PageProps = {
   params: Promise<{ uid: string }>;
-  searchParams: Promise<{ position?: string; groupe?: string }>;
 };
 
 function pluriel(n: number | null, mot: string): string {
@@ -93,10 +108,8 @@ const POSITION_TONE: Record<string, "pour" | "contre" | "abstention" | "neutral"
 
 export default async function ScrutinPage({
   params,
-  searchParams,
 }: PageProps): Promise<React.ReactElement> {
   const { uid } = await params;
-  const filters = await searchParams;
   const data = await getScrutin(uid);
   if (!data) notFound();
 
@@ -110,10 +123,19 @@ export default async function ScrutinPage({
       b.nonVotant -
       (a.pour + a.contre + a.abstention + a.nonVotant),
   );
+  // Toutes les positions, une fois : les filtres de l'URL s'appliquent
+  // dans le navigateur (components/vote-list-filter.tsx), pour que la
+  // page reste statique.
   const [voteRows, totauxSondage] = await Promise.all([
-    getScrutinVotes(uid, filters.position, filters.groupe),
+    getScrutinVotes(uid),
     getSondageScrutin(uid),
   ]);
+  const comptesVotes: ComptesVotes = {};
+  for (const v of voteRows) {
+    const parPosition = (comptesVotes[v.groupeUid ?? ""] ??= {});
+    parPosition[v.position] = (parPosition[v.position] ?? 0) + 1;
+  }
+  const libelleElus = senat ? "sénateurs" : "députés";
 
   const positionCounts = {
     pour: scrutin.pour ?? 0,
@@ -127,7 +149,6 @@ export default async function ScrutinPage({
   const sourceHref = senat
     ? urlScrutinSenat(scrutin.legislature, scrutin.numero)
     : urlScrutinAn(scrutin.legislature, scrutin.numero);
-  const filtreActif = Boolean(filters.position || filters.groupe);
 
   const meta: [string, React.ReactNode][] = [
     ["Pour", formatNumber(scrutin.pour)],
@@ -234,6 +255,7 @@ export default async function ScrutinPage({
             </span>
             {amendement.auteurUid ? (
               <Link
+                prefetch={false}
                 href={`/deputes/${amendement.auteurUid}`}
                 className="ln font-medium"
               >
@@ -360,6 +382,7 @@ export default async function ScrutinPage({
                   <li key={g.groupeUid ?? "sans-groupe"}>
                     {g.groupeUid ? (
                       <Link
+                        prefetch={false}
                         href={`/groupes/${g.groupeUid}`}
                         className={cn("row-link", rowCls)}
                         title={g.libelle ?? undefined}
@@ -397,6 +420,7 @@ export default async function ScrutinPage({
             <p className="eyebrow">Dossier</p>
             {dossier ? (
               <Link
+                prefetch={false}
                 href={`/dossiers/${dossier.uid}`}
                 className="mt-2.5 block text-[17px] font-medium leading-snug"
               >
@@ -453,11 +477,15 @@ export default async function ScrutinPage({
           rule
           title="Positions nominatives"
           aside={
-            <span className="num">
-              {formatNumber(voteRows.length)}{" "}
-              {senat ? "sénateurs" : "députés"}
-              {filtreActif ? " (filtré)" : ""}
-            </span>
+            <Suspense
+              fallback={
+                <span className="num">
+                  {formatNumber(voteRows.length)} {libelleElus}
+                </span>
+              }
+            >
+              <VoteCount comptes={comptesVotes} label={libelleElus} />
+            </Suspense>
           }
         />
         <div className="pt-5">
@@ -495,52 +523,62 @@ export default async function ScrutinPage({
 
         {voteRows.length > 0 ? (
           <>
-            <div className="mt-6 hidden grid-cols-[minmax(0,1fr)_160px_120px] gap-5 px-2 pb-2.5 text-[13px] text-muted-foreground sm:grid">
-              <span>{senat ? "Sénateur" : "Député"}</span>
-              <span>Groupe</span>
-              <span>Position</span>
-            </div>
-            <ul className="mt-4 border-b border-border sm:mt-0">
-              {voteRows.map((v) => (
-                <li key={v.acteurUid}>
-                  <Link
-                    href={
-                      senat
-                        ? `/senateurs/${v.acteurUid}`
-                        : `/deputes/${v.acteurUid}`
-                    }
-                    className="row-link grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-1 border-t border-border px-2 py-3 sm:grid-cols-[minmax(0,1fr)_160px_120px]"
+            <Suspense fallback={null}>
+              <VoteListFilter comptes={comptesVotes} listId={LISTE_VOTES_ID} />
+            </Suspense>
+            <div id={LISTE_VOTES_ID}>
+              <div className="mt-6 hidden grid-cols-[minmax(0,1fr)_160px_120px] gap-5 px-2 pb-2.5 text-[13px] text-muted-foreground sm:grid">
+                <span>{senat ? "Sénateur" : "Député"}</span>
+                <span>Groupe</span>
+                <span>Position</span>
+              </div>
+              <ul className="mt-4 border-b border-border sm:mt-0">
+                {voteRows.map((v) => (
+                  <li
+                    key={v.acteurUid}
+                    data-position={v.position}
+                    data-groupe={v.groupeUid ?? ""}
                   >
-                    <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-medium">
-                        {nomComplet(v.prenom, v.nom)}
-                      </span>
-                      <span className="block text-[13px] text-muted-foreground sm:hidden">
-                        {v.groupeLibelle ?? "Sans groupe"}
-                        {v.parDelegation ? " · par délégation" : null}
-                      </span>
-                      {v.parDelegation ? (
-                        <span className="hidden text-[13px] text-muted-foreground sm:block">
-                          Par délégation
+                    <Link
+                      prefetch={false}
+                      href={
+                        senat
+                          ? `/senateurs/${v.acteurUid}`
+                          : `/deputes/${v.acteurUid}`
+                      }
+                      className="row-link grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-1 border-t border-border px-2 py-3 sm:grid-cols-[minmax(0,1fr)_160px_120px]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-[15px] font-medium">
+                          {nomComplet(v.prenom, v.nom)}
                         </span>
-                      ) : null}
-                    </span>
-                    <span className="hidden truncate text-sm text-muted-foreground sm:block">
-                      {v.groupeLibelle ?? "—"}
-                    </span>
-                    <span>
-                      <Badge tone={POSITION_TONE[v.position] ?? "neutral"}>
-                        {formatPosition(v.position)}
-                      </Badge>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                        <span className="block text-[13px] text-muted-foreground sm:hidden">
+                          {v.groupeLibelle ?? "Sans groupe"}
+                          {v.parDelegation ? " · par délégation" : null}
+                        </span>
+                        {v.parDelegation ? (
+                          <span className="hidden text-[13px] text-muted-foreground sm:block">
+                            Par délégation
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="hidden truncate text-sm text-muted-foreground sm:block">
+                        {v.groupeLibelle ?? "—"}
+                      </span>
+                      <span>
+                        <Badge tone={POSITION_TONE[v.position] ?? "neutral"}>
+                          {formatPosition(v.position)}
+                        </Badge>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </>
         ) : (
           <p className="mt-6 text-[15px] text-[#404040] dark:text-muted-foreground">
-            Aucune position ne correspond à ces filtres.
+            Aucune position nominative pour ce scrutin.
           </p>
         )}
       </section>

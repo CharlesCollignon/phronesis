@@ -11,6 +11,14 @@ export const alt = "Résultat d'un scrutin public sur Phronesis";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
+/**
+ * Image statique : dessinée à la première demande, puis servie depuis le
+ * cache jusqu'à l'invalidation de la fiche. La redessiner à chaque
+ * requête de robot ou de réseau social coûtait le rendu le plus lourd
+ * du site.
+ */
+export const dynamic = "force-static";
+
 export default async function Image({
   params,
 }: {

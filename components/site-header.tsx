@@ -81,6 +81,7 @@ export function SiteHeader(): React.ReactElement {
     <header className="sticky top-0 z-40 bg-[#0a0a0a] text-white">
       <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
         <Link
+          prefetch={false}
           href="/"
           className="inline-flex items-center gap-2.5 font-[family-name:var(--font-logo)] text-[22px] uppercase tracking-[0.03em] text-[var(--logo)]"
         >
@@ -96,6 +97,7 @@ export function SiteHeader(): React.ReactElement {
             const active = isActive(item, pathname);
             return (
               <Link
+                prefetch={false}
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
@@ -117,6 +119,7 @@ export function SiteHeader(): React.ReactElement {
 
         <div className="flex items-center gap-2">
           <Link
+            prefetch={false}
             href="/recherche"
             aria-label="Rechercher"
             aria-current={searchActive ? "page" : undefined}
@@ -151,6 +154,7 @@ export function SiteHeader(): React.ReactElement {
               <ClerkAuthControls />
             ) : (
               <Link
+                prefetch={false}
                 href="/sign-in"
                 className="ml-2 text-[15px] text-[#c4c4c4] transition-colors hover:text-white"
               >
@@ -187,6 +191,7 @@ export function SiteHeader(): React.ReactElement {
         <nav aria-label="Menu mobile" className="flex flex-col pt-4">
           {NAV.map((item) => (
             <Link
+              prefetch={false}
               key={item.href}
               href={item.href}
               tabIndex={menuOpen ? undefined : -1}
@@ -203,6 +208,7 @@ export function SiteHeader(): React.ReactElement {
               <ClerkAuthControls />
             ) : (
               <Link
+                prefetch={false}
                 href="/sign-in"
                 tabIndex={menuOpen ? undefined : -1}
                 className="text-lg text-white"

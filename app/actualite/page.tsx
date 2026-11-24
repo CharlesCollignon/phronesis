@@ -175,7 +175,7 @@ export default async function ActualitePage({
                   const adopte = s.sortCode.toLowerCase().includes("adopt");
                   return (
                     <li key={s.uid}>
-                      <Link href={`/scrutins/${s.uid}`} className={ROW}>
+                      <Link prefetch={false} href={`/scrutins/${s.uid}`} className={ROW}>
                         <span className={KIND}>
                           Scrutin{" "}
                           <span className="num">n° {formatNumber(s.numero)}</span>
@@ -226,7 +226,7 @@ export default async function ActualitePage({
                 const total = Math.max(d.sondageTotal, 1);
                 return (
                   <li key={d.uid}>
-                    <Link href={`/dossiers/${d.uid}`} className={ROW}>
+                    <Link prefetch={false} href={`/dossiers/${d.uid}`} className={ROW}>
                       <span className={KIND}>
                         {d.procedureLibelle ?? "Dossier"}
                       </span>

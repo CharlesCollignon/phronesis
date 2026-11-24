@@ -2,16 +2,30 @@
  * Totaux des consultations citoyennes, lus par les fiches dossier et
  * scrutin.
  *
- * Une seule entrée de cache par type pour tout le site, relue seulement
- * quand un avis est donné ou retiré (`SONDAGES_TAG`) : afficher une
- * fiche n'interroge plus la base. Tant que les consultations restent
- * peu nombreuses, c'est le plus économe ; au-delà de quelques milliers
- * de fiches consultées, passer à une entrée par fiche.
+ * Deux étages de cache, pour qu'afficher une fiche n'interroge pas la
+ * base et qu'un avis ne touche que la fiche concernée :
+ *
+ * - un agrégat par type pour tout le site (`SONDAGES_TAG`), relu en une
+ *   requête quand un avis est donné ou retiré ;
+ * - une entrée par fiche, tirée de cet agrégat et portant l'étiquette de
+ *   la fiche (`tagSondageDossier`, `tagSondageScrutin`). C'est elle que
+ *   lisent les pages : comme elles sont statiques, elles héritent de ses
+ *   étiquettes. Si elles lisaient l'agrégat, un seul avis invaliderait
+ *   toutes les fiches du site.
+ *
+ * Une route qui enregistre un avis invalide donc les deux : l'agrégat,
+ * et l'entrée de la fiche.
  */
 import { sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { cachedQuery, SONDAGES_TAG } from "@/lib/cache";
+import {
+  cachedQuery,
+  SONDAGES_TAG,
+  tagSondageDossier,
+  tagSondageScrutin,
+} from "@/lib/cache";
+import { estUidFiche } from "@/lib/cache-tags";
 
 export type TotauxSondageDossier = {
   pour: number;
@@ -88,29 +102,49 @@ const totauxScrutins = cachedQuery(
   SONDAGES,
 );
 
+const AUCUN_AVIS_DOSSIER: TotauxSondageDossier = {
+  pour: 0,
+  contre: 0,
+  pasAvis: 0,
+  total: 0,
+};
+
+const AUCUN_AVIS_SCRUTIN: TotauxSondageScrutin = {
+  pour: 0,
+  contre: 0,
+  abstention: 0,
+  pasAvis: 0,
+  total: 0,
+};
+
+const sondageDossier = cachedQuery(
+  "sondageDossier",
+  async (uid: string): Promise<TotauxSondageDossier> =>
+    (await totauxDossiers())[uid] ?? AUCUN_AVIS_DOSSIER,
+  { tags: (uid) => [tagSondageDossier(uid)], revalidate: false },
+);
+
+const sondageScrutin = cachedQuery(
+  "sondageScrutin",
+  async (uid: string): Promise<TotauxSondageScrutin> =>
+    (await totauxScrutins())[uid] ?? AUCUN_AVIS_SCRUTIN,
+  { tags: (uid) => [tagSondageScrutin(uid)], revalidate: false },
+);
+
+/**
+ * Un identifiant mal formé (URL sondée par un robot) ne crée pas
+ * d'entrée de cache.
+ */
 export async function getSondageDossier(
   dossierUid: string,
 ): Promise<TotauxSondageDossier> {
-  return (
-    (await totauxDossiers())[dossierUid] ?? {
-      pour: 0,
-      contre: 0,
-      pasAvis: 0,
-      total: 0,
-    }
-  );
+  if (!estUidFiche(dossierUid)) return AUCUN_AVIS_DOSSIER;
+  return sondageDossier(dossierUid);
 }
 
 export async function getSondageScrutin(
   scrutinUid: string,
 ): Promise<TotauxSondageScrutin> {
-  return (
-    (await totauxScrutins())[scrutinUid] ?? {
-      pour: 0,
-      contre: 0,
-      abstention: 0,
-      pasAvis: 0,
-      total: 0,
-    }
-  );
+  if (!estUidFiche(scrutinUid)) return AUCUN_AVIS_SCRUTIN;
+  return sondageScrutin(scrutinUid);
 }

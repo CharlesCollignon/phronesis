@@ -35,6 +35,19 @@ export function tagScrutin(uid: string): string {
   return `scrutin:${uid}`;
 }
 
+/**
+ * Totaux de la consultation d'une fiche : invalidés quand un avis est
+ * donné ou retiré sur elle, et sur elle seule. Sans cela, un seul avis
+ * invaliderait toutes les fiches du site, qui portent ces totaux.
+ */
+export function tagSondageDossier(uid: string): string {
+  return `sondage:dossier:${uid}`;
+}
+
+export function tagSondageScrutin(uid: string): string {
+  return `sondage:scrutin:${uid}`;
+}
+
 export function estTagFiche(tag: unknown): tag is string {
   return typeof tag === "string" && TAG_FICHE.test(tag);
 }

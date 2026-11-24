@@ -123,7 +123,7 @@ export function EluListe({
           )}
         </p>
         {filtered ? (
-          <Link href={base} className="ln text-foreground">
+          <Link prefetch={false} href={base} className="ln text-foreground">
             Effacer les filtres
           </Link>
         ) : null}
@@ -142,6 +142,7 @@ export function EluListe({
             return (
               <li key={d.uid} className="flex">
                 <Link
+                  prefetch={false}
                   href={`${base}/${d.uid}`}
                   className="flex w-full items-center gap-3.5 border-b border-r border-border px-4 py-[18px] shadow-[inset_0_0_0_0_var(--accent)] transition-[background-color,box-shadow] duration-500 ease-[var(--spring)] hover:bg-[var(--highlight)] hover:shadow-[inset_0_3px_0_0_var(--accent)]"
                 >
