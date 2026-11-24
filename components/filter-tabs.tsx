@@ -39,6 +39,7 @@ export function FilterTabs({
           const active = activeId === tab.id;
           return (
             <Link
+              prefetch={false}
               key={tab.id}
               href={tab.href}
               aria-current={active ? "true" : undefined}
@@ -67,6 +68,7 @@ export function FilterTabs({
         const active = activeId === tab.id;
         return (
           <Link
+            prefetch={false}
             key={tab.id}
             href={tab.href}
             aria-current={active ? "true" : undefined}

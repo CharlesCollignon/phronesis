@@ -177,6 +177,7 @@ export default async function DossiersPage({
             <>
               Résultats pour « {q} »{" "}
               <Link
+                prefetch={false}
                 href={pageHref("", 1, type)}
                 className="ln ml-2 text-sm font-normal text-muted-foreground"
               >
@@ -225,6 +226,7 @@ export default async function DossiersPage({
                 style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
               >
                 <Link
+                  prefetch={false}
                   href={`/dossiers/${d.uid}`}
                   className="row-link group grid grid-cols-[minmax(0,1fr)_20px] items-center gap-6 border-t border-border px-2 py-5 md:grid-cols-[minmax(0,1fr)_150px_96px_20px]"
                 >
@@ -274,6 +276,7 @@ export default async function DossiersPage({
         >
           {page > 1 ? (
             <Link
+              prefetch={false}
               href={pageHref(q, page - 1, type)}
               className={cn(PG, "mr-2 border-border hover:border-foreground")}
             >
@@ -291,6 +294,7 @@ export default async function DossiersPage({
                   </span>
                 ) : (
                   <Link
+                    prefetch={false}
                     key={p}
                     href={pageHref(q, p, type)}
                     aria-current={p === page ? "page" : undefined}
@@ -313,6 +317,7 @@ export default async function DossiersPage({
               )}
           {hasNext ? (
             <Link
+              prefetch={false}
               href={pageHref(q, page + 1, type)}
               className={cn(PG, "ml-2 border-border hover:border-foreground")}
             >

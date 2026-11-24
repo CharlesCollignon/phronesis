@@ -18,7 +18,15 @@ import {
 import { urlDeputeAn, urlPhotoDepute } from "@/lib/urls";
 import { getVotesParThemeDepute } from "@/lib/votes-par-theme";
 
-export const dynamic = "force-dynamic";
+/**
+ * Page statique : générée à la première visite, puis servie depuis le
+ * cache jusqu'à l'invalidation de ses lectures (lib/cache.ts). La rendre
+ * à chaque requête coûtait une fonction par passage de robot. La liste
+ * vide dit de ne rien générer au build.
+ */
+export function generateStaticParams(): { uid: string }[] {
+  return [];
+}
 
 type PageProps = {
   params: Promise<{ uid: string }>;

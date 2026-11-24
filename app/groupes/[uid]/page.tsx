@@ -33,7 +33,15 @@ import { urlPhotoDepute, urlPhotoSenateur } from "@/lib/urls";
 import { getVotesParThemeGroupe } from "@/lib/votes-par-theme";
 import { descriptionCourte, pageMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+/**
+ * Page statique : générée à la première visite, puis servie depuis le
+ * cache jusqu'à l'invalidation de ses lectures (lib/cache.ts). La rendre
+ * à chaque requête coûtait une fonction par passage de robot. La liste
+ * vide dit de ne rien générer au build.
+ */
+export function generateStaticParams(): { uid: string }[] {
+  return [];
+}
 
 const SIEGES = { AN: 577, SENAT: 348 } as const;
 
@@ -145,15 +153,17 @@ export default async function GroupePage({
         style={{ animationDelay: "200ms" }}
       >
         <Link
+          prefetch={false}
           href={`/comparateur?type=${compareType}&a=${groupe.uid}`}
           className="btn btn-accent"
         >
           Comparer ce groupe
         </Link>
-        <Link href="#membres" className="ln text-[15px] font-medium">
+        <Link prefetch={false} href="#membres" className="ln text-[15px] font-medium">
           Voir les membres
         </Link>
         <Link
+          prefetch={false}
           href="/methodologie"
           className="ln text-[15px] font-medium"
         >
@@ -274,6 +284,7 @@ export default async function GroupePage({
                     return (
                       <li key={philo.id}>
                         <Link
+                          prefetch={false}
                           href={`/philosophies/${philo.id}`}
                           className="row-link grid grid-cols-[minmax(0,1fr)_56px] items-center gap-x-4 gap-y-2 border-t border-border px-2 py-4 md:grid-cols-[220px_minmax(0,1fr)_56px]"
                         >
@@ -330,6 +341,7 @@ export default async function GroupePage({
           title="Membres"
           aside={
             <Link
+              prefetch={false}
               href={`${base}?groupe=${groupe.uid}`}
               className="ln text-[15px] text-foreground"
             >
@@ -350,6 +362,7 @@ export default async function GroupePage({
               return (
                 <li key={m.uid} className="flex">
                   <Link
+                    prefetch={false}
                     href={`${base}/${m.uid}`}
                     className="flex w-full items-center gap-3.5 border-b border-r border-border p-4 shadow-[inset_0_0_0_0_var(--accent)] transition-[background-color,box-shadow] duration-500 ease-[var(--spring)] hover:bg-[var(--highlight)] hover:shadow-[inset_0_3px_0_0_var(--accent)]"
                   >

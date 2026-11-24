@@ -33,7 +33,15 @@ import { JsonLd } from "@/components/json-ld";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+/**
+ * Page statique : générée à la première visite, puis servie depuis le
+ * cache jusqu'à l'invalidation de ses lectures (lib/cache.ts). La rendre
+ * à chaque requête coûtait une fonction par passage de robot. La liste
+ * vide dit de ne rien générer au build.
+ */
+export function generateStaticParams(): { uid: string }[] {
+  return [];
+}
 
 /** Amendements affichés d'emblée ; les suivants sont repliés. */
 const AMENDEMENTS_VISIBLES = 10;
@@ -253,6 +261,7 @@ export default async function DossierPage({
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
               Repères civiques (non mesurés) : DDHC 1789 et DUDH 1948. Voir la{" "}
               <Link
+                prefetch={false}
                 href="/methodologie#reperes-civiques"
                 className="ln text-foreground"
               >
@@ -331,6 +340,7 @@ export default async function DossierPage({
                   return (
                     <li key={s.uid}>
                       <Link
+                        prefetch={false}
                         href={`/scrutins/${s.uid}`}
                         className={cn(
                           "row-link grid grid-cols-[minmax(0,1fr)_88px] items-baseline gap-x-5 gap-y-1 px-2 py-4 md:grid-cols-[110px_minmax(0,1fr)_92px_120px]",

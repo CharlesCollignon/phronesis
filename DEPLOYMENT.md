@@ -79,6 +79,44 @@ pnpm empreintes:generate -- --limit=50
 Utiliser l’URL **directe** Neon (sans `-pooler`) pour les scripts
 batch. Sur Vercel, `DATABASE_URL` doit rester l’URL **pooler**.
 
+## Pages statiques et coût Vercel
+
+L'offre gratuite de Vercel compte le temps de calcul des fonctions
+(« Fluid Active CPU », 4 h par mois pour tout le compte) et met tous
+les projets en pause au-delà. Tant que chaque page était rendue à
+chaque requête, un robot qui parcourait les quelque 19 500 fiches
+coûtait un rendu par passage (de l'ordre de 100 ms de calcul par
+fiche, mesuré en local).
+
+- **Les fiches sont statiques** (dossier, scrutin, député, sénateur,
+  groupe) : générées à la première visite, puis servies depuis le
+  cache sans exécuter de fonction. Elles héritent des étiquettes de
+  leurs lectures (`lib/cache.ts`) : `pnpm cache:rafraichir` les
+  régénère donc en les relisant, comme avant. Une page ne doit lire ni
+  `searchParams`, ni cookies, ni en-têtes, sinon elle redevient
+  dynamique : `pnpm build` l'affiche alors en `ƒ` au lieu de `●`.
+- **Les filtres d'un scrutin s'appliquent dans le navigateur**
+  (`components/vote-list-filter.tsx`) : la page contient toutes les
+  positions, quelle que soit l'URL.
+- **Un avis de consultation n'invalide que sa fiche**
+  (`tagSondageDossier`, `tagSondageScrutin` dans `lib/sondages.ts`).
+- **Le middleware Clerk ne s'exécute que sur les routes qui appellent
+  `auth()`** (`middleware.ts`). Une nouvelle route qui lit la session
+  doit être ajoutée à son `matcher`.
+- **Les liens de l'en-tête, du pied de page et des longues listes ne
+  sont pas préchargés** (`prefetch={false}`) : chaque lien en vue
+  déclenchait une requête, jusqu'à plusieurs centaines pour une liste
+  nominative, et `robots.txt` écarte les URL `_rsc` du routeur.
+
+Restent rendues à chaque requête : l'accueil, les listes (pagination et
+filtres dans l'URL), la recherche, le comparateur et les plans du site.
+
+Un déploiement repart avec un cache de pages vide (le cache des
+lectures, lui, survit) : chaque fiche est régénérée à sa première
+visite, sans relire la base. Après un déploiement, vérifier sur une
+fiche que l'en-tête `x-vercel-cache` passe de `MISS` à `HIT` au second
+appel.
+
 ## Script utilitaire
 
 ```bash

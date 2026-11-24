@@ -186,6 +186,7 @@ export default async function ScrutinsPage({
               <span className="text-foreground">« {q} »</span>
               {" · "}
               <Link
+                prefetch={false}
                 href={(() => {
                   const sp = new URLSearchParams();
                   if (chambre !== "all") sp.set("chambre", chambre);
@@ -229,6 +230,7 @@ export default async function ScrutinsPage({
               return (
                 <li key={s.uid}>
                   <Link
+                    prefetch={false}
                     href={`/scrutins/${s.uid}`}
                     className={`row-link rise grid grid-cols-[minmax(0,1fr)_84px] items-center gap-5 border-t border-border px-2 py-4 ${COLS}`}
                     style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
@@ -285,12 +287,12 @@ export default async function ScrutinsPage({
           className="mt-8 flex flex-wrap items-center gap-3"
         >
           {page > 1 ? (
-            <Link href={qs(page - 1)} className="btn btn-outline">
+            <Link prefetch={false} href={qs(page - 1)} className="btn btn-outline">
               ← Précédent
             </Link>
           ) : null}
           {rows.length === limit ? (
-            <Link href={qs(page + 1)} className="btn btn-outline">
+            <Link prefetch={false} href={qs(page + 1)} className="btn btn-outline">
               Suivant →
             </Link>
           ) : null}

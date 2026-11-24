@@ -8,6 +8,8 @@ export {
   SONDAGES_TAG,
   tagDossier,
   tagScrutin,
+  tagSondageDossier,
+  tagSondageScrutin,
 } from "@/lib/cache-tags";
 
 /**
@@ -25,6 +27,13 @@ export {
  * - ce qui vient d'être invalidé est relu aussitôt, d'un seul trait,
  *   pendant que Neon est encore éveillé (`pnpm cache:rafraichir`),
  *   plutôt qu'une page à la fois au fil des visites.
+ *
+ * Les fiches sont des pages statiques (`generateStaticParams` vide) :
+ * la page générée hérite des étiquettes des lectures qu'elle a faites,
+ * et l'invalidation d'une étiquette la fait régénérer à la visite
+ * suivante. Une étiquette portée par une lecture de fiche touche donc
+ * toutes les pages qui la lisent : ne pas y lire une entrée commune à
+ * tout le site (voir lib/sondages.ts).
  */
 
 /**

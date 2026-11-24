@@ -350,7 +350,7 @@ function BoussoleQuizInner({
     <div>
       {HAS_CLERK && !isSignedIn ? (
         <p className="mb-6 text-[15px] text-muted-foreground">
-          <Link href="/sign-in" className="ln font-medium text-foreground">
+          <Link prefetch={false} href="/sign-in" className="ln font-medium text-foreground">
             Connectez-vous
           </Link>{" "}
           pour sauvegarder et retrouver votre boussole.

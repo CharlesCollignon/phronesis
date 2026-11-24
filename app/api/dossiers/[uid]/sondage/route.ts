@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/db";
 import { dossiers, sondagesDossiers } from "@/db/schema";
-import { SONDAGES_TAG } from "@/lib/cache";
+import { SONDAGES_TAG, tagSondageDossier } from "@/lib/cache";
 import { getSondageDossier } from "@/lib/sondages";
 
 export const dynamic = "force-dynamic";
@@ -154,6 +154,7 @@ export async function POST(
       },
     });
   revalidateTag(SONDAGES_TAG, { expire: 0 });
+  revalidateTag(tagSondageDossier(uid), { expire: 0 });
 
   const counts = await countsForDossier(uid);
   return NextResponse.json({ counts, mine: body.position });
@@ -197,6 +198,7 @@ export async function DELETE(
       ),
     );
   revalidateTag(SONDAGES_TAG, { expire: 0 });
+  revalidateTag(tagSondageDossier(uid), { expire: 0 });
 
   const counts = await countsForDossier(uid);
   return NextResponse.json({ counts, mine: null });

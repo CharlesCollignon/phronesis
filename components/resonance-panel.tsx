@@ -122,7 +122,7 @@ function ResonanceInner({
           <Link href="/boussole" className="btn btn-accent">
             Faire ma Boussole
           </Link>
-          <Link href="/sign-in" className="ln text-[15px] font-medium">
+          <Link prefetch={false} href="/sign-in" className="ln text-[15px] font-medium">
             Se connecter
           </Link>
         </div>
