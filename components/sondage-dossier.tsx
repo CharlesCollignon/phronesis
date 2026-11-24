@@ -4,14 +4,10 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
+import type { TotauxSondageDossier } from "@/lib/sondages";
 import { cn } from "@/lib/utils";
 
-type Counts = {
-  pour: number;
-  contre: number;
-  pasAvis: number;
-  total: number;
-};
+type Counts = TotauxSondageDossier;
 
 type Position = "pour" | "contre" | "pas_avis";
 
@@ -23,20 +19,27 @@ const LABELS: { id: Position; label: string }[] = [
 
 type SondageDossierProps = {
   dossierUid: string;
+  /** Totaux lus avec la fiche : les afficher ne demande aucun appel. */
+  totaux: Counts;
 };
 
 function SondageInner({
   dossierUid,
+  totaux,
   isSignedIn,
 }: SondageDossierProps & {
   isSignedIn: boolean;
 }): React.ReactElement {
-  const [counts, setCounts] = useState<Counts | null>(null);
+  const [counts, setCounts] = useState<Counts>(totaux);
   const [mine, setMine] = useState<Position | null>(null);
+  const [mineLoaded, setMineLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Seul un utilisateur connecté a un avis à retrouver. Un visiteur
+    // anonyme n'appelle pas l'API : chaque appel réveillerait la base.
+    if (!isSignedIn) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -53,14 +56,16 @@ function SondageInner({
         setMine(data.mine);
       } catch {
         if (!cancelled) {
-          setError("Impossible de charger le sondage.");
+          setError("Impossible de retrouver votre avis.");
         }
+      } finally {
+        if (!cancelled) setMineLoaded(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [dossierUid]);
+  }, [dossierUid, isSignedIn]);
 
   const vote = useCallback(
     async (position: Position): Promise<void> => {
@@ -104,17 +109,13 @@ function SondageInner({
     [dossierUid, isSignedIn, mine],
   );
 
-  const display = counts ?? {
-    pour: 0,
-    contre: 0,
-    pasAvis: 0,
-    total: 0,
-  };
-  const total = Math.max(display.total, 1);
-  const pPour = (100 * display.pour) / total;
-  const pContre = (100 * display.contre) / total;
-  const pAvis = (100 * display.pasAvis) / total;
-  const loading = counts === null && error === null;
+  const total = Math.max(counts.total, 1);
+  const pPour = (100 * counts.pour) / total;
+  const pContre = (100 * counts.contre) / total;
+  const pAvis = (100 * counts.pasAvis) / total;
+  // Tant que l'avis déjà donné n'est pas connu, un clic ne saurait pas
+  // s'il doit l'enregistrer ou le retirer.
+  const loading = isSignedIn && !mineLoaded;
 
   return (
     <section aria-labelledby={`sondage-${dossierUid}`}>
@@ -154,51 +155,47 @@ function SondageInner({
         })}
       </div>
 
-      {loading ? (
-        <p className="mt-3.5 text-sm text-muted-foreground">Chargement…</p>
-      ) : (
-        <div key={display.total} className="reveal mt-4">
+      <div key={counts.total} className="reveal mt-4">
+        <div
+          className="flex h-1.5 w-full overflow-hidden bg-[var(--vote-neutre)]"
+          role="img"
+          aria-label={`Pour ${counts.pour}, contre ${counts.contre}, sans avis ${counts.pasAvis}`}
+        >
           <div
-            className="flex h-1.5 w-full overflow-hidden bg-[var(--vote-neutre)]"
-            role="img"
-            aria-label={`Pour ${display.pour}, contre ${display.contre}, sans avis ${display.pasAvis}`}
-          >
-            <div
-              className="bg-[var(--vote-pour)]"
-              style={{ width: `${pPour}%` }}
-            />
-            <div
-              className="bg-[var(--vote-contre)]"
-              style={{ width: `${pContre}%` }}
-            />
-            <div
-              className="bg-[var(--vote-abstention)]"
-              style={{ width: `${pAvis}%` }}
-            />
-          </div>
-          <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[13px]">
-            <div className="flex gap-1.5">
-              <dt className="text-muted-foreground">Pour</dt>
-              <dd className="num font-medium">{display.pour}</dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt className="text-muted-foreground">Contre</dt>
-              <dd className="num font-medium">{display.contre}</dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt className="text-muted-foreground">Sans avis</dt>
-              <dd className="num font-medium">{display.pasAvis}</dd>
-            </div>
-          </dl>
+            className="bg-[var(--vote-pour)]"
+            style={{ width: `${pPour}%` }}
+          />
+          <div
+            className="bg-[var(--vote-contre)]"
+            style={{ width: `${pContre}%` }}
+          />
+          <div
+            className="bg-[var(--vote-abstention)]"
+            style={{ width: `${pAvis}%` }}
+          />
         </div>
-      )}
+        <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[13px]">
+          <div className="flex gap-1.5">
+            <dt className="text-muted-foreground">Pour</dt>
+            <dd className="num font-medium">{counts.pour}</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt className="text-muted-foreground">Contre</dt>
+            <dd className="num font-medium">{counts.contre}</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt className="text-muted-foreground">Sans avis</dt>
+            <dd className="num font-medium">{counts.pasAvis}</dd>
+          </div>
+        </dl>
+      </div>
 
       <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
         Avis des citoyens Phronesis
-        {display.total > 0 ? (
+        {counts.total > 0 ? (
           <>
             {" "}
-            (<span className="num">{display.total}</span>)
+            (<span className="num">{counts.total}</span>)
           </>
         ) : null}
         . Consultation non représentative de la population, pas un vote
@@ -225,9 +222,9 @@ function SondageInner({
   );
 }
 
-function SondageWithClerk({
-  dossierUid,
-}: SondageDossierProps): React.ReactElement {
+function SondageWithClerk(
+  props: SondageDossierProps,
+): React.ReactElement {
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) {
     return (
@@ -237,17 +234,15 @@ function SondageWithClerk({
       </section>
     );
   }
-  return (
-    <SondageInner dossierUid={dossierUid} isSignedIn={Boolean(isSignedIn)} />
-  );
+  return <SondageInner {...props} isSignedIn={Boolean(isSignedIn)} />;
 }
 
-export function SondageDossier({
-  dossierUid,
-}: SondageDossierProps): React.ReactElement {
+export function SondageDossier(
+  props: SondageDossierProps,
+): React.ReactElement {
   const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   if (!hasClerk) {
-    return <SondageInner dossierUid={dossierUid} isSignedIn={false} />;
+    return <SondageInner {...props} isSignedIn={false} />;
   }
-  return <SondageWithClerk dossierUid={dossierUid} />;
+  return <SondageWithClerk {...props} />;
 }

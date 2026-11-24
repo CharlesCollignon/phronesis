@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 
 import { db } from "../../db";
 import { acteurs, organes, scrutins, votes } from "../../db/schema";
+import { noterFiches } from "../lib/invalidations";
 import {
   DATASETS,
   asArray,
@@ -144,55 +145,89 @@ async function main(): Promise<void> {
     console.warn(`Attention : ${unknownGroups} votes sans groupe reconnu`);
   }
 
+  // Chaque lot note, dans la même transaction, les fiches dont une
+  // ligne a réellement été écrite : le scrutin, et son dossier qui en
+  // affiche le résultat.
   await inBatches(scrutinRows, 200, async (batch) => {
-    await db
-      .insert(scrutins)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: scrutins.uid,
-        ...upsertSiChange(scrutins, [
-          "titre",
-          "sortCode",
-          "nombreVotants",
-          "suffragesExprimes",
-          "suffragesRequis",
-          "pour",
-          "contre",
-          "abstentions",
-          "nonVotants",
-        ]),
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(scrutins)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: scrutins.uid,
+          ...upsertSiChange(scrutins, [
+            "titre",
+            "sortCode",
+            "nombreVotants",
+            "suffragesExprimes",
+            "suffragesRequis",
+            "pour",
+            "contre",
+            "abstentions",
+            "nonVotants",
+          ]),
+        })
+        .returning({ uid: scrutins.uid, dossierUid: scrutins.dossierUid });
+      await noterFiches(tx, {
+        scrutins: ecrits.map((s) => s.uid),
+        dossiers: ecrits.map((s) => s.dossierUid),
       });
+    });
   });
 
   await inBatches(validVotes, 2000, async (batch) => {
-    await db
-      .insert(votes)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: [votes.scrutinUid, votes.acteurUid],
-        ...upsertSiChange(votes, [
-          "groupeUid",
-          "position",
-          "parDelegation",
-          "causePosition",
-        ]),
-      });
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(votes)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: [votes.scrutinUid, votes.acteurUid],
+          ...upsertSiChange(votes, [
+            "groupeUid",
+            "position",
+            "parDelegation",
+            "causePosition",
+          ]),
+        })
+        .returning({ scrutinUid: votes.scrutinUid });
+      await noterFiches(tx, { scrutins: ecrits.map((v) => v.scrutinUid) });
+    });
   });
 
   // Lie les scrutins aux dossiers via les vote_refs des actes législatifs.
-  const linked = await db.execute(sql`
-    UPDATE scrutins s
-    SET dossier_uid = a.dossier_uid
-    FROM (
-      SELECT DISTINCT dossier_uid,
-             jsonb_array_elements_text(vote_refs) AS vote_ref
-      FROM actes
-      WHERE vote_refs IS NOT NULL
-    ) a
-    WHERE s.uid = a.vote_ref
-      AND s.dossier_uid IS DISTINCT FROM a.dossier_uid
-  `);
-  console.log(`Scrutins liés à un dossier : ${linked.count ?? "?"}`);
+  // La requête renvoie aussi l'ancien dossier : sa fiche perd le scrutin.
+  const linked = await db.transaction(async (tx) => {
+    const lies = await tx.execute<{
+      uid: string;
+      ancien: string | null;
+      nouveau: string;
+    }>(sql`
+      WITH cible AS (
+        SELECT s.uid, s.dossier_uid AS ancien, a.dossier_uid AS nouveau
+        FROM scrutins s
+        JOIN (
+          SELECT DISTINCT dossier_uid,
+                 jsonb_array_elements_text(vote_refs) AS vote_ref
+          FROM actes
+          WHERE vote_refs IS NOT NULL
+        ) a ON s.uid = a.vote_ref
+        WHERE s.dossier_uid IS DISTINCT FROM a.dossier_uid
+      ),
+      maj AS (
+        UPDATE scrutins s
+        SET dossier_uid = c.nouveau
+        FROM cible c
+        WHERE s.uid = c.uid
+      )
+      SELECT uid, ancien, nouveau FROM cible
+    `);
+    await noterFiches(tx, {
+      scrutins: lies.map((l) => l.uid),
+      dossiers: lies.flatMap((l) => [l.ancien, l.nouveau]),
+    });
+    return lies.length;
+  });
+  console.log(`Scrutins liés à un dossier : ${linked}`);
 
   const duration = Date.now() - start;
   await logImport(

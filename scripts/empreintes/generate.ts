@@ -27,6 +27,7 @@ import {
 import { listDossiersSansEmpreinte } from "../../lib/queries";
 import { urlDossierAn } from "../../lib/urls";
 import { extractJson, genererAvecAttente, getModel } from "../lib/ia";
+import { noterFiches } from "../lib/invalidations";
 import { rassemblerSources, type SourceDocument } from "./sources";
 
 const PROMPT_VERSION = "v2.1-effets-sources-officielles";
@@ -244,30 +245,34 @@ async function main(): Promise<void> {
       continue;
     }
 
-    for (const axe of axes) {
-      await db
-        .insert(empreintes)
-        .values({
-          dossierUid: dossier.uid,
-          axe: axe.axe,
-          impact: axe.impact,
-          justification: axe.justification,
-          sources,
-          modele: modelId,
-          promptVersion: PROMPT_VERSION,
-        })
-        .onConflictDoUpdate({
-          target: [empreintes.dossierUid, empreintes.axe],
-          set: {
+    // La fiche du dossier affiche l'empreinte : à relire.
+    await db.transaction(async (tx) => {
+      for (const axe of axes) {
+        await tx
+          .insert(empreintes)
+          .values({
+            dossierUid: dossier.uid,
+            axe: axe.axe,
             impact: axe.impact,
             justification: axe.justification,
             sources,
             modele: modelId,
             promptVersion: PROMPT_VERSION,
-            genereLe: new Date(),
-          },
-        });
-    }
+          })
+          .onConflictDoUpdate({
+            target: [empreintes.dossierUid, empreintes.axe],
+            set: {
+              impact: axe.impact,
+              justification: axe.justification,
+              sources,
+              modele: modelId,
+              promptVersion: PROMPT_VERSION,
+              genereLe: new Date(),
+            },
+          });
+      }
+      await noterFiches(tx, { dossiers: [dossier.uid] });
+    });
   }
 
   console.log("Génération des empreintes terminée.");

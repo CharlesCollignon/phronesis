@@ -5,15 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { VoteComparison } from "@/components/vote-comparison";
+import type { TotauxSondageScrutin } from "@/lib/sondages";
 import { cn } from "@/lib/utils";
 
-type Counts = {
-  pour: number;
-  contre: number;
-  abstention: number;
-  pasAvis: number;
-  total: number;
-};
+type Counts = TotauxSondageScrutin;
 
 type Position = "pour" | "contre" | "abstention" | "pas_avis";
 
@@ -26,6 +21,8 @@ const LABELS: { id: Position; label: string }[] = [
 
 type SondageScrutinProps = {
   scrutinUid: string;
+  /** Totaux lus avec la fiche : les afficher ne demande aucun appel. */
+  totaux: Counts;
   deputesPour: number;
   deputesContre: number;
   deputesAbstention: number;
@@ -33,6 +30,7 @@ type SondageScrutinProps = {
 
 function SondageInner({
   scrutinUid,
+  totaux,
   isSignedIn,
   deputesPour,
   deputesContre,
@@ -40,12 +38,16 @@ function SondageInner({
 }: SondageScrutinProps & {
   isSignedIn: boolean;
 }): React.ReactElement {
-  const [counts, setCounts] = useState<Counts | null>(null);
+  const [counts, setCounts] = useState<Counts>(totaux);
   const [mine, setMine] = useState<Position | null>(null);
+  const [mineLoaded, setMineLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Seul un utilisateur connecté a un avis à retrouver. Un visiteur
+    // anonyme n'appelle pas l'API : chaque appel réveillerait la base.
+    if (!isSignedIn) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -61,13 +63,15 @@ function SondageInner({
         setCounts(data.counts);
         setMine(data.mine);
       } catch {
-        if (!cancelled) setError("Impossible de charger le sondage.");
+        if (!cancelled) setError("Impossible de retrouver votre avis.");
+      } finally {
+        if (!cancelled) setMineLoaded(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [scrutinUid]);
+  }, [scrutinUid, isSignedIn]);
 
   const vote = useCallback(
     async (position: Position): Promise<void> => {
@@ -113,14 +117,9 @@ function SondageInner({
     [scrutinUid, isSignedIn, mine],
   );
 
-  const display = counts ?? {
-    pour: 0,
-    contre: 0,
-    abstention: 0,
-    pasAvis: 0,
-    total: 0,
-  };
-  const loading = counts === null && error === null;
+  // Tant que l'avis déjà donné n'est pas connu, un clic ne saurait pas
+  // s'il doit l'enregistrer ou le retirer.
+  const loading = isSignedIn && !mineLoaded;
 
   return (
     <section aria-labelledby="sondage-titre">
@@ -190,23 +189,19 @@ function SondageInner({
       ) : null}
 
       <div className="mt-6">
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Chargement…</p>
-        ) : (
-          <VoteComparison
-            deputes={{
-              pour: deputesPour,
-              contre: deputesContre,
-              abstention: deputesAbstention,
-            }}
-            citoyens={{
-              pour: display.pour,
-              contre: display.contre,
-              abstention: display.abstention,
-              pasAvis: display.pasAvis,
-            }}
-          />
-        )}
+        <VoteComparison
+          deputes={{
+            pour: deputesPour,
+            contre: deputesContre,
+            abstention: deputesAbstention,
+          }}
+          citoyens={{
+            pour: counts.pour,
+            contre: counts.contre,
+            abstention: counts.abstention,
+            pasAvis: counts.pasAvis,
+          }}
+        />
       </div>
     </section>
   );

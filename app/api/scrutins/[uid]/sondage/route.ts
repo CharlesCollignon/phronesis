@@ -1,9 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { db } from "@/db";
 import { scrutins, sondagesScrutins } from "@/db/schema";
+import { SONDAGES_TAG } from "@/lib/cache";
+import { getSondageScrutin } from "@/lib/sondages";
 
 export const dynamic = "force-dynamic";
 
@@ -62,22 +65,18 @@ async function countsForScrutin(scrutinUid: string): Promise<{
   };
 }
 
+/**
+ * Totaux lus en cache : seul l'avis d'un utilisateur connecté
+ * interroge la base. La fiche affiche déjà les totaux, le composant
+ * n'appelle cette route que pour retrouver cet avis.
+ */
 export async function GET(
   _req: Request,
   ctx: RouteContext,
 ): Promise<NextResponse> {
   const { uid } = await ctx.params;
 
-  const [scrutin] = await db
-    .select({ uid: scrutins.uid })
-    .from(scrutins)
-    .where(eq(scrutins.uid, uid))
-    .limit(1);
-  if (!scrutin) {
-    return NextResponse.json({ error: "Scrutin inconnu" }, { status: 404 });
-  }
-
-  const counts = await countsForScrutin(uid);
+  const counts = await getSondageScrutin(uid);
 
   let mine: Position | null = null;
   if (
@@ -167,6 +166,7 @@ export async function POST(
         updatedAt: now,
       },
     });
+  revalidateTag(SONDAGES_TAG, { expire: 0 });
 
   const counts = await countsForScrutin(uid);
   return NextResponse.json({ counts, mine: body.position });
@@ -209,6 +209,7 @@ export async function DELETE(
         eq(sondagesScrutins.clerkUserId, userId),
       ),
     );
+  revalidateTag(SONDAGES_TAG, { expire: 0 });
 
   const counts = await countsForScrutin(uid);
   return NextResponse.json({ counts, mine: null });

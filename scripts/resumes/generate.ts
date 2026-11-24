@@ -24,6 +24,7 @@ import { acteurs, dossiers, resumesIa } from "../../db/schema";
 import { urlDossierAn } from "../../lib/urls";
 import { type SourceDocument } from "../empreintes/sources";
 import { BudgetEpuiseError, genererAvecAttente, getModel } from "../lib/ia";
+import { noterFiches } from "../lib/invalidations";
 import { rassemblerSourcesResume } from "./sources";
 
 const PROMPT_VERSION = "v2-textes-officiels";
@@ -218,26 +219,30 @@ async function main(): Promise<void> {
       continue;
     }
 
-    await db
-      .insert(resumesIa)
-      .values({
-        sujetType: "dossier",
-        sujetUid: dossier.uid,
-        contenu: text,
-        modele: modelId,
-        promptVersion: PROMPT_VERSION,
-        sources,
-      })
-      .onConflictDoUpdate({
-        target: [resumesIa.sujetType, resumesIa.sujetUid],
-        set: {
+    // La fiche du dossier affiche le résumé : à relire.
+    await db.transaction(async (tx) => {
+      await tx
+        .insert(resumesIa)
+        .values({
+          sujetType: "dossier",
+          sujetUid: dossier.uid,
           contenu: text,
           modele: modelId,
           promptVersion: PROMPT_VERSION,
           sources,
-          genereLe: new Date(),
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: [resumesIa.sujetType, resumesIa.sujetUid],
+          set: {
+            contenu: text,
+            modele: modelId,
+            promptVersion: PROMPT_VERSION,
+            sources,
+            genereLe: new Date(),
+          },
+        });
+      await noterFiches(tx, { dossiers: [dossier.uid] });
+    });
     generes += 1;
   }
 

@@ -1,5 +1,6 @@
 import { db } from "../../db";
 import { acteurs, mandats, organes } from "../../db/schema";
+import { noterToutesLesFiches } from "../lib/invalidations";
 import {
   DATASETS,
   asArray,
@@ -94,6 +95,61 @@ function parseActeur(
   return { acteur, mandats: mandatRows };
 }
 
+/** Organes dont le libellé s'affiche sur les fiches scrutin. */
+const GROUPES_POLITIQUES = new Set(["GP", "GROUPESENAT"]);
+
+/**
+ * Vrai si le nom d'un élu ou le libellé d'un groupe déjà en base change
+ * avec ce dump. Ils s'affichent sur la plupart des fiches scrutin
+ * (votants, groupes, auteur de l'amendement), qui sont alors toutes à
+ * relire. Un nouvel élu ou un nouveau groupe ne compte pas : aucune
+ * fiche en cache ne l'affiche encore.
+ */
+async function libellesAffichesChangent(
+  acteurRows: ActeurRow[],
+  organeRows: OrganeRow[],
+): Promise<boolean> {
+  const nomsAvant = new Map(
+    (
+      await db
+        .select({ uid: acteurs.uid, prenom: acteurs.prenom, nom: acteurs.nom })
+        .from(acteurs)
+    ).map((a) => [a.uid, JSON.stringify([a.prenom, a.nom])]),
+  );
+  const acteurChange = acteurRows.some((a) => {
+    const avant = nomsAvant.get(a.uid);
+    return avant !== undefined && avant !== JSON.stringify([a.prenom, a.nom]);
+  });
+  if (acteurChange) return true;
+
+  const groupesAvant = new Map(
+    (
+      await db
+        .select({
+          uid: organes.uid,
+          codeType: organes.codeType,
+          libelle: organes.libelle,
+          libelleAbrege: organes.libelleAbrege,
+          couleur: organes.couleur,
+        })
+        .from(organes)
+    )
+      .filter((o) => GROUPES_POLITIQUES.has(o.codeType))
+      .map((o) => [
+        o.uid,
+        JSON.stringify([o.libelle, o.libelleAbrege, o.couleur]),
+      ]),
+  );
+  return organeRows.some((o) => {
+    const avant = groupesAvant.get(o.uid);
+    return (
+      avant !== undefined &&
+      avant !==
+        JSON.stringify([o.libelle, o.libelleAbrege ?? null, o.couleur ?? null])
+    );
+  });
+}
+
 async function main(): Promise<void> {
   const start = Date.now();
   const zipPath = await download(DATASETS.acteurs);
@@ -129,6 +185,15 @@ async function main(): Promise<void> {
   const organeUids = new Set(organeRows.map((o) => o.uid));
   for (const m of mandatRows) {
     if (m.organeUid && !organeUids.has(m.organeUid)) m.organeUid = null;
+  }
+
+  // Noté avant l'écriture : si le script s'arrête en route, les fiches
+  // sont relues pour rien, jamais laissées avec un ancien nom.
+  if (await libellesAffichesChangent(acteurRows, organeRows)) {
+    console.log(
+      "Nom d'élu ou libellé de groupe modifié : toutes les fiches seront relues",
+    );
+    await noterToutesLesFiches(db);
   }
 
   await inBatches(organeRows, 500, async (batch) => {

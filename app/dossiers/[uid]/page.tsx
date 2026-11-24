@@ -18,6 +18,7 @@ import {
   formatSort,
 } from "@/lib/format";
 import { getDossier } from "@/lib/queries";
+import { getSondageDossier } from "@/lib/sondages";
 import { computeScorePhronesis } from "@/lib/score-phronesis";
 import { urlDossierAn } from "@/lib/urls";
 import {
@@ -122,6 +123,7 @@ export default async function DossierPage({
   const { uid } = await params;
   const data = await getDossier(uid);
   if (!data) notFound();
+  const totauxSondage = await getSondageDossier(uid);
 
   const {
     dossier,
@@ -422,7 +424,11 @@ export default async function DossierPage({
             compareLabel="Projection loi"
             title="Résonance avec vos valeurs"
           />
-          <SondageDossier dossierUid={dossier.uid} />
+          <SondageDossier
+            key={dossier.uid}
+            dossierUid={dossier.uid}
+            totaux={totauxSondage}
+          />
         </aside>
       </div>
     </PageShell>

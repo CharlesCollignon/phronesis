@@ -21,26 +21,48 @@ textes officiels : chaque lundi après l'ingestion (2 h maximum), puis le
 1er du mois (*IA mensuelle*), avant le classement des amendements qui
 utilise le budget Mistral restant.
 
-Les pages lisent la base à travers un cache (`lib/cache.ts`) qui dure
-jusqu'à la prochaine ingestion, pour ne pas réveiller Neon à chaque
-visite. Le cache survit aux déploiements. Le workflow le vide à la fin
-de l'ingestion via `POST /api/revalidate`.
+## Cache des pages et coût Neon
 
-Après une génération de résumés ou d'empreintes en local, vider le
-cache à la main :
+Neon s'endort après 5 minutes sans requête et se facture au temps
+d'éveil : chaque lecture hors cache isolée coûte 5 minutes de calcul.
+Les pages lisent donc la base à travers un cache (`lib/cache.ts`), qui
+survit aux déploiements, et deux règles le gardent rempli :
+
+- **on n'invalide que ce qui a changé.** Chaque batch (ingestion,
+  résumés, empreintes) note dans la table `invalidations_cache` les
+  dossiers et scrutins dont il a réellement modifié les données. Les
+  autres fiches restent en cache sans limite de durée ;
+- **ce qui est invalidé est relu aussitôt.** `pnpm cache:rafraichir`
+  envoie ces étiquettes au site (`POST /api/revalidate`), invalide les
+  listes, élus et groupes, puis relit toutes ces pages d'un trait,
+  pendant que Neon est encore éveillé.
+
+Les workflows lancent `pnpm cache:rafraichir` à la fin de chaque batch.
+Après un batch en local (résumés, empreintes, ingestion), le lancer à
+la main ; `.env` doit contenir `DATABASE_URL` et `REVALIDATE_SECRET` :
 
 ```bash
-curl -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" \
-  https://www.phronesis-france.com/api/revalidate
+pnpm cache:rafraichir
 ```
 
-Si un changement de code modifie le format renvoyé par une requête en
-cache, incrémenter `CACHE_VERSION` dans `lib/cache.ts`.
+Pour tout relire (toutes les fiches, une heure environ) : workflow
+*Cache du site (rafraîchir)* en cochant « tout », ou
+`pnpm cache:rafraichir --tout`. À faire :
+
+- après avoir incrémenté `CACHE_VERSION` dans `lib/cache.ts` (format
+  renvoyé par une requête en cache modifié) : toutes les entrées sont
+  alors vides ;
+- après un changement de logique d'ingestion qui modifie des données
+  affichées sans passer par les écritures habituelles.
+
+Une lecture ajoutée à une fiche dossier ou scrutin doit être couverte
+par ces invalidations : si un batch modifie ce qu'elle affiche, il doit
+le noter (`scripts/lib/invalidations.ts`).
 
 Secrets :
 
 ```bash
-gh secret set DATABASE_URL
+gh secret set DATABASE_URL        # URL Neon directe
 gh secret set REVALIDATE_SECRET   # même valeur que sur Vercel
 ```
 

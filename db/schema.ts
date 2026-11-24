@@ -521,3 +521,17 @@ export const sondagesScrutins = pgTable(
     ),
   ],
 );
+
+/**
+ * File d'attente des invalidations de cache : les batchs y notent les
+ * étiquettes de ce qu'ils ont modifié (`dossier:<uid>`, `scrutin:<uid>`,
+ * ou `fiches` pour tout relire), dans la même transaction que
+ * l'écriture. `pnpm cache:rafraichir` les envoie au site puis les
+ * efface ; un batch interrompu ne perd donc aucune invalidation.
+ */
+export const invalidationsCache = pgTable("invalidations_cache", {
+  tag: text("tag").primaryKey(),
+  creeLe: timestamp("cree_le", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

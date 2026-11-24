@@ -1,7 +1,15 @@
 import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
-import { cachedQuery, SONDAGES_TAG } from "@/lib/cache";
+import {
+  cachedQuery,
+  FICHES_TAG,
+  OPEN_DATA_TAG,
+  SONDAGES_TAG,
+  tagDossier,
+  tagScrutin,
+} from "@/lib/cache";
+import { estUidFiche } from "@/lib/cache-tags";
 import { computeScorePhronesis } from "@/lib/score-phronesis";
 
 const {
@@ -1034,6 +1042,27 @@ async function getGroupePositionsRecentesUncached(
 // ingestion (voir lib/cache.ts).
 // listDossiersSansEmpreinte reste hors cache :
 // le script des empreintes l'appelle hors runtime Next.
+
+// Fiches dossier et scrutin : gardées tant que l'ingestion n'a pas
+// modifié leurs données, puis invalidées une par une.
+const FICHE_DOSSIER = {
+  tags: (uid: string) => [FICHES_TAG, tagDossier(uid)],
+  revalidate: false as const,
+};
+const FICHE_SCRUTIN = {
+  tags: (uid: string) => [FICHES_TAG, tagScrutin(uid)],
+  revalidate: false as const,
+};
+
+/** Ne lit le cache (et la base) que pour un identifiant plausible. */
+function pourUidValide<Rest extends unknown[], Result>(
+  lire: (uid: string, ...rest: Rest) => Promise<Result>,
+  absent: Result,
+): (uid: string, ...rest: Rest) => Promise<Result> {
+  return async (uid, ...rest) =>
+    estUidFiche(uid) ? lire(uid, ...rest) : absent;
+}
+
 export const listDeputes = cachedQuery("listDeputes", listDeputesUncached);
 export const listSenateurs = cachedQuery(
   "listSenateurs",
@@ -1054,20 +1083,26 @@ export const getDeputeVotes = cachedQuery(
   getDeputeVotesUncached,
 );
 export const listScrutins = cachedQuery("listScrutins", listScrutinsUncached);
-export const getScrutin = cachedQuery("getScrutin", getScrutinUncached);
-export const getScrutinVotes = cachedQuery(
-  "getScrutinVotes",
-  getScrutinVotesUncached,
+export const getScrutin = pourUidValide(
+  cachedQuery("getScrutin", getScrutinUncached, FICHE_SCRUTIN),
+  null,
+);
+export const getScrutinVotes = pourUidValide(
+  cachedQuery("getScrutinVotes", getScrutinVotesUncached, FICHE_SCRUTIN),
+  [],
 );
 export const listDossiers = cachedQuery("listDossiers", listDossiersUncached);
-export const getDossier = cachedQuery("getDossier", getDossierUncached);
+export const getDossier = pourUidValide(
+  cachedQuery("getDossier", getDossierUncached, FICHE_DOSSIER),
+  null,
+);
 export const searchAll = cachedQuery("searchAll", searchAllUncached);
 export const getHomeStats = cachedQuery("getHomeStats", getHomeStatsUncached);
 // Contient les compteurs de sondages : invalidé à chaque vote.
 export const getActualiteAssemblee = cachedQuery(
   "getActualiteAssemblee",
   getActualiteAssembleeUncached,
-  { tags: [SONDAGES_TAG] },
+  { tags: [OPEN_DATA_TAG, SONDAGES_TAG] },
 );
 export const getImportHistory = cachedQuery(
   "getImportHistory",

@@ -12,6 +12,7 @@ import yauzl from "yauzl";
 
 import { db } from "../../db";
 import { acteurs, scrutins, votes } from "../../db/schema";
+import { noterFiches } from "../lib/invalidations";
 import {
   CACHE_DIR,
   inBatches,
@@ -270,21 +271,30 @@ async function ingestScrutinsAndVotes(
   console.log(`Scrutins Sénat parsés : ${scrutinRows.length}`);
   const scrutinUids = new Set(scrutinRows.map((s) => s.uid));
 
+  // Chaque écriture note, dans la même transaction, les fiches dont
+  // une ligne a réellement changé.
   await inBatches(scrutinRows, 300, async (batch) => {
-    await db
-      .insert(scrutins)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: scrutins.uid,
-        ...upsertSiChange(scrutins, [
-          "titre",
-          "sortCode",
-          "pour",
-          "contre",
-          "nombreVotants",
-          "suffragesExprimes",
-        ]),
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(scrutins)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: scrutins.uid,
+          ...upsertSiChange(scrutins, [
+            "titre",
+            "sortCode",
+            "pour",
+            "contre",
+            "nombreVotants",
+            "suffragesExprimes",
+          ]),
+        })
+        .returning({ uid: scrutins.uid, dossierUid: scrutins.dossierUid });
+      await noterFiches(tx, {
+        scrutins: ecrits.map((s) => s.uid),
+        dossiers: ecrits.map((s) => s.dossierUid),
       });
+    });
   });
 
   // Précharge groupes Sénat courants (acteur -> organe GROUPESENAT).
@@ -312,17 +322,21 @@ async function ingestScrutinsAndVotes(
     if (buffer.length === 0) return;
     const batch = buffer;
     buffer = [];
-    await db
-      .insert(votes)
-      .values(batch)
-      .onConflictDoUpdate({
-        target: [votes.scrutinUid, votes.acteurUid],
-        ...upsertSiChange(votes, [
-          "position",
-          "groupeUid",
-          "parDelegation",
-        ]),
-      });
+    await db.transaction(async (tx) => {
+      const ecrits = await tx
+        .insert(votes)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: [votes.scrutinUid, votes.acteurUid],
+          ...upsertSiChange(votes, [
+            "position",
+            "groupeUid",
+            "parDelegation",
+          ]),
+        })
+        .returning({ scrutinUid: votes.scrutinUid });
+      await noterFiches(tx, { scrutins: ecrits.map((v) => v.scrutinUid) });
+    });
   };
 
   for (const line of votBlock.split("\n")) {
@@ -369,23 +383,33 @@ async function ingestScrutinsAndVotes(
   );
 
   // Agrégats abstention / non-votant depuis les votes importés.
-  await db.execute(sql`
-    UPDATE scrutins s
-    SET
-      abstentions = c.abst,
-      non_votants = c.nv
-    FROM (
-      SELECT
-        scrutin_uid,
-        count(*) FILTER (WHERE position = 'abstention')::int AS abst,
-        count(*) FILTER (WHERE position = 'nonVotant')::int AS nv
-      FROM votes
-      WHERE scrutin_uid LIKE 'VTSEN%'
-      GROUP BY scrutin_uid
-    ) c
-    WHERE s.uid = c.scrutin_uid AND s.chambre = 'SENAT'
-      AND (s.abstentions, s.non_votants) IS DISTINCT FROM (c.abst, c.nv)
-  `);
+  await db.transaction(async (tx) => {
+    const ecrits = await tx.execute<{
+      uid: string;
+      dossier_uid: string | null;
+    }>(sql`
+      UPDATE scrutins s
+      SET
+        abstentions = c.abst,
+        non_votants = c.nv
+      FROM (
+        SELECT
+          scrutin_uid,
+          count(*) FILTER (WHERE position = 'abstention')::int AS abst,
+          count(*) FILTER (WHERE position = 'nonVotant')::int AS nv
+        FROM votes
+        WHERE scrutin_uid LIKE 'VTSEN%'
+        GROUP BY scrutin_uid
+      ) c
+      WHERE s.uid = c.scrutin_uid AND s.chambre = 'SENAT'
+        AND (s.abstentions, s.non_votants) IS DISTINCT FROM (c.abst, c.nv)
+      RETURNING s.uid, s.dossier_uid
+    `);
+    await noterFiches(tx, {
+      scrutins: ecrits.map((s) => s.uid),
+      dossiers: ecrits.map((s) => s.dossier_uid),
+    });
+  });
 }
 
 async function main(): Promise<void> {
